@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, Animated, TouchableWithoutFeedback, PanResponder } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
-import styles, { countryModalStyles } from "../styles/home.styles";
+import styles, { countryModalStyles } from "../home.styles";
 
 const POPULAR_COUNTRIES = [
   "Todos os países",

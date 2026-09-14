@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { View, Text, TouchableOpacity, Animated, Platform } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import styles from "../styles/home.styles";
+import styles from "../home.styles";
 import { SkeletonBox } from "../../../shared/components/Skeleton";
 
 const SearchCardItem = React.memo(function SearchCardItem({

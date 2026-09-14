@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal, FlatList } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
-import styles from "../styles/flightSearch.styles";
+import styles from "../flightSearch.styles";
 
 const CURRENCY_LIST = ["BRL", "USD", "EUR", "AED", "GBP"];
 

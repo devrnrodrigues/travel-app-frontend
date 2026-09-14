@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import styles from "../styles/home.styles";
+import styles from "../home.styles";
 import { SearchSkeletonList } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
 import SearchCardItem from "./SearchCardItem";

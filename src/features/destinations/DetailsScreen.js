@@ -16,22 +16,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import styles from "../styles/details.styles";
+import styles from "./styles/details.styles";
 import {
   getWeather,
   getAiDescription,
   getAiPrice,
   getPexelsImages,
-} from "../api/detailsApi";
-import { supabase } from "../../../config/supabase";
-import { useTheme } from "../../../theme/ThemeContext";
+} from "./api/detailsApi";
+import { supabase } from "../../config/supabase";
+import { useTheme } from "../../theme/ThemeContext";
 import {
   SkeletonBox,
   DetailsDescriptionSkeleton,
-} from "../../../shared/components/Skeleton";
-import FadeInView from "../../../shared/components/FadeInView";
-import ImageGalleryModal, { ThumbnailItem } from "../components/ImageGalleryModal";
-import ReviewsSection from "../components/ReviewsSection";
+} from "../../shared/components/Skeleton";
+import FadeInView from "../../shared/components/FadeInView";
+import ImageGalleryModal, { ThumbnailItem } from "./components/ImageGalleryModal";
+import ReviewsSection from "./components/ReviewsSection";
 
 const { width } = Dimensions.get("window");
 const STRICT_THUMB_SIZE = Math.round(width * 0.115);

@@ -6,13 +6,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import styles from "../styles/home.styles";
-import { supabase } from "../../../config/supabase";
-import { useTheme } from "../../../theme/ThemeContext";
-import { HomeSkeletonList } from "../../../shared/components/Skeleton";
-import FadeInView from "../../../shared/components/FadeInView";
-import HomeCardItem from "../components/HomeCardItem";
-import SearchModal from "../components/SearchModal";
+import styles from "./home.styles";
+import { supabase } from "../../config/supabase";
+import { useTheme } from "../../theme/ThemeContext";
+import { HomeSkeletonList } from "../../shared/components/Skeleton";
+import FadeInView from "../../shared/components/FadeInView";
+import HomeCardItem from "./components/HomeCardItem";
+import SearchModal from "./components/SearchModal";
 
 const PEXELS_API_KEY = process.env.EXPO_PUBLIC_PEXELS_API_KEY;
 

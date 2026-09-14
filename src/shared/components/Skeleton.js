@@ -1,5 +1,5 @@
-import homeStyles from "../../features/home/styles/home.styles";
-import exploreStyles, { COLUMN_WIDTH } from "../../features/explore/styles/explore.styles";
+import homeStyles from "../../features/home/home.styles";
+import exploreStyles, { COLUMN_WIDTH } from "../../features/explore/explore.styles";
 import React, { useEffect, useRef } from "react";
 import {
   View,

@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, Linking, ActivityIndic
 const { width } = Dimensions.get("window");
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import styles from "../styles/flightSearch.styles";
+import styles from "../flightSearch.styles";
 import FadeInView from "../../../shared/components/FadeInView";
 
 export default function FlightResults({ tickets, loading, error, onRetry, currentTheme, isDarkMode }) {

@@ -10,7 +10,7 @@ import GetStartedScreen from "../features/onboarding/screens/GetStartedScreen";
 import WelcomeScreen from "../features/onboarding/screens/WelcomeScreen";
 import LoginScreen from "../features/auth/screens/LoginScreen";
 import RegisterScreen from "../features/auth/screens/RegisterScreen";
-import DetailsScreen from "../features/destinations/screens/DetailsScreen";
+import DetailsScreen from "../features/destinations/DetailsScreen";
 import FlightSearchScreen from "../features/flights/screens/FlightSearchScreen";
 import { useTheme } from "../theme/ThemeContext";
 

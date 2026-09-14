@@ -17,12 +17,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { supabase } from "../../../config/supabase";
-import { useTheme } from "../../../theme/ThemeContext";
-import { ProfileSkeleton } from "../../../shared/components/Skeleton";
-import FadeInView from "../../../shared/components/FadeInView";
-import AnimatedProfileInput from "../components/AnimatedProfileInput";
-import { styles, dialogStyles } from "../styles/profile.styles";
+import { supabase } from "../../config/supabase";
+import { useTheme } from "../../theme/ThemeContext";
+import { ProfileSkeleton } from "../../shared/components/Skeleton";
+import FadeInView from "../../shared/components/FadeInView";
+import AnimatedProfileInput from "./components/AnimatedProfileInput";
+import { styles, dialogStyles } from "./profile.styles";
 
 export default function ProfileScreen({ navigation }) {
   const { currentTheme, isDarkMode, toggleThemeMode } = useTheme();

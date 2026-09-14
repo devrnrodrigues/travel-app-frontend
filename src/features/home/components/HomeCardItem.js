@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { View, Text, Image, TouchableOpacity, Animated, StyleSheet, Platform } from "react-native";
 import { BlurView } from "expo-blur";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import styles from "../styles/home.styles";
+import styles from "../home.styles";
 
 const HomeCardItem = React.memo(function HomeCardItem({
   item,
