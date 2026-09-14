@@ -1,83 +1,90 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer, DarkTheme, DefaultTheme } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ThemeProvider, useTheme } from "./src/theme/ThemeContext";
-
-import HomeScreen from "./src/features/home/screens/HomeScreen";
-import DetailsScreen from "./src/features/destinations/screens/DetailsScreen";
-import FlightSearchScreen from "./src/features/flights/screens/FlightSearchScreen";
-import ExploreScreen from "./src/features/explore/screens/ExploreScreen";
-import FavoritesScreen from "./src/features/favorites/screens/FavoritesScreen";
-import GetStartedScreen from "./src/features/onboarding/screens/GetStartedScreen";
-import WelcomeScreen from "./src/features/onboarding/screens/WelcomeScreen";
-import LoginScreen from "./src/features/auth/screens/LoginScreen";
-import RegisterScreen from "./src/features/auth/screens/RegisterScreen";
-import ProfileScreen from "./src/features/profile/screens/ProfileScreen";
-
-const Stack = createNativeStackNavigator();
-
-function NavigationStack() {
-  const { isDarkMode } = useTheme();
-  const themeBg = isDarkMode ? "#000000" : "#FFFFFF";
-
-  const navTheme = {
-    ...(isDarkMode ? DarkTheme : DefaultTheme),
-    colors: {
-      ...(isDarkMode ? DarkTheme.colors : DefaultTheme.colors),
-      background: themeBg,
-    },
-  };
-
-  return (
-    <NavigationContainer theme={navTheme}>
-      <Stack.Navigator
-        initialRouteName="Profile"
-        screenOptions={{
-          headerShown: false,
-          animation: "fade",
-          contentStyle: { backgroundColor: themeBg },
-        }}
-      >
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Main" component={HomeScreen} />
-        <Stack.Screen
-          name="Details"
-          component={DetailsScreen}
-          options={{
-            presentation: "transparentModal",
-            animation: "fade",
-            animationDuration: 180,
-          }}
-        />
-        <Stack.Screen
-          name="DetailsTicket"
-          component={FlightSearchScreen}
-          options={{
-            presentation: "transparentModal",
-            animation: "fade",
-            animationDuration: 180,
-          }}
-        />
-        <Stack.Screen name="Explore" component={ExploreScreen} />
-        <Stack.Screen name="Favorites" component={FavoritesScreen} />
-        <Stack.Screen name="GetStarted" component={GetStartedScreen} />
-        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "./src/config/supabase";
+import { ThemeProvider } from "./src/theme/ThemeContext";
+import RootNavigator from "./src/navigation/RootNavigator";
+import { styles } from "./src/navigation/styles/bottomTab.styles";
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkAuthState() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.warn("Auth getSession error, cleaning stale session:", error.message);
+          await supabase.auth.signOut().catch(() => {});
+          if (isMounted) {
+            setSession(null);
+            setHasSeenWelcome(false);
+          }
+        } else if (isMounted && data?.session) {
+          setSession(data.session);
+          setHasSeenWelcome(true);
+        }
+      } catch (err) {
+        console.warn("Auth check finished with fallback:", err.message || err);
+        if (isMounted) {
+          setSession(null);
+          setHasSeenWelcome(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    checkAuthState();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (isMounted) {
+        setSession(currentSession);
+        if (event === "SIGNED_OUT" || !currentSession) {
+          setHasSeenWelcome(false);
+        } else if (currentSession?.user?.id) {
+          const userSeen = await AsyncStorage.getItem(
+            `hasSeenWelcome_${currentSession.user.id}`
+          );
+          const globalSeen = await AsyncStorage.getItem("hasSeenWelcome");
+          if (userSeen === "true" || globalSeen === "true") {
+            setHasSeenWelcome(true);
+          } else {
+            setHasSeenWelcome(false);
+          }
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#249689" />
+      </View>
+    );
+  }
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.flex1}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <NavigationStack />
+          <RootNavigator session={session} hasSeenWelcome={hasSeenWelcome} />
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

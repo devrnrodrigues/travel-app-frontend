@@ -386,7 +386,7 @@ export default function Favorites({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
       <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
         <LinearGradient
           colors={["rgba(0, 0, 0, 0.50)", "rgba(0, 0, 0, 0.68)"]}

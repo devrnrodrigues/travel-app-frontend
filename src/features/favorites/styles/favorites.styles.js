@@ -3,17 +3,18 @@ import { StyleSheet, Dimensions } from "react-native";
 const { width } = Dimensions.get("window");
 
 export default StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: "#000000",
+  },
+  container: {
+    flex: 1,
   },
   flex1: {
     flex: 1,
   },
   backgroundImage: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
+    flex: 1,
   },
   header: {
     flexDirection: "row",
