@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, StatusBar,
-  ActivityIndicator, TextInput, Modal, Image, ImageBackground, FlatList, Dimensions, StyleSheet,
+  ActivityIndicator, TextInput, ImageBackground, StyleSheet,
   Animated, BackHandler, Easing,
 } from "react-native";
-const { width } = Dimensions.get("window");
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "react-native-vector-icons/Feather";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,12 +13,12 @@ import styles from "../styles/flightSearch.styles";
 import { useTheme } from "../../../theme/ThemeContext";
 import { supabase } from "../../../config/supabase";
 import FadeInView from "../../../shared/components/FadeInView";
-
-const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
-const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
+import {
+  DestinationModal,
+  CabinClassModal,
+  CurrencyModal,
+  CalendarModal,
+} from "../components/FlightModals";
 
 export default function DetailsTicket({ navigation, route }) {
   const { isDarkMode } = useTheme();
@@ -63,8 +62,6 @@ export default function DetailsTicket({ navigation, route }) {
   const [error, setError] = useState(false);
   const [calendarModalVisible, setCalendarModalVisible] = useState(false);
   const [calendarTarget, setCalendarTarget] = useState("IDA");
-  const [currentCalendarYear, setCurrentCalendarYear] = useState(new Date().getFullYear());
-  const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date().getMonth());
 
   useEffect(() => {
     Animated.timing(screenFadeAnim, {
@@ -209,38 +206,8 @@ export default function DetailsTicket({ navigation, route }) {
   };
 
   const handleOpenCalendar = (target) => {
-    const dateStr = target === "IDA" ? departDate : returnDate;
-    const [year, month] = dateStr.split("-").map(Number);
-    setCurrentCalendarYear(year);
-    setCurrentCalendarMonth(month - 1);
     setCalendarTarget(target);
     setCalendarModalVisible(true);
-  };
-
-  const changeMonth = (dir) => {
-    let m = currentCalendarMonth + dir;
-    let y = currentCalendarYear;
-    if (m > 11) { m = 0; y++; } else if (m < 0) { m = 11; y--; }
-    setCurrentCalendarMonth(m);
-    setCurrentCalendarYear(y);
-  };
-
-  const generateCalendarDays = () => {
-    const firstDayIndex = new Date(currentCalendarYear, currentCalendarMonth, 1).getDay();
-    const totalDays = new Date(currentCalendarYear, currentCalendarMonth + 1, 0).getDate();
-    const days = [];
-    for (let i = 0; i < firstDayIndex; i++) days.push({ dayStr: "", isEmpty: true });
-    for (let i = 1; i <= totalDays; i++)
-      days.push({ dayStr: String(i).padStart(2, "0"), isEmpty: false });
-    return days;
-  };
-
-  const handleSelectDay = (dayStr) => {
-    const m = String(currentCalendarMonth + 1).padStart(2, "0");
-    const newDate = `${currentCalendarYear}-${m}-${dayStr}`;
-    if (calendarTarget === "IDA") setDepartDate(newDate);
-    else setReturnDate(newDate);
-    setCalendarModalVisible(false);
   };
 
   return (
@@ -576,196 +543,45 @@ export default function DetailsTicket({ navigation, route }) {
         )}
       </View>
 
-      <Modal visible={destinationModalVisible} transparent animationType="fade" statusBarTranslucent={true} navigationBarTranslucent={true}>
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalDestinationContent,
-              !isDarkMode && {
-                backgroundColor: "rgba(100, 100, 100, 0.82)",
-                borderWidth: 0,
-                shadowColor: "transparent",
-                shadowOpacity: 0,
-                shadowRadius: 0,
-                elevation: 0,
-              },
-            ]}
-          >
-            <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#FFFFFF" }]}>
-              Selecione o Aeroporto de Chegada
-            </Text>
-            <FlatList
-              data={destinationOptions}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(255, 255, 255, 0.1)" }]}
-                  onPress={() => { setDestinationAirport(item); setDestinationModalVisible(false); }}
-                >
-                  <Feather name="navigation" size={16} color={currentTheme.accent} style={styles.marginRight10} />
-                  <Text style={[styles.autocompleteText, !isDarkMode && { color: "#FFFFFF" }]}>
-                    {item.nome_aeroporto} ({item.codigo_iata})
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity style={styles.closeModalButton} onPress={() => setDestinationModalVisible(false)}>
-              <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(255, 255, 255, 0.75)" }]}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <DestinationModal
+        visible={destinationModalVisible}
+        onClose={() => setDestinationModalVisible(false)}
+        destinationOptions={destinationOptions}
+        onSelectAirport={setDestinationAirport}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
+      />
 
-      <Modal visible={classModalVisible} transparent animationType="fade" statusBarTranslucent={true} navigationBarTranslucent={true}>
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalDestinationContent,
-              !isDarkMode && {
-                backgroundColor: "rgba(100, 100, 100, 0.82)",
-                borderWidth: 0,
-                shadowColor: "transparent",
-                shadowOpacity: 0,
-                shadowRadius: 0,
-                elevation: 0,
-              },
-            ]}
-          >
-            <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#FFFFFF" }]}>
-              Selecione a Classe do Voo
-            </Text>
-            <FlatList
-              data={Object.keys(CABIN_CLASS_MAP).map((label) => ({ id: CABIN_CLASS_MAP[label], label }))}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(255, 255, 255, 0.1)" }]}
-                  onPress={() => { setCabinClass(item.label); setClassModalVisible(false); }}
-                >
-                  <Feather name="layers" size={16} color={currentTheme.accent} style={styles.marginRight10} />
-                  <Text style={[styles.autocompleteText, !isDarkMode && { color: "#FFFFFF" }]}>{item.label}</Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity style={styles.closeModalButton} onPress={() => setClassModalVisible(false)}>
-              <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(255, 255, 255, 0.75)" }]}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <CabinClassModal
+        visible={classModalVisible}
+        onClose={() => setClassModalVisible(false)}
+        onSelectClass={setCabinClass}
+        cabinClassMap={CABIN_CLASS_MAP}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
+      />
 
-      <Modal visible={currencyModalVisible} transparent animationType="fade" statusBarTranslucent={true} navigationBarTranslucent={true}>
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalDestinationContent,
-              !isDarkMode && {
-                backgroundColor: "rgba(100, 100, 100, 0.82)",
-                borderWidth: 0,
-                shadowColor: "transparent",
-                shadowOpacity: 0,
-                shadowRadius: 0,
-                elevation: 0,
-              },
-            ]}
-          >
-            <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#FFFFFF" }]}>
-              Selecione o Tipo de Moeda
-            </Text>
-            <FlatList
-              data={["BRL", "USD", "EUR", "AED", "GBP"]}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(255, 255, 255, 0.1)" }]}
-                  onPress={() => { setCurrency(item); setCurrencyModalVisible(false); }}
-                >
-                  <Feather name="dollar-sign" size={16} color={currentTheme.accent} style={styles.marginRight10} />
-                  <Text style={[styles.autocompleteText, !isDarkMode && { color: "#FFFFFF" }]}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity style={styles.closeModalButton} onPress={() => setCurrencyModalVisible(false)}>
-              <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(255, 255, 255, 0.75)" }]}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <CurrencyModal
+        visible={currencyModalVisible}
+        onClose={() => setCurrencyModalVisible(false)}
+        onSelectCurrency={setCurrency}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
+      />
 
-      <Modal visible={calendarModalVisible} transparent animationType="fade" statusBarTranslucent={true} navigationBarTranslucent={true}>
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalContent,
-              !isDarkMode && {
-                backgroundColor: "rgba(100, 100, 100, 0.82)",
-                borderWidth: 0,
-                shadowColor: "transparent",
-                shadowOpacity: 0,
-                shadowRadius: 0,
-                elevation: 0,
-              },
-            ]}
-          >
-            <View style={styles.calendarSelectorRow}>
-              <TouchableOpacity
-                style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(255, 255, 255, 0.15)" }]}
-                onPress={() => changeMonth(-1)}
-              >
-                <Feather name="chevron-left" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-              <Text style={[styles.calendarTitleText, !isDarkMode && { color: "#FFFFFF" }]}>
-                {MONTH_NAMES[currentCalendarMonth]} {currentCalendarYear}
-              </Text>
-              <TouchableOpacity
-                style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(255, 255, 255, 0.15)" }]}
-                onPress={() => changeMonth(1)}
-              >
-                <Feather name="chevron-right" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.calendarHeaderRow}>
-              {WEEKDAYS.map((day, i) => (
-                <Text key={i} style={[styles.calendarHeaderCell, !isDarkMode && { color: "rgba(255, 255, 255, 0.7)" }]}>{day}</Text>
-              ))}
-            </View>
-            <View style={styles.calendarGrid}>
-              {generateCalendarDays().map((item, index) => {
-                const today = new Date(); today.setHours(0, 0, 0, 0);
-                const cellDate = new Date(currentCalendarYear, currentCalendarMonth, Number(item.dayStr));
-                const isPast = !item.isEmpty && cellDate < today;
-                const fullDate = `${currentCalendarYear}-${String(currentCalendarMonth + 1).padStart(2, "0")}-${item.dayStr}`;
-                const isSelected = !item.isEmpty &&
-                  (calendarTarget === "IDA" ? departDate : returnDate) === fullDate;
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    disabled={item.isEmpty || isPast}
-                    style={[
-                      styles.calendarDay,
-                      isSelected && [styles.calendarDayActive, { backgroundColor: currentTheme.accent }],
-                    ]}
-                    onPress={() => handleSelectDay(item.dayStr)}
-                  >
-                    <Text style={[
-                      styles.calendarDayText,
-                      !isDarkMode && { color: "#FFFFFF" },
-                      isSelected && styles.calendarDayTextActive,
-                      isPast && (styles.calendarDayTextDisabled || { color: "rgba(255, 255, 255, 0.35)" }),
-                      item.isEmpty && styles.calendarDayTextEmpty,
-                    ]}>
-                      {item.dayStr}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <TouchableOpacity style={styles.closeModalButton} onPress={() => setCalendarModalVisible(false)}>
-              <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "#6B7280" }]}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <CalendarModal
+        visible={calendarModalVisible}
+        onClose={() => setCalendarModalVisible(false)}
+        target={calendarTarget}
+        departDate={departDate}
+        returnDate={returnDate}
+        onSelectDate={(newDate, target) => {
+          if (target === "IDA") setDepartDate(newDate);
+          else setReturnDate(newDate);
+        }}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
+      />
     </Animated.View>
   );
 }
