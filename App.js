@@ -14,6 +14,7 @@ import GetStartedScreen from "./src/features/onboarding/screens/GetStartedScreen
 import WelcomeScreen from "./src/features/onboarding/screens/WelcomeScreen";
 import LoginScreen from "./src/features/auth/screens/LoginScreen";
 import RegisterScreen from "./src/features/auth/screens/RegisterScreen";
+import ProfileScreen from "./src/features/profile/screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -32,7 +33,7 @@ function NavigationStack() {
   return (
     <NavigationContainer theme={navTheme}>
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName="Profile"
         screenOptions={{
           headerShown: false,
           animation: "fade",
@@ -65,6 +66,7 @@ function NavigationStack() {
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
