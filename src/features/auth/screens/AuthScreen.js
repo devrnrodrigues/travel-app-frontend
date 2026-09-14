@@ -662,7 +662,7 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
         ) : (
           <>
             <Image
-              source={require("../assets/google-icon.png")}
+              source={require("../../../assets/google-icon.png")}
               style={styles.googleIcon}
               resizeMode="contain"
             />
