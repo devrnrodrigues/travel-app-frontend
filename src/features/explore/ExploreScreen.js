@@ -21,11 +21,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { supabase } from "../../../config/supabase";
-import { useTheme } from "../../../theme/ThemeContext";
-import { ExploreSkeletonGrid } from "../../../shared/components/Skeleton";
-import FadeInView from "../../../shared/components/FadeInView";
-import styles, { GAP, COLUMN_WIDTH, categoryThemes, defaultTheme } from "../styles/explore.styles";
+import { supabase } from "../../config/supabase";
+import { useTheme } from "../../theme/ThemeContext";
+import { ExploreSkeletonGrid } from "../../shared/components/Skeleton";
+import FadeInView from "../../shared/components/FadeInView";
+import styles, { GAP, COLUMN_WIDTH, categoryThemes, defaultTheme } from "./explore.styles";
 
 const PEXELS_API_KEY = process.env.EXPO_PUBLIC_PEXELS_API_KEY;
 

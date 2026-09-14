@@ -2,10 +2,10 @@ import React from "react";
 import { Dimensions, Easing } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import BottomTabBar from "./components/BottomTabBar";
-import HomeScreen from "../features/home/screens/HomeScreen";
-import ExploreScreen from "../features/explore/screens/ExploreScreen";
-import FavoritesScreen from "../features/favorites/screens/FavoritesScreen";
-import ProfileScreen from "../features/profile/screens/ProfileScreen";
+import HomeScreen from "../features/home/HomeScreen";
+import ExploreScreen from "../features/explore/ExploreScreen";
+import FavoritesScreen from "../features/favorites/FavoritesScreen";
+import ProfileScreen from "../features/profile/ProfileScreen";
 import { useTheme } from "../theme/ThemeContext";
 import { styles } from "./styles/bottomTab.styles";
 

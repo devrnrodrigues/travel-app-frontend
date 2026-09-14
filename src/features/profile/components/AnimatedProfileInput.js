@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { TextInput, Animated, Easing } from "react-native";
-import { styles } from "../styles/profile.styles";
+import { styles } from "../profile.styles";
 
 export default function AnimatedProfileInput({
   isFocused,

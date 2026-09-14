@@ -22,7 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { supabase } from "../../../config/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import styles from "../styles/auth.styles";
+import styles from "../auth.styles";
 import Message from "../../../shared/components/Message";
 
 function AnimatedInputContainer({ isFocused, children, style }) {

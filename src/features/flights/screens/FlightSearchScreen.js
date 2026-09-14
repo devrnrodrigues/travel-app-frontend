@@ -9,7 +9,7 @@ import Feather from "react-native-vector-icons/Feather";
 import { LinearGradient } from "expo-linear-gradient";
 import { searchFlights, CABIN_CLASS_MAP } from "../api/flightApi";
 import FlightResults from "./FlightResultsScreen";
-import styles from "../styles/flightSearch.styles";
+import styles from "../flightSearch.styles";
 import { useTheme } from "../../../theme/ThemeContext";
 import { supabase } from "../../../config/supabase";
 import FadeInView from "../../../shared/components/FadeInView";

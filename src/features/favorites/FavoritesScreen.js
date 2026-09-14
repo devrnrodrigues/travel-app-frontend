@@ -22,11 +22,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
-import { supabase } from "../../../config/supabase";
-import styles, { dialogStyles } from "../styles/favorites.styles";
-import { useTheme } from "../../../theme/ThemeContext";
-import { FavoritesSkeletonList, SkeletonBox } from "../../../shared/components/Skeleton";
-import FadeInView from "../../../shared/components/FadeInView";
+import { supabase } from "../../config/supabase";
+import styles, { dialogStyles } from "./favorites.styles";
+import { useTheme } from "../../theme/ThemeContext";
+import { FavoritesSkeletonList, SkeletonBox } from "../../shared/components/Skeleton";
+import FadeInView from "../../shared/components/FadeInView";
 
 const { width, height: WINDOW_HEIGHT } = Dimensions.get("window");
 
