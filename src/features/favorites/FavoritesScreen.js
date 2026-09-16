@@ -297,6 +297,23 @@ export default function Favorites({ navigation }) {
     });
   };
 
+  const isSearchOpenRef = useRef(isSearchOpen);
+  isSearchOpenRef.current = isSearchOpen;
+
+  useEffect(() => {
+    const onHide = () => {
+      if (isSearchOpenRef.current) {
+        handleCloseSearch();
+      }
+    };
+    const didHideSub = Keyboard.addListener("keyboardDidHide", onHide);
+    const willHideSub = Keyboard.addListener("keyboardWillHide", onHide);
+    return () => {
+      didHideSub.remove();
+      willHideSub.remove();
+    };
+  }, []);
+
   useEffect(() => {
     const onBackPress = () => {
       if (isSearchOpen) {
@@ -375,7 +392,7 @@ export default function Favorites({ navigation }) {
               .eq("user_id", user.id);
 
             if (error) throw error;
-            
+
             const uniqueFavorites = [];
             const seenKeys = new Set();
             for (const fav of (data || [])) {
@@ -414,7 +431,7 @@ export default function Favorites({ navigation }) {
           style={styles.flex1}
         >
           <SafeAreaView style={styles.container}>
-            {}
+            { }
             <View
               style={styles.searchBarWrapper}
             >
@@ -427,7 +444,7 @@ export default function Favorites({ navigation }) {
                 </Text>
               </Animated.View>
 
-              {}
+              { }
               <Animated.View
                 style={[
                   isDarkMode ? styles.iconButtonDark : styles.iconButtonLight,
@@ -590,7 +607,7 @@ export default function Favorites({ navigation }) {
         </LinearGradient>
       </ImageBackground>
 
-      {}
+      { }
       <Modal
         visible={!!itemToDelete}
         transparent={true}
@@ -628,7 +645,7 @@ export default function Favorites({ navigation }) {
                   </Text>
                 </View>
 
-                {}
+                { }
                 <TouchableOpacity
                   style={dialogStyles.actionButton}
                   onPress={confirmDelete}
@@ -642,7 +659,7 @@ export default function Favorites({ navigation }) {
                   )}
                 </TouchableOpacity>
 
-                {}
+                { }
                 <TouchableOpacity
                   style={[dialogStyles.actionButton, dialogStyles.lastButton]}
                   onPress={() => setItemToDelete(null)}
