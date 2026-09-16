@@ -1,5 +1,6 @@
 import homeStyles from "../../features/home/home.styles";
 import exploreStyles, { COLUMN_WIDTH } from "../../features/explore/explore.styles";
+import favoritesStyles from "../../features/favorites/favorites.styles";
 import React, { useEffect, useRef } from "react";
 import {
   View,
@@ -472,53 +473,55 @@ export function FavoriteCardSkeleton({
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = !isDarkMode ? "rgba(100, 100, 100, 0.40)" : "rgba(12, 12, 12, 0.82)";
-  const thumbBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.35)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.45)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.28)";
+  const placeholderBg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.09)"
+    : "rgba(255, 255, 255, 0.45)";
+  const placeholderBg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : "rgba(255, 255, 255, 0.28)";
 
   const imageSize = Math.max(48, cardHeight - 20);
   const cardWidth = width - 40;
 
   return (
     <View
-      style={{
-        backgroundColor: cardBg,
-        borderRadius: 18,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        height: cardHeight,
-        marginBottom: cardMarginBottom,
-        flexDirection: "row",
-        alignItems: "center",
-        overflow: "hidden",
-        position: "relative",
-      }}
+      style={[
+        favoritesStyles.cardBase,
+        !isDarkMode ? favoritesStyles.cardLight : favoritesStyles.cardDark,
+        {
+          height: cardHeight,
+          marginBottom: cardMarginBottom,
+          overflow: "hidden",
+          position: "relative",
+        },
+      ]}
     >
-      {}
       <View
-        style={{
-          width: imageSize,
-          height: imageSize,
-          borderRadius: 13,
-          backgroundColor: thumbBg,
-        }}
+        style={[
+          favoritesStyles.imageWrapper,
+          {
+            width: imageSize,
+            height: imageSize,
+            backgroundColor: isDarkMode
+              ? "rgba(255, 255, 255, 0.08)"
+              : "rgba(255, 255, 255, 0.35)",
+          },
+        ]}
       />
 
-      {}
-      <View style={{ marginLeft: 14, flex: 1 }}>
+      <View style={[favoritesStyles.cardInfo, { justifyContent: "center" }]}>
         <View
           style={{
-            height: 14,
+            height: 15,
             width: titleWidth,
             borderRadius: 4,
             backgroundColor: placeholderBg1,
-            marginBottom: 8,
+            marginBottom: 6,
           }}
         />
         <View
           style={{
-            height: 10,
+            height: 12,
             width: locationWidth,
             borderRadius: 3,
             backgroundColor: placeholderBg2,
@@ -526,7 +529,6 @@ export function FavoriteCardSkeleton({
         />
       </View>
 
-      {}
       <ShimmerOverlay
         animatedValue={anim}
         width={cardWidth}

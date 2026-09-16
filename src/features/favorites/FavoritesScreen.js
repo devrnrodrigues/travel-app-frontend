@@ -18,7 +18,7 @@ import {
   Easing,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
@@ -30,6 +30,7 @@ import FadeInView from "../../shared/components/FadeInView";
 
 const { width, height: WINDOW_HEIGHT } = Dimensions.get("window");
 
+const SEARCH_BAR_HEIGHT = 64;
 const DEFAULT_LIST_HEIGHT = WINDOW_HEIGHT - 120;
 const BOTTOM_BAR_SPACE = 120;
 const TOP_PADDING = 10;
@@ -224,7 +225,27 @@ export default function Favorites({ navigation }) {
   const scrollOffsetRef = useRef(0);
 
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [listHeight, setListHeight] = useState(DEFAULT_LIST_HEIGHT);
+  const insets = useSafeAreaInsets();
+  const estimatedListHeight = useMemo(() => {
+    const safeTop = insets?.top || 0;
+    const safeBottom = insets?.bottom || 0;
+    return Math.max(300, WINDOW_HEIGHT - safeTop - safeBottom - SEARCH_BAR_HEIGHT);
+  }, [insets?.top, insets?.bottom]);
+
+  const [listHeight, setListHeight] = useState(estimatedListHeight);
+
+  useEffect(() => {
+    if (estimatedListHeight > 0 && Math.abs(estimatedListHeight - listHeight) > 15) {
+      setListHeight(estimatedListHeight);
+    }
+  }, [estimatedListHeight]);
+
+  const handleListLayout = useCallback((e) => {
+    const h = e.nativeEvent.layout.height;
+    if (h > 0 && Math.abs(h - listHeight) > 2) {
+      setListHeight(h);
+    }
+  }, [listHeight]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -488,85 +509,83 @@ export default function Favorites({ navigation }) {
               </Animated.View>
             </View>
 
-            {loading ? (
-              <FavoritesSkeletonList
-                isDarkMode={isDarkMode}
-                cardHeight={cardHeight}
-                cardMarginBottom={cardMarginBottom}
-              />
-            ) : (
-              <FadeInView duration={260} style={styles.flex1}>
-                <Animated.FlatList
-                  ref={flatListRef}
-                  data={filteredFavorites}
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                  keyExtractor={(item) => item.id.toString()}
-                  contentContainerStyle={{
-                    paddingTop: TOP_PADDING,
-                    paddingHorizontal: 20,
-                    paddingBottom: paddingBottom,
-                  }}
-                  bounces={true}
-                  overScrollMode="always"
-                  scrollEventThrottle={16}
-                  onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    {
-                      useNativeDriver: true,
-                      listener: (e) => {
-                        scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
-                      },
-                    }
-                  )}
-                  onLayout={(e) => {
-                    const h = e.nativeEvent.layout.height;
-                    if (h > 0) setListHeight(h);
-                  }}
-                  renderItem={({ item, index }) => (
-                    <FavoriteCardItem
-                      item={item}
-                      index={index}
-                      totalItems={filteredFavorites.length}
-                      scrollY={scrollY}
-                      cardSlot={cardSlot}
-                      cardHeight={cardHeight}
-                      cardMarginBottom={cardMarginBottom}
-                      currentTheme={currentTheme}
-                      isDarkMode={isDarkMode}
-                      navigation={navigation}
-                      setItemToDelete={setItemToDelete}
-                    />
-                  )}
-                  ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                      {searchQuery.trim() ? (
-                        <>
-                          <Feather
-                            name="search"
-                            size={38}
-                            color={isDarkMode ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.55)"}
-                            style={styles.emptyIcon}
-                          />
-                          <Text style={styles.emptyTitle}>
-                            Nenhum resultado
-                          </Text>
-                          <Text
-                            style={isDarkMode ? styles.emptySubtitleDark : styles.emptySubtitleLight}
-                          >
-                            Nenhum destino salvo corresponde a "{searchQuery}".
-                          </Text>
-                        </>
-                      ) : (
-                        <Text style={styles.whiteText}>
-                          Nenhum destino salvo ainda.
-                        </Text>
-                      )}
-                    </View>
-                  }
+            <View style={styles.flex1} onLayout={handleListLayout}>
+              {loading ? (
+                <FavoritesSkeletonList
+                  isDarkMode={isDarkMode}
+                  cardHeight={cardHeight}
+                  cardMarginBottom={cardMarginBottom}
                 />
-              </FadeInView>
-            )}
+              ) : (
+                <FadeInView duration={260} style={styles.flex1}>
+                  <Animated.FlatList
+                    ref={flatListRef}
+                    data={filteredFavorites}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    keyExtractor={(item) => item.id.toString()}
+                    contentContainerStyle={{
+                      paddingTop: TOP_PADDING,
+                      paddingHorizontal: 20,
+                      paddingBottom: paddingBottom,
+                    }}
+                    bounces={true}
+                    overScrollMode="always"
+                    scrollEventThrottle={16}
+                    onScroll={Animated.event(
+                      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                      {
+                        useNativeDriver: true,
+                        listener: (e) => {
+                          scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+                        },
+                      }
+                    )}
+                    renderItem={({ item, index }) => (
+                      <FavoriteCardItem
+                        item={item}
+                        index={index}
+                        totalItems={filteredFavorites.length}
+                        scrollY={scrollY}
+                        cardSlot={cardSlot}
+                        cardHeight={cardHeight}
+                        cardMarginBottom={cardMarginBottom}
+                        currentTheme={currentTheme}
+                        isDarkMode={isDarkMode}
+                        navigation={navigation}
+                        setItemToDelete={setItemToDelete}
+                      />
+                    )}
+                    ListEmptyComponent={
+                      <View style={styles.emptyContainer}>
+                        {searchQuery.trim() ? (
+                          <>
+                            <Feather
+                              name="search"
+                              size={38}
+                              color={isDarkMode ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.55)"}
+                              style={styles.emptyIcon}
+                            />
+                            <Text style={styles.emptyTitle}>
+                              Nenhum resultado
+                            </Text>
+                            <Text
+                              style={isDarkMode ? styles.emptySubtitleDark : styles.emptySubtitleLight}
+                            >
+                              Nenhum destino salvo corresponde a "{searchQuery}".
+                            </Text>
+                          </>
+                        ) : (
+                          <Text style={styles.whiteText}>
+                            Nenhum destino salvo ainda.
+                          </Text>
+                        )}
+                      </View>
+                    }
+                  />
+                </FadeInView>
+              )}
+            </View>
           </SafeAreaView>
         </LinearGradient>
       </ImageBackground>
