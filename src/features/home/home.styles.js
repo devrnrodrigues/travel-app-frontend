@@ -46,7 +46,11 @@ export default StyleSheet.create({
     borderRadius: 40,
     overflow: "hidden",
     backgroundColor: "#121212",
-    elevation: 20,
+    elevation: 0,
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 0,
   },
   cardImage: { width: "100%", height: "100%", position: 'absolute', opacity: 0.9 },
   cardInfo: {
