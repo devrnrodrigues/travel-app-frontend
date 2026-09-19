@@ -1,6 +1,6 @@
 # Travel App
 
-Aplicativo moderno de turismo e planejamento de viagens desenvolvido em **React Native** com **Expo**. O app oferece descoberta de destinos turísticos com fotos em alta resolução, previsão do tempo ao vivo, descrições e estimativas geradas por Inteligência Artificial, busca de voos em tempo real, suporte a temas (claro/escuro) e sincronização na nuvem com **Supabase**.
+Aplicativo moderno de turismo e planejamento de viagens desenvolvido em **React Native** com **Expo**. O app oferece descoberta de destinos turísticos com fotos em alta resolução, previsão do tempo ao vivo, descrições e estimativas geradas por Inteligência Artificial, busca de voos em tempo real, suporte a temas (claro/escuro) e sincronização na nuvem através de API REST **Spring Boot** com **PostgreSQL**.
 
 ## Funcionalidades
 
@@ -24,16 +24,16 @@ Aplicativo moderno de turismo e planejamento de viagens desenvolvido em **React 
 - **Resultados Detalhados:** Listagem de passagens com cia aérea, paradas, bagagem inclusa e redirecionamento para compra.
 
 ### Favoritos e Perfil
-- **Favoritos Sincronizados:** Adicione ou remova destinos favoritos salvos no Supabase.
+- **Favoritos Sincronizados:** Adicione ou remova destinos favoritos salvos no backend.
 - **Dark Mode / Light Mode:** Suporte completo a tema escuro e claro com persistência local.
-- **Autenticação Segura:** Cadastro, login e sessão persistida via Supabase Auth.
+- **Autenticação Segura:** Cadastro, login com e-mail/senha, login com Google Sign-In e sessão gerenciada via JWT e Refresh Token.
 - **Perfil do Usuário:** Gerenciamento de dados cadastrais, avatar e alteração de senha.
 
 ## Tecnologias e Bibliotecas
 
 - **Core:** [React Native](https://reactnative.dev/) (0.86) & [Expo](https://expo.dev/) (SDK 57)
 - **Navegação:** [@react-navigation/native](https://reactnavigation.org/) (Stack & Bottom Tabs v7)
-- **Backend & Auth:** [@supabase/supabase-js](https://supabase.com/)
+- **Backend & Auth:** API REST Spring Boot (OAuth2/JWT) com PostgreSQL
 - **Armazenamento Local:** [@react-native-async-storage/async-storage](https://react-native-async-storage.github.io/async-storage/)
 - **Animações e Efeitos:** `react-native-reanimated`, `expo-linear-gradient`, `expo-blur`
 - **Ícones:** `@expo/vector-icons` (Ionicons, Feather, MaterialCommunityIcons)
@@ -51,7 +51,7 @@ A estrutura segue o padrão Feature-Based Modular:
 travel-app-frontend/
 ├── assets/                  # Ícones, splash screen e imagens estáticas
 ├── src/
-│   ├── config/              # Configurações globais (Supabase client, etc.)
+│   ├── config/              # Configurações globais (API client, variáveis de ambiente)
 │   ├── features/            # Módulos organizados por funcionalidade
 │   │   ├── auth/            # Telas de login/registro e estilos de autenticação
 │   │   ├── destinations/    # Detalhes do destino, API de IA, clima e avaliações
@@ -96,8 +96,7 @@ cp .env.example .env
 
 Preencha com as suas respectivas chaves de API:
 ```env
-EXPO_PUBLIC_SUPABASE_URL=sua_url_do_supabase
-EXPO_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anon_supabase
+EXPO_PUBLIC_API_URL=http://<seu-ip-local>:8080/api
 EXPO_PUBLIC_PEXELS_API_KEY=sua_chave_pexels
 EXPO_PUBLIC_WEATHER_API_KEY=sua_chave_weather_api
 EXPO_PUBLIC_GEMINI_API_KEY=sua_chave_gemini_api
