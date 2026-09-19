@@ -28,24 +28,35 @@ import FadeInView from "../../shared/components/FadeInView";
 import styles, { GAP, COLUMN_WIDTH, categoryThemes, defaultTheme } from "./explore.styles";
 import { getDestinations } from "../destinations/api/destinationService";
 
+const HEIGHT_FACTORS = [
+  1.65, 0.95, 1.35, 1.80, 1.10, 1.50, 0.85, 1.70, 1.25, 1.00, 1.55, 1.15,
+  1.40, 0.90, 1.75, 1.20, 1.60, 1.05, 1.45, 0.95, 1.30, 1.65, 1.10, 1.50,
+];
+
 const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imgAnim = useRef(new Animated.Value(0)).current;
 
-  const handleImageLoad = () => {
+  const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
     Animated.timing(imgAnim, {
       toValue: 1,
-      duration: 240,
+      duration: 200,
       useNativeDriver: Platform.OS !== "web",
     }).start();
-  };
+  }, [imgAnim]);
+
+  const handlePress = useCallback(() => {
+    if (onPress) {
+      onPress(item);
+    }
+  }, [onPress, item]);
 
   return (
     <TouchableOpacity
       activeOpacity={0.88}
       style={[styles.gridItem, { height: item.cardHeight }]}
-      onPress={onPress}
+      onPress={handlePress}
     >
       <Animated.Image
         source={{ uri: item.image_url }}
@@ -57,7 +68,6 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
         <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight]} />
       )}
 
-      {}
       {item.realRating && item.realRating !== "N/A" && (
         <View style={styles.topBadge}>
           <Ionicons name="star" size={9} color="#FFD700" />
@@ -65,7 +75,6 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
         </View>
       )}
 
-      {}
       <LinearGradient
         colors={["transparent", "rgba(0, 0, 0, 0.86)"]}
         style={styles.bottomOverlay}
@@ -211,19 +220,24 @@ export default function Explore({ navigation }) {
     };
   }, [scheduleAutoHide]);
 
-  const loadNextPage = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const hasNextPageRef = useRef(hasNextPage);
+  hasNextPageRef.current = hasNextPage;
+  const isFetchingNextPageRef = useRef(isFetchingNextPage);
+  isFetchingNextPageRef.current = isFetchingNextPage;
+  const fetchNextPageRef = useRef(fetchNextPage);
+  fetchNextPageRef.current = fetchNextPage;
 
-  const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
-    const paddingToBottom = 350;
-    return layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
-  };
+  const checkAndLoadNextPage = useCallback((layoutMeasurement, contentOffset, contentSize) => {
+    if (!hasNextPageRef.current || isFetchingNextPageRef.current) return;
+    if (!contentSize || contentSize.height <= 0) return;
+    const paddingToBottom = 220;
+    if (contentOffset.y > 60 && layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+      fetchNextPageRef.current();
+    }
+  }, []);
 
   const handleScroll = useCallback((event) => {
-    const nativeEvent = event.nativeEvent;
+    const { nativeEvent } = event;
     const currentY = nativeEvent.contentOffset.y;
     const diff = currentY - lastScrollY.current;
 
@@ -241,10 +255,8 @@ export default function Explore({ navigation }) {
 
     lastScrollY.current = currentY;
 
-    if (isCloseToBottom(nativeEvent)) {
-      loadNextPage();
-    }
-  }, [hideSearchBar, showSearchBar, loadNextPage]);
+    checkAndLoadNextPage(nativeEvent.layoutMeasurement, nativeEvent.contentOffset, nativeEvent.contentSize);
+  }, [hideSearchBar, showSearchBar, checkAndLoadNextPage]);
 
   const searchTranslateY = searchBarAnim.interpolate({
     inputRange: [0, 1],
@@ -283,10 +295,7 @@ export default function Explore({ navigation }) {
     ));
   }, [destinations, searchQuery]);
 
-  const HEIGHT_FACTORS = [
-    1.65, 0.95, 1.35, 1.80, 1.10, 1.50, 0.85, 1.70, 1.25, 1.00, 1.55, 1.15,
-    1.40, 0.90, 1.75, 1.20, 1.60, 1.05, 1.45, 0.95, 1.30, 1.65, 1.10, 1.50
-  ];
+
 
   const { col1, col2, col3 } = useMemo(() => {
     const c1 = [];
@@ -354,14 +363,13 @@ export default function Explore({ navigation }) {
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
                 onMomentumScrollEnd={(event) => {
-                  if (isCloseToBottom(event.nativeEvent)) {
-                    loadNextPage();
-                  }
+                  const { nativeEvent } = event;
+                  checkAndLoadNextPage(nativeEvent.layoutMeasurement, nativeEvent.contentOffset, nativeEvent.contentSize);
                 }}
                 onScrollBeginDrag={dismissSearchFocus}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
-                scrollEventThrottle={32}
+                scrollEventThrottle={16}
                 removeClippedSubviews={Platform.OS === "android"}
                 refreshControl={
                   <RefreshControl
@@ -392,7 +400,7 @@ export default function Explore({ navigation }) {
                             key={String(item.id)}
                             item={item}
                             isDarkMode={isDarkMode}
-                            onPress={() => handleCardPress(item)}
+                            onPress={handleCardPress}
                           />
                         ))}
                       </View>
@@ -402,7 +410,7 @@ export default function Explore({ navigation }) {
                             key={String(item.id)}
                             item={item}
                             isDarkMode={isDarkMode}
-                            onPress={() => handleCardPress(item)}
+                            onPress={handleCardPress}
                           />
                         ))}
                       </View>
@@ -412,7 +420,7 @@ export default function Explore({ navigation }) {
                             key={String(item.id)}
                             item={item}
                             isDarkMode={isDarkMode}
-                            onPress={() => handleCardPress(item)}
+                            onPress={handleCardPress}
                           />
                         ))}
                       </View>
