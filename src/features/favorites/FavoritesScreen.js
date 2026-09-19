@@ -22,11 +22,11 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
-import { supabase } from "../../config/supabase";
 import styles, { dialogStyles } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
 import { FavoritesSkeletonList, SkeletonBox } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
+import { getFavoritesApi, removeFavoriteApi } from "./api/favoriteService";
 
 const { width, height: WINDOW_HEIGHT } = Dimensions.get("window");
 
@@ -350,23 +350,11 @@ export default function Favorites({ navigation }) {
     if (!itemToDelete) return;
     try {
       setIsDeleting(true);
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user && itemToDelete.title) {
-        await supabase
-          .from("favorites")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("title", itemToDelete.title);
-      } else {
-        await supabase
-          .from("favorites")
-          .delete()
-          .eq("id", itemToDelete.id);
-      }
+      const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
+      await removeFavoriteApi(destId);
 
       setFavorites((prev) =>
-        prev.filter((fav) => fav.id !== itemToDelete.id && fav.title !== itemToDelete.title)
+        prev.filter((fav) => (fav.destinationId || fav.id) !== destId)
       );
       setItemToDelete(null);
     } catch (error) {
@@ -383,32 +371,13 @@ export default function Favorites({ navigation }) {
           setLoading(true);
         }
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const list = await getFavoritesApi();
+          setFavorites(list || []);
 
-          if (user) {
-            const { data, error } = await supabase
-              .from("favorites")
-              .select("*")
-              .eq("user_id", user.id);
-
-            if (error) throw error;
-
-            const uniqueFavorites = [];
-            const seenKeys = new Set();
-            for (const fav of (data || [])) {
-              const key = (fav.title || fav.item_id || String(fav.id)).trim().toLowerCase();
-              if (!seenKeys.has(key)) {
-                seenKeys.add(key);
-                uniqueFavorites.push(fav);
-              }
-            }
-            setFavorites(uniqueFavorites);
-
-            if (uniqueFavorites.length <= 6 && scrollOffsetRef.current > 0) {
-              scrollOffsetRef.current = 0;
-              scrollY.setValue(0);
-              flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-            }
+          if ((list || []).length <= 6 && scrollOffsetRef.current > 0) {
+            scrollOffsetRef.current = 0;
+            scrollY.setValue(0);
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
           }
         } catch (error) {
           console.error("Erro ao carregar favoritos:", error);
