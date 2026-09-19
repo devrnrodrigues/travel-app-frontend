@@ -113,18 +113,28 @@ export default function Explore({ navigation }) {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    hasPreviousPage,
+    fetchPreviousPage,
+    isFetchingPreviousPage,
     refetch,
     isRefetching,
   } = useInfiniteQuery({
     queryKey: ["destinations", "explore"],
     queryFn: ({ pageParam = 0 }) => getDestinations({ page: pageParam, size: PAGE_SIZE }),
     initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => {
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
       if (!lastPage || lastPage.length < PAGE_SIZE) {
         return undefined;
       }
-      return allPages.length;
+      return lastPageParam + 1;
     },
+    getPreviousPageParam: (firstPage, allPages, firstPageParam) => {
+      if (firstPageParam <= 0) {
+        return undefined;
+      }
+      return firstPageParam - 1;
+    },
+    maxPages: 10,
   });
 
   const destinations = useMemo(() => {
@@ -224,6 +234,12 @@ export default function Explore({ navigation }) {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const loadPreviousPage = useCallback(() => {
+    if (hasPreviousPage && !isFetchingPreviousPage) {
+      fetchPreviousPage();
+    }
+  }, [hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
+
   const handleScroll = useCallback((event) => {
     const currentY = event.nativeEvent.contentOffset.y;
     const diff = currentY - lastScrollY.current;
@@ -236,12 +252,17 @@ export default function Explore({ navigation }) {
       if (!isSearchFocusedRef.current) {
         hideSearchBar();
       }
-    } else if (diff < -15 && isHiddenRef.current) {
-      showSearchBar();
+    } else if (diff < -15) {
+      if (isHiddenRef.current) {
+        showSearchBar();
+      }
+      if (currentY <= 150) {
+        loadPreviousPage();
+      }
     }
 
     lastScrollY.current = currentY;
-  }, [hideSearchBar, showSearchBar]);
+  }, [hideSearchBar, showSearchBar, loadPreviousPage]);
 
   const searchTranslateY = searchBarAnim.interpolate({
     inputRange: [0, 1],
@@ -349,6 +370,13 @@ export default function Explore({ navigation }) {
                     tintColor={currentTheme?.accent || "#4CAF50"}
                     colors={[currentTheme?.accent || "#4CAF50"]}
                   />
+                }
+                ListHeaderComponent={
+                  isFetchingPreviousPage ? (
+                    <View style={styles.loadingMoreContainer}>
+                      <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
+                    </View>
+                  ) : null
                 }
                 ListEmptyComponent={
                   <View style={styles.emptyStateContainer}>
