@@ -21,7 +21,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import styles, { dialogStyles } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
@@ -218,13 +218,54 @@ export default function Favorites({ navigation }) {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const PAGE_SIZE = 10;
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    hasPreviousPage,
+    fetchPreviousPage,
+    isFetchingPreviousPage,
+  } = useInfiniteQuery({
     queryKey: ["favorites"],
-    queryFn: () => getFavoritesApi({ page: 0, size: 10 }),
+    queryFn: ({ pageParam = 0 }) => getFavoritesApi({ page: pageParam, size: PAGE_SIZE }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      if (!lastPage || lastPage.length < PAGE_SIZE) {
+        return undefined;
+      }
+      return lastPageParam + 1;
+    },
+    getPreviousPageParam: (firstPage, allPages, firstPageParam) => {
+      if (firstPageParam <= 0) {
+        return undefined;
+      }
+      return firstPageParam - 1;
+    },
+    maxPages: 10,
   });
 
-  const favorites = data || [];
+  const favorites = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flat();
+  }, [data]);
+
   const loading = isLoading && favorites.length === 0;
+
+  const loadNextPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const loadPreviousPage = useCallback(() => {
+    if (hasPreviousPage && !isFetchingPreviousPage) {
+      fetchPreviousPage();
+    }
+  }, [hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const lastItemTitleRef = useRef("");
@@ -360,9 +401,15 @@ export default function Favorites({ navigation }) {
       const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
       await removeFavoriteApi(destId);
 
-      queryClient.setQueryData(["favorites"], (old) =>
-        (old || []).filter((fav) => (fav.destinationId || fav.id) !== destId)
-      );
+      queryClient.setQueryData(["favorites"], (old) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) =>
+            page.filter((fav) => (fav.destinationId || fav.id) !== destId)
+          ),
+        };
+      });
       setItemToDelete(null);
     } catch (error) {
       console.error("Erro ao remover favorito:", error);
@@ -511,12 +558,23 @@ export default function Favorites({ navigation }) {
                     bounces={true}
                     overScrollMode="always"
                     scrollEventThrottle={16}
+                    onEndReached={loadNextPage}
+                    onEndReachedThreshold={0.5}
+                    windowSize={5}
+                    maxToRenderPerBatch={10}
+                    initialNumToRender={10}
+                    removeClippedSubviews={Platform.OS === "android"}
                     onScroll={Animated.event(
                       [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                       {
                         useNativeDriver: true,
                         listener: (e) => {
-                          scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+                          const currentY = e.nativeEvent.contentOffset.y;
+                          const diff = currentY - scrollOffsetRef.current;
+                          scrollOffsetRef.current = currentY;
+                          if (diff < -15 && currentY <= 150) {
+                            loadPreviousPage();
+                          }
                         },
                       }
                     )}
@@ -535,6 +593,20 @@ export default function Favorites({ navigation }) {
                         setItemToDelete={setItemToDelete}
                       />
                     )}
+                    ListHeaderComponent={
+                      isFetchingPreviousPage ? (
+                        <View style={styles.loadingMoreContainer}>
+                          <ActivityIndicator size="small" color={currentTheme.accent} />
+                        </View>
+                      ) : null
+                    }
+                    ListFooterComponent={
+                      isFetchingNextPage ? (
+                        <View style={styles.loadingMoreContainer}>
+                          <ActivityIndicator size="small" color={currentTheme.accent} />
+                        </View>
+                      ) : null
+                    }
                     ListEmptyComponent={
                       <View style={styles.emptyContainer}>
                         {searchQuery.trim() ? (
