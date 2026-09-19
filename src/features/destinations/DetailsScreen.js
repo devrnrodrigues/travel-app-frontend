@@ -23,7 +23,12 @@ import {
   getAiPrice,
   getPexelsImages,
 } from "./api/detailsApi";
-import { supabase } from "../../config/supabase";
+import { useAuth } from "../auth/context/AuthContext";
+import {
+  checkFavoriteApi,
+  addFavoriteApi,
+  removeFavoriteApi,
+} from "../favorites/api/favoriteService";
 import { useTheme } from "../../theme/ThemeContext";
 import {
   SkeletonBox,
@@ -38,6 +43,7 @@ const STRICT_THUMB_SIZE = Math.round(width * 0.115);
 
 export default function Details({ route, navigation }) {
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
   const { item, currentTheme } = route.params;
   const [description, setDescription] = useState("");
   const [weather, setWeather] = useState(null);
@@ -177,121 +183,39 @@ export default function Details({ route, navigation }) {
   useFocusEffect(
     useCallback(() => {
       const loadFavoriteStatus = async () => {
+        if (!user || !item?.id) return;
         try {
-          const { data: { user } } = await supabase.auth.getUser();
-          setCurrentUser(user);
-
-          if (!user) return;
-
-          const destinationId = String(item.item_id || item.id);
-          const destTitle = (item.title || "").trim().toLowerCase();
-
-          const { data } = await supabase
-            .from("favorites")
-            .select("id, item_id, title")
-            .eq("user_id", user.id);
-
-          const isFav = (data || []).some((f) => {
-            const fItemId = f.item_id ? String(f.item_id) : "";
-            const fTitle = f.title ? f.title.trim().toLowerCase() : "";
-            return (
-              (destinationId && fItemId === destinationId) ||
-              (item.id && fItemId === String(item.id)) ||
-              (destTitle && fTitle === destTitle)
-            );
-          });
-
+          const isFav = await checkFavoriteApi(item.id);
           setIsFavorited(isFav);
         } catch (error) {
-          console.error("Erro ao carregar status de favorito:", error);
+          console.error("Erro ao verificar favorito:", error);
         }
       };
 
       loadFavoriteStatus();
-    }, [item])
+    }, [item?.id, user])
   );
 
   const toggleFavorite = async () => {
-    if (!currentUser) {
-      alert("Você precisa estar logado.");
+    if (!user) {
+      alert("Você precisa estar logado para favoritar.");
       return;
     }
 
-    if (isTogglingFavorite) return;
+    if (isTogglingFavorite || !item?.id) return;
     setIsTogglingFavorite(true);
-
-    const destinationId = String(item.item_id || item.id);
-    const destTitle = (item.title || "").trim().toLowerCase();
 
     try {
       if (isFavorited) {
         setIsFavorited(false);
-
-        const { data: userFavs } = await supabase
-          .from("favorites")
-          .select("id, item_id, title")
-          .eq("user_id", currentUser.id);
-
-        const toDeleteIds = (userFavs || [])
-          .filter((f) => {
-            const fItemId = f.item_id ? String(f.item_id) : "";
-            const fTitle = f.title ? f.title.trim().toLowerCase() : "";
-            return (
-              (destinationId && fItemId === destinationId) ||
-              (item.id && fItemId === String(item.id)) ||
-              (destTitle && fTitle === destTitle)
-            );
-          })
-          .map((f) => f.id);
-
-        if (toDeleteIds.length > 0) {
-          const { error } = await supabase
-            .from("favorites")
-            .delete()
-            .in("id", toDeleteIds);
-          if (error) throw error;
-        } else {
-          await supabase
-            .from("favorites")
-            .delete()
-            .eq("user_id", currentUser.id)
-            .eq("item_id", destinationId);
-        }
+        await removeFavoriteApi(item.id);
       } else {
         setIsFavorited(true);
-
-        const { data: userFavs } = await supabase
-          .from("favorites")
-          .select("id, item_id, title")
-          .eq("user_id", currentUser.id);
-
-        const alreadyExists = (userFavs || []).some((f) => {
-          const fItemId = f.item_id ? String(f.item_id) : "";
-          const fTitle = f.title ? f.title.trim().toLowerCase() : "";
-          return (
-            (destinationId && fItemId === destinationId) ||
-            (item.id && fItemId === String(item.id)) ||
-            (destTitle && fTitle === destTitle)
-          );
-        });
-
-        if (alreadyExists) {
-          return;
-        }
-
-        const { error } = await supabase.from("favorites").insert({
-          user_id: currentUser.id,
-          item_id: destinationId,
-          title: item.title,
-          image_url: item.image_url,
-          location: item.location,
-        });
-
-        if (error) throw error;
+        await addFavoriteApi(item.id);
       }
     } catch (error) {
-      console.error("Erro ao alternar favorito:", error);
       setIsFavorited((prev) => !prev);
+      console.error("Erro ao alternar favorito:", error);
     } finally {
       setIsTogglingFavorite(false);
     }
