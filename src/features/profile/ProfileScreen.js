@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   Animated,
   PanResponder,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -219,11 +220,19 @@ export default function ProfileScreen({ navigation }) {
                       !isDarkMode && styles.avatarLight,
                     ]}
                   >
-                    <Ionicons
-                      name="person"
-                      size={40}
-                      color={currentTheme.accent}
-                    />
+                    {user?.avatarUrl ? (
+                      <Image
+                        source={{ uri: user.avatarUrl }}
+                        style={styles.avatarImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons
+                        name="person"
+                        size={40}
+                        color={currentTheme.accent}
+                      />
+                    )}
                   </View>
                   <Text
                     style={[

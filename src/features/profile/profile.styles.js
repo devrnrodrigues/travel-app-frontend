@@ -55,9 +55,15 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.08)",
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
   avatarLight: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
   userName: {
     color: "#FFF",
