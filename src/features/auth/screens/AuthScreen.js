@@ -24,6 +24,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../auth.styles";
 import Message from "../../../shared/components/Message";
 import { useAuth } from "../context/AuthContext";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
+
+GoogleSignin.configure({
+  webClientId: "572904383469-dooa41k72e3bfpm61evcr7pgvp7vo62e.apps.googleusercontent.com",
+  offlineAccess: false,
+});
 
 function AnimatedInputContainer({ isFocused, children, style }) {
   const anim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
@@ -68,7 +74,7 @@ const DEFAULT_REGISTER_HEIGHT = 785;
 
 export default function AuthScreen({ navigation, route, initialMode = "login" }) {
   const { login, register, loginWithGoogle } = useAuth();
-  
+
   const routeMode = route?.params?.initialMode || route?.params?.mode || initialMode;
   const [activeFace, setActiveFace] = useState(routeMode === "register" ? "register" : "login");
   const isFlipping = useRef(false);
@@ -307,9 +313,30 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
     setLoginGoogleLoading(true);
     setFeedback({ text: "", type: "" });
     try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      try {
+        await GoogleSignin.signOut();
+      } catch {}
+      const response = await GoogleSignin.signIn();
+      const idToken = response.data?.idToken || response.idToken;
+
+      if (!idToken) {
+        throw new Error("Não foi possível obter o token de identificação do Google.");
+      }
+
       await AsyncStorage.setItem("hasSeenGetStarted", "true");
-      await loginWithGoogle("dev-mock:usuario@teste.com:Usuario Teste");
+      await loginWithGoogle(idToken);
     } catch (err) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      }
+      if (err.code === statusCodes.IN_PROGRESS) {
+        return;
+      }
+      if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        setFeedback({ text: "Google Play Services indisponível ou desatualizado.", type: "error" });
+        return;
+      }
       setFeedback({ text: err.message || "Erro ao entrar com Google.", type: "error" });
     } finally {
       setLoginGoogleLoading(false);
@@ -355,9 +382,30 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
     setRegisterGoogleLoading(true);
     setFeedback({ text: "", type: "" });
     try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      try {
+        await GoogleSignin.signOut();
+      } catch {}
+      const response = await GoogleSignin.signIn();
+      const idToken = response.data?.idToken || response.idToken;
+
+      if (!idToken) {
+        throw new Error("Não foi possível obter o token de identificação do Google.");
+      }
+
       await AsyncStorage.setItem("hasSeenGetStarted", "true");
-      await loginWithGoogle("dev-mock:usuario@teste.com:Usuario Teste");
+      await loginWithGoogle(idToken);
     } catch (err) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      }
+      if (err.code === statusCodes.IN_PROGRESS) {
+        return;
+      }
+      if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        setFeedback({ text: "Google Play Services indisponível ou desatualizado.", type: "error" });
+        return;
+      }
       setFeedback({ text: err.message || "Erro ao cadastrar com Google.", type: "error" });
     } finally {
       setRegisterGoogleLoading(false);
@@ -701,12 +749,12 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
             styles.cardWrapper,
             !hasEntered
               ? {
-                  opacity: entranceFade,
-                  transform: [
-                    { translateY: entranceTranslateY },
-                    { scale: entranceScale },
-                  ],
-                }
+                opacity: entranceFade,
+                transform: [
+                  { translateY: entranceTranslateY },
+                  { scale: entranceScale },
+                ],
+              }
               : null,
           ]}
         >
@@ -725,7 +773,7 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
               },
             ]}
           >
-            {}
+            { }
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => {
@@ -764,7 +812,7 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {}
+      { }
       <View style={styles.backgroundWrapper} pointerEvents="none">
         <Image
           source={require("../../../assets/welcome-bg.jpg")}
@@ -775,7 +823,7 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
         <View style={styles.overlay} />
       </View>
 
-      {}
+      { }
       {Platform.OS === "ios" ? (
         <KeyboardAvoidingView behavior="padding" style={styles.flex1}>
           {formContent}

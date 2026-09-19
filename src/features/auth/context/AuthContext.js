@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { loginApi, registerApi, loginWithGoogleApi, logoutApi } from "../api/authService";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 const AuthContext = createContext({});
 
@@ -102,6 +103,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    try {
+      await GoogleSignin.signOut();
+    } catch {}
+
     const storedRefreshToken = await AsyncStorage.getItem("refreshToken");
     await logoutApi(storedRefreshToken);
 
