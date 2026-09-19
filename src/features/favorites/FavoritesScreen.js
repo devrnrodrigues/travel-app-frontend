@@ -21,6 +21,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import styles, { dialogStyles } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
@@ -215,12 +216,18 @@ export default function Favorites({ navigation }) {
   const { currentTheme, isDarkMode } = useTheme();
   const bgSource = typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
 
-  const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: () => getFavoritesApi({ page: 0, size: 10 }),
+  });
+
+  const favorites = data || [];
+  const loading = isLoading && favorites.length === 0;
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const lastItemTitleRef = useRef("");
-  const isInitialLoad = useRef(true);
   const flatListRef = useRef(null);
   const scrollOffsetRef = useRef(0);
 
@@ -353,8 +360,8 @@ export default function Favorites({ navigation }) {
       const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
       await removeFavoriteApi(destId);
 
-      setFavorites((prev) =>
-        prev.filter((fav) => (fav.destinationId || fav.id) !== destId)
+      queryClient.setQueryData(["favorites"], (old) =>
+        (old || []).filter((fav) => (fav.destinationId || fav.id) !== destId)
       );
       setItemToDelete(null);
     } catch (error) {
@@ -364,31 +371,17 @@ export default function Favorites({ navigation }) {
     }
   };
 
+  useEffect(() => {
+    if (favorites.length <= 6 && scrollOffsetRef.current > 0) {
+      scrollOffsetRef.current = 0;
+      scrollY.setValue(0);
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    }
+  }, [favorites.length]);
+
   useFocusEffect(
     useCallback(() => {
-      async function loadFavorites() {
-        if (isInitialLoad.current) {
-          setLoading(true);
-        }
-        try {
-          const list = await getFavoritesApi();
-          setFavorites(list || []);
-
-          if ((list || []).length <= 6 && scrollOffsetRef.current > 0) {
-            scrollOffsetRef.current = 0;
-            scrollY.setValue(0);
-            flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-          }
-        } catch (error) {
-          console.error("Erro ao carregar favoritos:", error);
-        } finally {
-          setLoading(false);
-          isInitialLoad.current = false;
-        }
-      }
-
       scrollY.setValue(scrollOffsetRef.current);
-      loadFavorites();
     }, [])
   );
 
