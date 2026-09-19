@@ -17,46 +17,26 @@ const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.75;
 const CARD_HEIGHT = 500;
 
-export function useShimmerAnimation(normalDuration = 1800, firstDuration = 800) {
-  const animatedValue = useRef(new Animated.Value(0.28)).current;
+export function useShimmerAnimation(duration = 2200) {
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    let isMounted = true;
-    let activeAnim = null;
+    const animation = Animated.loop(
+      Animated.timing(animatedValue, {
+        toValue: 1,
+        duration,
+        easing: Easing.bezier(0.4, 0, 0.2, 1),
+        useNativeDriver: Platform.OS !== "web",
+      })
+    );
 
-    animatedValue.setValue(0.28);
-
-    activeAnim = Animated.timing(animatedValue, {
-      toValue: 1,
-      duration: firstDuration,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: Platform.OS !== "web",
-    });
-
-    activeAnim.start(({ finished }) => {
-      if (!isMounted || !finished) return;
-
-      animatedValue.setValue(0);
-      const loop = Animated.loop(
-        Animated.timing(animatedValue, {
-          toValue: 1,
-          duration: normalDuration,
-          easing: Easing.bezier(0.35, 0, 0.25, 1),
-          useNativeDriver: Platform.OS !== "web",
-        })
-      );
-      activeAnim = loop;
-      loop.start();
-    });
+    animation.start();
 
     return () => {
-      isMounted = false;
-      if (activeAnim) {
-        activeAnim.stop();
-      }
+      animation.stop();
       animatedValue.stopAnimation();
     };
-  }, [animatedValue, normalDuration, firstDuration]);
+  }, [animatedValue, duration]);
 
   return animatedValue;
 }
