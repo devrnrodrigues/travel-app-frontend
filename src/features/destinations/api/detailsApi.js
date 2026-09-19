@@ -1,35 +1,23 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiClient } from "../../../config/apiClient";
 import { ENV } from "../../../config/env";
 
-const WEATHER_API_KEY = ENV.WEATHER_API_KEY;
 const GEMINI_API_KEY = ENV.GEMINI_API_KEY;
 const PEXELS_API_KEY = ENV.PEXELS_API_KEY;
 
-export async function getWeather(title, location) {
+export async function getWeather(destinationId) {
+  if (!destinationId) return null;
   try {
-    let response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(title)}&units=metric&lang=pt_br&appid=${WEATHER_API_KEY}`
-    );
-
-    let data = await response.json();
-
-    if (data.cod !== 200) {
-      response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&units=metric&lang=pt_br&appid=${WEATHER_API_KEY}`
-      );
-      data = await response.json();
-    }
-
-    if (!data.main) return null;
-
+    const data = await apiClient.get(`/destinations/${destinationId}/weather`);
+    if (!data) return null;
     return {
-      temp: Math.round(data.main.temp),
-      humidity: data.main.humidity,
-      wind: Math.round(data.wind.speed * 3.6),
-      condition: data.weather[0].description,
+      temp: Math.round(data.temperature ?? 0),
+      humidity: data.rainProbability ?? 0,
+      rainProbability: data.rainProbability ?? 0,
+      wind: Math.round(data.windSpeed ?? 0),
+      condition: data.conditionText || "Tempo estável",
     };
-  } catch (error) {
-    console.error(error);
+  } catch {
     return null;
   }
 }

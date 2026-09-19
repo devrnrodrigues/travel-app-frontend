@@ -223,10 +223,10 @@ export default function Details({ route, navigation }) {
   const fetchWeatherData = async () => {
     try {
       setLoadingWeather(true);
-      const weatherData = await getWeather(item.title, item.location);
+      const weatherData = await getWeather(item.id || item.item_id);
       setWeather(weatherData);
-    } catch (error) {
-      console.error(error);
+    } catch {
+      setWeather(null);
     } finally {
       setLoadingWeather(false);
     }
@@ -551,7 +551,7 @@ export default function Details({ route, navigation }) {
           {!loadingWeather && weather && (
             <FadeInView duration={240}>
               <Text style={[styles.weatherAlert, !isDarkMode && { color: "#6B7280", fontStyle: "italic" }]}>
-                {`Condição climática atual local: ${weather.condition} com ${weather.humidity}% de umidade.`}
+                {`Condição climática atual local: ${weather.condition} com ${weather.humidity}% de chance de chuva.`}
               </Text>
             </FadeInView>
           )}
