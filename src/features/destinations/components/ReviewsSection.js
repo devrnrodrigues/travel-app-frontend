@@ -379,8 +379,8 @@ export default function ReviewsSection({
                 {reviews.map((rev) => {
                   const isMenuElevated = activeDropdownId === rev.id || elevatedDropdownId === rev.id;
                   const isOwner = Boolean(currentUser && (rev.user_id === currentUser.id || rev.userId === currentUser.id));
-                  const reviewerName = rev.user_name || (isOwner ? (currentUser.fullName || currentUser.email) : "Viajante");
-                  const reviewerAvatar = rev.avatar_url || rev.user_avatar || (isOwner ? currentUser.avatarUrl : null);
+                  const reviewerName = rev.userName || rev.user_name || (isOwner ? (currentUser.fullName || currentUser.email) : "Viajante");
+                  const reviewerAvatar = rev.userAvatarUrl || rev.avatarUrl || rev.avatar_url || rev.user_avatar || (isOwner ? currentUser.avatarUrl : null);
                   return (
                     <View
                       key={rev.id}
