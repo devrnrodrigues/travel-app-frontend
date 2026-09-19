@@ -4,11 +4,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import styles from "../styles/welcome.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { supabase } from "../../../config/supabase";
+import { useAuth } from "../../auth/context/AuthContext";
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 export default function Welcome({ navigation }) {
+  const { markWelcomeSeen } = useAuth();
   const translateY = useRef(new Animated.Value(0)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
   const bounceLoop = useRef(null);
@@ -129,13 +130,7 @@ export default function Welcome({ navigation }) {
     if (state === State.END) {
       if (ty < -80) {
         stopBounce();
-        await AsyncStorage.setItem("hasSeenWelcome", "true");
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.id) {
-            await AsyncStorage.setItem(`hasSeenWelcome_${user.id}`, "true");
-          }
-        } catch (_) {}
+        await markWelcomeSeen();
         navigation.replace("Main");
 
         Animated.timing(translateY, {

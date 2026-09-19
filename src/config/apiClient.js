@@ -3,7 +3,7 @@ import { ENV } from "./env";
 
 const BASE_URL = (ENV.API_URL || "").replace(/\/$/, "");
 
-async function request(endpoint, options = {}) {
+async function request(endpoint, options = {}, isRetry = false) {
   const url = endpoint.startsWith("http")
     ? endpoint
     : `${BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
@@ -30,6 +30,33 @@ async function request(endpoint, options = {}) {
 
     if (response.status === 204) {
       return null;
+    }
+
+    if (response.status === 401 && !isRetry && !endpoint.includes("/auth/")) {
+      const storedRefreshToken = await AsyncStorage.getItem("refreshToken");
+      if (storedRefreshToken) {
+        try {
+          const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refreshToken: storedRefreshToken }),
+          });
+          if (refreshRes.ok) {
+            const tokenData = await refreshRes.json();
+            if (tokenData?.accessToken) {
+              await AsyncStorage.setItem("accessToken", tokenData.accessToken);
+              if (tokenData.refreshToken) {
+                await AsyncStorage.setItem("refreshToken", tokenData.refreshToken);
+              }
+              return request(endpoint, options, true);
+            }
+          }
+        } catch {}
+      }
+      await AsyncStorage.multiRemove(["accessToken", "refreshToken", "currentUser"]);
+      const error = new Error("Sessão expirada. Faça login novamente.");
+      error.status = 401;
+      throw error;
     }
 
     const text = await response.text();
