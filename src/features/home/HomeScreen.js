@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQuery } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import styles from "./home.styles";
 import { useTheme } from "../../theme/ThemeContext";
@@ -89,22 +88,19 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
 
 export default function Home({ navigation }) {
   const { activeCat, setActiveCat, currentTheme, themesByCat, isDarkMode } = useTheme();
-  const [destinations, setDestinations] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
-  const prevCatRef = useRef(activeCat);
+  const selectedCategory = CATEGORIES[activeCat] || CATEGORIES[0];
+  const selectedTheme = themesByCat[activeCat] || currentTheme;
 
-  const loadData = async (catIndex = activeCat, showSpinner = false) => {
-    if (showSpinner) {
-      setLoading(true);
-    }
-    try {
-      const selectedCategory = CATEGORIES[catIndex];
-      const data = await getDestinations({ category: selectedCategory });
-
-      const selectedTheme = themesByCat[catIndex];
-      const updatedDestinations = (data || []).map((destination) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["destinations", "home", selectedCategory],
+    queryFn: async () => {
+      const result = await getDestinations({
+        category: selectedCategory,
+        size: 6,
+      });
+      return (result || []).map((destination) => {
         if (!destination.image_url) {
           return {
             ...destination,
@@ -117,22 +113,11 @@ export default function Home({ navigation }) {
           isLocalSource: false,
         };
       });
+    },
+  });
 
-      setDestinations(updatedDestinations);
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      const catChanged = prevCatRef.current !== activeCat;
-      prevCatRef.current = activeCat;
-      loadData(activeCat, catChanged || destinations.length === 0);
-    }, [activeCat, destinations.length])
-  );
+  const destinations = data || [];
+  const loading = isLoading && destinations.length === 0;
 
   const bgSource = useMemo(() => {
     return typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
