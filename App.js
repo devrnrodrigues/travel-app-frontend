@@ -2,10 +2,22 @@ import React from "react";
 import { View, ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./src/theme/ThemeContext";
 import { AuthProvider, useAuth } from "./src/features/auth/context/AuthContext";
 import RootNavigator from "./src/navigation/RootNavigator";
 import { styles } from "./src/navigation/styles/bottomTab.styles";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 15,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function AppContent() {
   const { session, hasSeenWelcome, isLoading } = useAuth();
@@ -25,11 +37,13 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.flex1}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -179,6 +179,11 @@ export default StyleSheet.create({
   searchInputLight: {
     color: "#FFFFFF",
   },
+  loadingMoreContainer: {
+    paddingVertical: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
 export const categoryThemes = {
   "Florestas": { colors: ["rgba(15, 23, 21, 0.45)", "rgba(20, 33, 29, 0.55)", "rgba(27, 46, 41, 0.68)"], accent: "#4CAF50" },

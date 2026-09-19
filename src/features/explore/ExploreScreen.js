@@ -21,6 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTheme } from "../../theme/ThemeContext";
 import { ExploreSkeletonGrid } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
@@ -93,12 +94,40 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
 export default function Explore({ navigation }) {
   const { currentTheme, isDarkMode } = useTheme();
   const bgSource = typeof currentTheme?.bg === "string" ? { uri: currentTheme.bg } : currentTheme?.bg;
-  const [destinations, setDestinations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchInputRef = useRef(null);
+
+  const PAGE_SIZE = 24;
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+    isRefetching,
+  } = useInfiniteQuery({
+    queryKey: ["destinations", "explore"],
+    queryFn: ({ pageParam = 0 }) => getDestinations({ page: pageParam, size: PAGE_SIZE }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || lastPage.length < PAGE_SIZE) {
+        return undefined;
+      }
+      return allPages.length;
+    },
+  });
+
+  const destinations = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flat();
+  }, [data]);
+
+  const loading = isLoading && destinations.length === 0;
+  const loadingMore = isFetchingNextPage;
+  const refreshing = isRefetching;
 
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === "android" ? 38 : 20);
@@ -182,8 +211,20 @@ export default function Explore({ navigation }) {
     };
   }, [scheduleAutoHide]);
 
+  const loadNextPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
+    const paddingToBottom = 350;
+    return layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+  };
+
   const handleScroll = useCallback((event) => {
-    const currentY = event.nativeEvent.contentOffset.y;
+    const nativeEvent = event.nativeEvent;
+    const currentY = nativeEvent.contentOffset.y;
     const diff = currentY - lastScrollY.current;
 
     if (currentY <= 20) {
@@ -191,17 +232,19 @@ export default function Explore({ navigation }) {
         showSearchBar();
       }
     } else if (diff > 18 && !isHiddenRef.current && currentY > 50) {
-      
       if (!isSearchFocusedRef.current) {
         hideSearchBar();
       }
     } else if (diff < -15 && isHiddenRef.current) {
-      
       showSearchBar();
     }
 
     lastScrollY.current = currentY;
-  }, [hideSearchBar, showSearchBar]);
+
+    if (isCloseToBottom(nativeEvent)) {
+      loadNextPage();
+    }
+  }, [hideSearchBar, showSearchBar, loadNextPage]);
 
   const searchTranslateY = searchBarAnim.interpolate({
     inputRange: [0, 1],
@@ -213,21 +256,8 @@ export default function Explore({ navigation }) {
     outputRange: [1, 0],
   });
 
-  const loadAllDestinations = async () => {
-    try {
-      const data = await getDestinations({ size: 100 });
-      setDestinations(data || []);
-    } catch (err) {
-      console.error("Erro ao carregar destinos em Explorar:", err.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
-      loadAllDestinations();
       showSearchBar();
       return () => {
         if (autoHideTimerRef.current) {
@@ -238,10 +268,9 @@ export default function Explore({ navigation }) {
     }, [showSearchBar])
   );
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    loadAllDestinations();
-  };
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const filteredDestinations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -324,6 +353,11 @@ export default function Explore({ navigation }) {
                 contentContainerStyle={styles.masonryContainer}
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
+                onMomentumScrollEnd={(event) => {
+                  if (isCloseToBottom(event.nativeEvent)) {
+                    loadNextPage();
+                  }
+                }}
                 onScrollBeginDrag={dismissSearchFocus}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
@@ -350,38 +384,45 @@ export default function Explore({ navigation }) {
                     </Text>
                   </View>
                 ) : (
-                  <View style={styles.masonryRow}>
-                    <View style={styles.masonryColumn}>
-                      {col1.map((item) => (
-                        <ExploreCard
-                          key={String(item.id)}
-                          item={item}
-                          isDarkMode={isDarkMode}
-                          onPress={() => handleCardPress(item)}
-                        />
-                      ))}
+                  <>
+                    <View style={styles.masonryRow}>
+                      <View style={styles.masonryColumn}>
+                        {col1.map((item) => (
+                          <ExploreCard
+                            key={String(item.id)}
+                            item={item}
+                            isDarkMode={isDarkMode}
+                            onPress={() => handleCardPress(item)}
+                          />
+                        ))}
+                      </View>
+                      <View style={styles.masonryColumn}>
+                        {col2.map((item) => (
+                          <ExploreCard
+                            key={String(item.id)}
+                            item={item}
+                            isDarkMode={isDarkMode}
+                            onPress={() => handleCardPress(item)}
+                          />
+                        ))}
+                      </View>
+                      <View style={styles.masonryColumn}>
+                        {col3.map((item) => (
+                          <ExploreCard
+                            key={String(item.id)}
+                            item={item}
+                            isDarkMode={isDarkMode}
+                            onPress={() => handleCardPress(item)}
+                          />
+                        ))}
+                      </View>
                     </View>
-                    <View style={styles.masonryColumn}>
-                      {col2.map((item) => (
-                        <ExploreCard
-                          key={String(item.id)}
-                          item={item}
-                          isDarkMode={isDarkMode}
-                          onPress={() => handleCardPress(item)}
-                        />
-                      ))}
-                    </View>
-                    <View style={styles.masonryColumn}>
-                      {col3.map((item) => (
-                        <ExploreCard
-                          key={String(item.id)}
-                          item={item}
-                          isDarkMode={isDarkMode}
-                          onPress={() => handleCardPress(item)}
-                        />
-                      ))}
-                    </View>
-                  </View>
+                    {loadingMore && (
+                      <View style={styles.loadingMoreContainer}>
+                        <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
+                      </View>
+                    )}
+                  </>
                 )}
               </ScrollView>
             </FadeInView>
