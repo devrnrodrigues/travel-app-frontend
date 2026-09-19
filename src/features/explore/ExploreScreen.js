@@ -14,7 +14,8 @@ import {
   Animated,
   Keyboard,
   Platform,
-  } from "react-native";
+  FlatList,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
@@ -28,10 +29,7 @@ import FadeInView from "../../shared/components/FadeInView";
 import styles, { GAP, COLUMN_WIDTH, categoryThemes, defaultTheme } from "./explore.styles";
 import { getDestinations } from "../destinations/api/destinationService";
 
-const HEIGHT_FACTORS = [
-  1.65, 0.95, 1.35, 1.80, 1.10, 1.50, 0.85, 1.70, 1.25, 1.00, 1.55, 1.15,
-  1.40, 0.90, 1.75, 1.20, 1.60, 1.05, 1.45, 0.95, 1.30, 1.65, 1.10, 1.50,
-];
+const CARD_HEIGHT = Math.round(COLUMN_WIDTH * 1.38);
 
 const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode }) {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -55,7 +53,7 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
   return (
     <TouchableOpacity
       activeOpacity={0.88}
-      style={[styles.gridItem, { height: item.cardHeight }]}
+      style={[styles.gridItem, { width: COLUMN_WIDTH, height: CARD_HEIGHT }]}
       onPress={handlePress}
     >
       <Animated.Image
@@ -220,25 +218,14 @@ export default function Explore({ navigation }) {
     };
   }, [scheduleAutoHide]);
 
-  const hasNextPageRef = useRef(hasNextPage);
-  hasNextPageRef.current = hasNextPage;
-  const isFetchingNextPageRef = useRef(isFetchingNextPage);
-  isFetchingNextPageRef.current = isFetchingNextPage;
-  const fetchNextPageRef = useRef(fetchNextPage);
-  fetchNextPageRef.current = fetchNextPage;
-
-  const checkAndLoadNextPage = useCallback((layoutMeasurement, contentOffset, contentSize) => {
-    if (!hasNextPageRef.current || isFetchingNextPageRef.current) return;
-    if (!contentSize || contentSize.height <= 0) return;
-    const paddingToBottom = 220;
-    if (contentOffset.y > 60 && layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
-      fetchNextPageRef.current();
+  const loadNextPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, []);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleScroll = useCallback((event) => {
-    const { nativeEvent } = event;
-    const currentY = nativeEvent.contentOffset.y;
+    const currentY = event.nativeEvent.contentOffset.y;
     const diff = currentY - lastScrollY.current;
 
     if (currentY <= 20) {
@@ -254,9 +241,7 @@ export default function Explore({ navigation }) {
     }
 
     lastScrollY.current = currentY;
-
-    checkAndLoadNextPage(nativeEvent.layoutMeasurement, nativeEvent.contentOffset, nativeEvent.contentSize);
-  }, [hideSearchBar, showSearchBar, checkAndLoadNextPage]);
+  }, [hideSearchBar, showSearchBar]);
 
   const searchTranslateY = searchBarAnim.interpolate({
     inputRange: [0, 1],
@@ -297,39 +282,6 @@ export default function Explore({ navigation }) {
 
 
 
-  const { col1, col2, col3 } = useMemo(() => {
-    const c1 = [];
-    const c2 = [];
-    const c3 = [];
-    const colHeights = [0, 0, 0];
-
-    filteredDestinations.forEach((item, index) => {
-      const idNum = typeof item.id === "number"
-        ? item.id
-        : String(item.id || index).split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-
-      const factorIndex = (idNum * 13 + index * 17) % HEIGHT_FACTORS.length;
-      const cardHeight = Math.round(COLUMN_WIDTH * HEIGHT_FACTORS[factorIndex]);
-      const cardItem = { ...item, cardHeight };
-
-      let shortestCol = 0;
-      if (colHeights[1] < colHeights[shortestCol]) shortestCol = 1;
-      if (colHeights[2] < colHeights[shortestCol]) shortestCol = 2;
-
-      if (shortestCol === 0) {
-        c1.push(cardItem);
-      } else if (shortestCol === 1) {
-        c2.push(cardItem);
-      } else {
-        c3.push(cardItem);
-      }
-
-      colHeights[shortestCol] += cardHeight + GAP;
-    });
-
-    return { col1: c1, col2: c2, col3: c3 };
-  }, [filteredDestinations]);
-
   const handleCardPress = useCallback((item) => {
     const itemTheme = categoryThemes[item.category] || defaultTheme;
     navigation.navigate("Details", {
@@ -337,6 +289,19 @@ export default function Explore({ navigation }) {
       currentTheme: itemTheme,
     });
   }, [navigation]);
+
+  const renderItem = useCallback(
+    ({ item }) => (
+      <ExploreCard
+        item={item}
+        isDarkMode={isDarkMode}
+        onPress={handleCardPress}
+      />
+    ),
+    [isDarkMode, handleCardPress]
+  );
+
+  const keyExtractor = useCallback((item) => String(item.id), []);
 
   return (
     <ImageBackground source={bgSource} style={styles.screenDarkBg} resizeMode="cover">
@@ -358,18 +323,24 @@ export default function Explore({ navigation }) {
             </ScrollView>
           ) : (
             <FadeInView duration={280} style={styles.flex1}>
-              <ScrollView
-                contentContainerStyle={styles.masonryContainer}
+              <FlatList
+                data={filteredDestinations}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                numColumns={3}
+                columnWrapperStyle={styles.columnWrapper}
+                contentContainerStyle={styles.flatListContent}
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
-                onMomentumScrollEnd={(event) => {
-                  const { nativeEvent } = event;
-                  checkAndLoadNextPage(nativeEvent.layoutMeasurement, nativeEvent.contentOffset, nativeEvent.contentSize);
-                }}
                 onScrollBeginDrag={dismissSearchFocus}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
                 scrollEventThrottle={16}
+                onEndReached={loadNextPage}
+                onEndReachedThreshold={0.5}
+                windowSize={5}
+                maxToRenderPerBatch={12}
+                initialNumToRender={12}
                 removeClippedSubviews={Platform.OS === "android"}
                 refreshControl={
                   <RefreshControl
@@ -379,8 +350,7 @@ export default function Explore({ navigation }) {
                     colors={[currentTheme?.accent || "#4CAF50"]}
                   />
                 }
-              >
-                {filteredDestinations.length === 0 ? (
+                ListEmptyComponent={
                   <View style={styles.emptyStateContainer}>
                     <Ionicons
                       name="search-outline"
@@ -391,48 +361,15 @@ export default function Explore({ navigation }) {
                       Nenhum destino encontrado para sua pesquisa.
                     </Text>
                   </View>
-                ) : (
-                  <>
-                    <View style={styles.masonryRow}>
-                      <View style={styles.masonryColumn}>
-                        {col1.map((item) => (
-                          <ExploreCard
-                            key={String(item.id)}
-                            item={item}
-                            isDarkMode={isDarkMode}
-                            onPress={handleCardPress}
-                          />
-                        ))}
-                      </View>
-                      <View style={styles.masonryColumn}>
-                        {col2.map((item) => (
-                          <ExploreCard
-                            key={String(item.id)}
-                            item={item}
-                            isDarkMode={isDarkMode}
-                            onPress={handleCardPress}
-                          />
-                        ))}
-                      </View>
-                      <View style={styles.masonryColumn}>
-                        {col3.map((item) => (
-                          <ExploreCard
-                            key={String(item.id)}
-                            item={item}
-                            isDarkMode={isDarkMode}
-                            onPress={handleCardPress}
-                          />
-                        ))}
-                      </View>
+                }
+                ListFooterComponent={
+                  loadingMore ? (
+                    <View style={styles.loadingMoreContainer}>
+                      <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
                     </View>
-                    {loadingMore && (
-                      <View style={styles.loadingMoreContainer}>
-                        <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
-                      </View>
-                    )}
-                  </>
-                )}
-              </ScrollView>
+                  ) : null
+                }
+              />
             </FadeInView>
           )}
 

@@ -50,6 +50,14 @@ export default StyleSheet.create({
   clearButton: {
     padding: 4,
   },
+  columnWrapper: {
+    gap: GAP,
+  },
+  flatListContent: {
+    gap: GAP,
+    paddingBottom: 40,
+    backgroundColor: "#000000",
+  },
   masonryContainer: {
     paddingHorizontal: 0,
     paddingTop: 0,
