@@ -327,15 +327,8 @@ export default function Details({ route, navigation }) {
       setLoadingPrice(true);
       const price = await getAiPrice(item);
       setEstimatedPrice(price);
-
-      if (price !== null) {
-        await supabase
-          .from("destinos")
-          .update({ price: price })
-          .eq("id", item.id);
-      }
     } catch (error) {
-      console.error("Erro ao salvar preço:", error);
+      console.error("Erro ao obter preço estimado:", error);
     } finally {
       setLoadingPrice(false);
     }

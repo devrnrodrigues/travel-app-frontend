@@ -7,14 +7,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import styles from "./home.styles";
-import { supabase } from "../../config/supabase";
 import { useTheme } from "../../theme/ThemeContext";
 import { HomeSkeletonList } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import HomeCardItem from "./components/HomeCardItem";
 import SearchModal from "./components/SearchModal";
-
-const PEXELS_API_KEY = process.env.EXPO_PUBLIC_PEXELS_API_KEY;
+import { getDestinations } from "../destinations/api/destinationService";
 
 const CATEGORIES = [
   "Florestas",
@@ -113,48 +111,29 @@ export default function Home({ navigation }) {
     }
     try {
       const selectedCategory = CATEGORIES[catIndex];
-      const { data, error } = await supabase
-        .from("destinos")
-        .select("*, reviews(rating), price")
-        .eq("category", selectedCategory);
-
-      if (error) throw error;
+      const data = await getDestinations({ category: selectedCategory });
 
       const selectedTheme = themesByCat[catIndex];
-      const updatedDestinations = await Promise.all((data || []).map(async (destination) => {
-        let calculatedRating = "N/A";
-        if (destination.reviews && destination.reviews.length > 0) {
-          const total = destination.reviews.reduce((sum, r) => sum + Number(r.rating), 0);
-          calculatedRating = (total / destination.reviews.length).toFixed(1);
+      const updatedDestinations = (data || []).map((destination) => {
+        if (!destination.image_url) {
+          return {
+            ...destination,
+            image_url: selectedTheme.bg,
+            isLocalSource: typeof selectedTheme.bg !== "string",
+          };
         }
-
-        const sanitizedTitle = destination.title.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const cacheKey = `@pexels_img_${destination.id}_${sanitizedTitle}`;
-
-        try {
-          const cachedImg = await AsyncStorage.getItem(cacheKey);
-          if (cachedImg !== null) {
-            return { ...destination, realRating: calculatedRating, image_url: cachedImg, isLocalSource: false };
-          }
-          const queryText = `${destination.title} ${selectedCategory}`.trim();
-          const pexelsResponse = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(queryText)}&per_page=1`, { headers: { Authorization: PEXELS_API_KEY } });
-          if (!pexelsResponse.ok) throw new Error(`HTTP Error ${pexelsResponse.status}`);
-          const pexelsData = await pexelsResponse.json();
-          if (pexelsData.photos && pexelsData.photos.length > 0) {
-            const imgUrl = pexelsData.photos[0].src.large;
-            await AsyncStorage.setItem(cacheKey, imgUrl);
-            return { ...destination, realRating: calculatedRating, image_url: imgUrl, isLocalSource: false };
-          }
-        } catch (imgError) { console.warn(imgError.message); }
-
-        if (destination.image_url && destination.image_url.startsWith("http")) {
-          return { ...destination, realRating: calculatedRating, isLocalSource: false };
-        }
-        return { ...destination, realRating: calculatedRating, image_url: selectedTheme.bg, isLocalSource: typeof selectedTheme.bg !== "string" };
-      }));
+        return {
+          ...destination,
+          isLocalSource: false,
+        };
+      });
 
       setDestinations(updatedDestinations);
-    } catch (error) { console.error(error.message); } finally { setLoading(false); }
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useFocusEffect(

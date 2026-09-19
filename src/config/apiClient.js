@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ENV } from "./env";
 
-const BASE_URL = (ENV.API_URL || "http://localhost:8080/api").replace(/\/$/, "");
+const BASE_URL = (ENV.API_URL || "").replace(/\/$/, "");
 
 async function request(endpoint, options = {}) {
   const url = endpoint.startsWith("http")

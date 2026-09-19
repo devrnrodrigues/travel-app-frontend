@@ -21,13 +21,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { supabase } from "../../config/supabase";
 import { useTheme } from "../../theme/ThemeContext";
 import { ExploreSkeletonGrid } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import styles, { GAP, COLUMN_WIDTH, categoryThemes, defaultTheme } from "./explore.styles";
-
-const PEXELS_API_KEY = process.env.EXPO_PUBLIC_PEXELS_API_KEY;
+import { getDestinations } from "../destinations/api/destinationService";
 
 const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode }) {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -217,74 +215,8 @@ export default function Explore({ navigation }) {
 
   const loadAllDestinations = async () => {
     try {
-      const { data, error } = await supabase
-        .from("destinos")
-        .select("*, reviews(rating), price");
-
-      if (error) throw error;
-
-      const updated = await Promise.all(
-        (data || []).map(async (destination) => {
-          let calculatedRating = "N/A";
-          if (destination.reviews && destination.reviews.length > 0) {
-            const total = destination.reviews.reduce(
-              (sum, r) => sum + Number(r.rating),
-              0
-            );
-            calculatedRating = (total / destination.reviews.length).toFixed(1);
-          }
-
-          const sanitizedTitle = destination.title
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, "");
-          const cacheKey = `@pexels_img_${destination.id}_${sanitizedTitle}`;
-
-          try {
-            const cachedImg = await AsyncStorage.getItem(cacheKey);
-            if (cachedImg !== null) {
-              return {
-                ...destination,
-                realRating: calculatedRating,
-                image_url: cachedImg,
-              };
-            }
-
-            const queryText = `${destination.title} ${destination.category || ""}`.trim();
-            const pexelsResponse = await fetch(
-              `https://api.pexels.com/v1/search?query=${encodeURIComponent(
-                queryText
-              )}&per_page=1`,
-              { headers: { Authorization: PEXELS_API_KEY } }
-            );
-
-            if (pexelsResponse.ok) {
-              const pexelsData = await pexelsResponse.json();
-              if (pexelsData.photos && pexelsData.photos.length > 0) {
-                const imgUrl = pexelsData.photos[0].src.large;
-                await AsyncStorage.setItem(cacheKey, imgUrl);
-                return {
-                  ...destination,
-                  realRating: calculatedRating,
-                  image_url: imgUrl,
-                };
-              }
-            }
-          } catch (err) {
-            
-          }
-
-          return {
-            ...destination,
-            realRating: calculatedRating,
-            image_url:
-              destination.image_url && destination.image_url.startsWith("http")
-                ? destination.image_url
-                : "https://images.pexels.com/photos/1007657/pexels-photo-1007657.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-          };
-        })
-      );
-
-      setDestinations(updated);
+      const data = await getDestinations({ size: 100 });
+      setDestinations(data || []);
     } catch (err) {
       console.error("Erro ao carregar destinos em Explorar:", err.message);
     } finally {
