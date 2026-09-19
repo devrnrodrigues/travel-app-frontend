@@ -26,7 +26,7 @@ export async function resolveDestinationImage(destination, fallbackCategory = ""
 
     if (ENV.PEXELS_API_KEY && queryTerm) {
       const response = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(queryTerm)}&per_page=1`,
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(queryTerm)}&per_page=3`,
         { headers: { Authorization: ENV.PEXELS_API_KEY } }
       );
 
