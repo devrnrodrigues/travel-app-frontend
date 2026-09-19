@@ -14,11 +14,11 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import styles from "../styles/details.styles";
 import reviewStyles from "../styles/reviews.styles";
 import {
-  getReviews,
-  createReview,
-  updateReview,
-  deleteReview,
-} from "../api/detailsApi";
+  getCommentsApi,
+  createCommentApi,
+  updateCommentApi,
+  deleteCommentApi,
+} from "../api/commentService";
 import { DetailsReviewsSkeleton } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
 import { ReviewFormModal, DeleteReviewModal } from "./ReviewModals";
@@ -166,17 +166,18 @@ export default function ReviewsSection({
     try {
       setLoadingReviews(true);
       if (onRatingCalculated) onRatingCalculated("...", true);
-      const data = await getReviews(item.id);
-      setReviews(data);
-      if (data.length > 0) {
-        const total = data.reduce((sum, review) => sum + Number(review.rating), 0);
-        const calculated = (total / data.length).toFixed(1);
+      const data = await getCommentsApi(item.id);
+      const list = data.comments || [];
+      setReviews(list);
+      if (list.length > 0) {
+        const calculated = Number(data.averageRating || 0) > 0
+          ? Number(data.averageRating).toFixed(1)
+          : (list.reduce((sum, review) => sum + Number(review.rating), 0) / list.length).toFixed(1);
         if (onRatingCalculated) onRatingCalculated(calculated, false);
       } else {
         if (onRatingCalculated) onRatingCalculated("N/A", false);
       }
-    } catch (err) {
-      console.error("Erro ao buscar avaliações:", err);
+    } catch {
       if (onRatingCalculated) onRatingCalculated("N/A", false);
     } finally {
       setLoadingReviews(false);
@@ -224,14 +225,14 @@ export default function ReviewsSection({
       const hours = String(d.getHours()).padStart(2, "0");
       const minutes = String(d.getMinutes()).padStart(2, "0");
       return `${year}-${month}-${day} ${hours}:${minutes}`;
-    } catch (e) {
+    } catch {
       return "";
     }
   };
 
   const userReview = useMemo(() => {
     if (!currentUser || !reviews || reviews.length === 0) return null;
-    return reviews.find((rev) => rev.user_id === currentUser.id) || null;
+    return reviews.find((rev) => rev.user_id === currentUser.id || rev.userId === currentUser.id) || null;
   }, [currentUser, reviews]);
 
   const handleOpenReviewModal = () => {
@@ -242,7 +243,7 @@ export default function ReviewsSection({
     setOpenedFromAvaliarBtn(true);
     if (userReview) {
       setSelectedRating(Number(userReview.rating) || 5);
-      setInputComment(userReview.comment || "");
+      setInputComment(userReview.content || userReview.comment || "");
       setEditingReviewId(userReview.id);
     } else {
       setSelectedRating(5);
@@ -255,7 +256,7 @@ export default function ReviewsSection({
   const handleEditReview = (rev) => {
     setOpenedFromAvaliarBtn(false);
     setSelectedRating(Number(rev.rating) || 5);
-    setInputComment(rev.comment || "");
+    setInputComment(rev.content || rev.comment || "");
     setEditingReviewId(rev.id);
     setShowForm(true);
   };
@@ -264,30 +265,33 @@ export default function ReviewsSection({
     if (!reviewToDelete) return;
     try {
       setIsDeletingReview(true);
-      await deleteReview(reviewToDelete.id);
+      await deleteCommentApi(reviewToDelete.id);
       setReviewToDelete(null);
       fetchReviews();
     } catch (err) {
-      console.error("Erro ao excluir avaliação:", err);
-      alert("Não foi possível excluir o comentário.");
+      alert(err.message || "Não foi possível excluir o comentário.");
     } finally {
       setIsDeletingReview(false);
     }
   };
 
   const handleSendReview = async () => {
+    const trimmed = inputComment.trim();
+    if (!trimmed) {
+      alert("Por favor, escreva um comentário antes de enviar.");
+      return;
+    }
     try {
       setIsSubmitting(true);
       if (editingReviewId) {
-        await updateReview(editingReviewId, {
+        await updateCommentApi(editingReviewId, {
           rating: selectedRating,
-          comment: inputComment.trim() || null,
+          content: trimmed,
         });
       } else {
-        await createReview({
-          destination_id: item.id,
+        await createCommentApi(item.id, {
           rating: selectedRating,
-          comment: inputComment.trim() || null,
+          content: trimmed,
         });
       }
       setInputComment("");
@@ -296,8 +300,7 @@ export default function ReviewsSection({
       setShowForm(false);
       fetchReviews();
     } catch (err) {
-      console.error("Erro ao enviar avaliação:", err);
-      alert("Não foi possível enviar sua avaliação.");
+      alert(err.message || "Não foi possível enviar sua avaliação.");
     } finally {
       setIsSubmitting(false);
     }
@@ -375,6 +378,9 @@ export default function ReviewsSection({
                 )}
                 {reviews.map((rev) => {
                   const isMenuElevated = activeDropdownId === rev.id || elevatedDropdownId === rev.id;
+                  const isOwner = Boolean(currentUser && (rev.user_id === currentUser.id || rev.userId === currentUser.id));
+                  const reviewerName = rev.user_name || (isOwner ? (currentUser.fullName || currentUser.email) : "Viajante");
+                  const reviewerAvatar = rev.avatar_url || rev.user_avatar || (isOwner ? currentUser.avatarUrl : null);
                   return (
                     <View
                       key={rev.id}
@@ -390,9 +396,9 @@ export default function ReviewsSection({
                           !isDarkMode && reviewStyles.avatarContainerLight,
                         ]}
                       >
-                        {rev.avatar_url || rev.user_avatar ? (
+                        {reviewerAvatar ? (
                           <Image
-                            source={{ uri: rev.avatar_url || rev.user_avatar }}
+                            source={{ uri: reviewerAvatar }}
                             style={reviewStyles.avatarImage}
                             resizeMode="cover"
                           />
@@ -403,7 +409,7 @@ export default function ReviewsSection({
                               !isDarkMode && { color: "#4B5563" },
                             ]}
                           >
-                            {rev.user_name ? rev.user_name.charAt(0).toUpperCase() : "?"}
+                            {reviewerName ? reviewerName.charAt(0).toUpperCase() : "?"}
                           </Text>
                         )}
                       </View>
@@ -417,9 +423,9 @@ export default function ReviewsSection({
                             ]}
                             numberOfLines={1}
                           >
-                            {rev.user_name || "Anônimo"}
+                            {reviewerName}
                           </Text>
-                          {currentUser && rev.user_id === currentUser.id && (
+                          {isOwner && (
                             <Text
                               style={[
                                 reviewStyles.reviewerName,
@@ -454,17 +460,17 @@ export default function ReviewsSection({
                             !isDarkMode && reviewStyles.reviewDateLight,
                           ]}
                         >
-                          {formatReviewDate(rev.created_at)}
+                          {formatReviewDate(rev.created_at || rev.createdAt)}
                         </Text>
 
-                        {rev.comment ? (
+                        {rev.content || rev.comment ? (
                           <Text
                             style={[
                               reviewStyles.reviewComment,
                               !isDarkMode && reviewStyles.reviewCommentLight,
                             ]}
                           >
-                            {rev.comment}
+                            {rev.content || rev.comment}
                           </Text>
                         ) : null}
 
@@ -530,7 +536,7 @@ export default function ReviewsSection({
 
                             <ReviewDropdownMenu
                               visible={activeDropdownId === rev.id}
-                              isOwner={Boolean(currentUser && rev.user_id === currentUser.id)}
+                              isOwner={isOwner}
                               onEdit={() => {
                                 setActiveDropdownId(null);
                                 handleEditReview(rev);
