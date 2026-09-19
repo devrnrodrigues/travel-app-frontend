@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import styles from "./home.styles";
 import { useTheme } from "../../theme/ThemeContext";
@@ -93,12 +93,24 @@ export default function Home({ navigation }) {
   const selectedCategory = CATEGORIES[activeCat] || CATEGORIES[0];
   const selectedTheme = themesByCat[activeCat] || currentTheme;
 
-  const { data, isLoading } = useQuery({
+  const PAGE_SIZE = 6;
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    hasPreviousPage,
+    fetchPreviousPage,
+    isFetchingPreviousPage,
+  } = useInfiniteQuery({
     queryKey: ["destinations", "home", selectedCategory],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
       const result = await getDestinations({
         category: selectedCategory,
-        size: 6,
+        page: pageParam,
+        size: PAGE_SIZE,
       });
       return (result || []).map((destination) => {
         if (!destination.image_url) {
@@ -114,10 +126,34 @@ export default function Home({ navigation }) {
         };
       });
     },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      if (!lastPage || lastPage.length < PAGE_SIZE) {
+        return undefined;
+      }
+      return lastPageParam + 1;
+    },
+    getPreviousPageParam: (firstPage, allPages, firstPageParam) => {
+      if (firstPageParam <= 0) {
+        return undefined;
+      }
+      return firstPageParam - 1;
+    },
+    maxPages: 10,
   });
 
-  const destinations = data || [];
+  const destinations = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flat();
+  }, [data]);
+
   const loading = isLoading && destinations.length === 0;
+
+  const loadNextPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const bgSource = useMemo(() => {
     return typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
@@ -231,6 +267,12 @@ export default function Home({ navigation }) {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.cardsList}
+                    onEndReached={loadNextPage}
+                    onEndReachedThreshold={0.5}
+                    windowSize={5}
+                    maxToRenderPerBatch={6}
+                    initialNumToRender={6}
+                    removeClippedSubviews={Platform.OS === "android"}
                     renderItem={({ item }) => (
                       <HomeCardItem
                         item={item}
@@ -239,6 +281,13 @@ export default function Home({ navigation }) {
                         navigation={navigation}
                       />
                     )}
+                    ListFooterComponent={
+                      isFetchingNextPage ? (
+                        <View style={{ justifyContent: "center", alignItems: "center", width: 80 }}>
+                          <ActivityIndicator size="small" color={currentTheme.accent || "#4CAF50"} />
+                        </View>
+                      ) : null
+                    }
                   />
                 </FadeInView>
               )}
