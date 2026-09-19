@@ -64,7 +64,6 @@ export default function Details({ route, navigation }) {
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [averageRating, setAverageRating] = useState("N/A");
   const [loadingReviews, setLoadingReviews] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
   const [estimatedPrice, setEstimatedPrice] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(true);
   const [showWeatherInfo, setShowWeatherInfo] = useState(false);
@@ -559,7 +558,7 @@ export default function Details({ route, navigation }) {
 
           <ReviewsSection
             item={item}
-            currentUser={currentUser}
+            currentUser={user}
             currentTheme={currentTheme}
             isDarkMode={isDarkMode}
             onRatingCalculated={(calculatedRating, isLoading) => {

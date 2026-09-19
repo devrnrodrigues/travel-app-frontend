@@ -1,6 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { supabase } from "../../../config/supabase";
-
 import { ENV } from "../../../config/env";
 
 const WEATHER_API_KEY = ENV.WEATHER_API_KEY;
@@ -111,60 +109,4 @@ export async function getPexelsImages(item) {
   const images = data?.photos?.map((photo) => photo.src.large) || [item.image_url];
   await AsyncStorage.setItem(cacheKey, JSON.stringify(images));
   return images;
-}
-
-export async function getReviews(destinationId) {
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("destination_id", destinationId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-export async function createReview(review) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { error } = await supabase
-    .from("reviews")
-    .insert([
-      {
-        ...review,
-        user_id: user.id,
-        user_name: user.user_metadata?.full_name || user.email,
-      },
-    ]);
-
-  if (error) throw error;
-}
-
-export async function updateReview(reviewId, updates) {
-  const { error } = await supabase
-    .from("reviews")
-    .update(updates)
-    .eq("id", reviewId);
-
-  if (error) throw error;
-}
-
-export async function deleteReview(reviewId) {
-  const { error } = await supabase
-    .from("reviews")
-    .delete()
-    .eq("id", reviewId);
-
-  if (error) throw error;
-}
-
-export async function getFavorites() {
-  const favs = await AsyncStorage.getItem("@favorites");
-  return favs ? JSON.parse(favs) : [];
-}
-
-export async function saveFavorites(favorites) {
-  await AsyncStorage.setItem("@favorites", JSON.stringify(favorites));
 }
