@@ -20,10 +20,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { supabase } from "../../../config/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../auth.styles";
 import Message from "../../../shared/components/Message";
+import { useAuth } from "../context/AuthContext";
 
 function AnimatedInputContainer({ isFocused, children, style }) {
   const anim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
@@ -67,6 +67,7 @@ const DEFAULT_LOGIN_HEIGHT = 485;
 const DEFAULT_REGISTER_HEIGHT = 785;
 
 export default function AuthScreen({ navigation, route, initialMode = "login" }) {
+  const { login, register, loginWithGoogle } = useAuth();
   
   const routeMode = route?.params?.initialMode || route?.params?.mode || initialMode;
   const [activeFace, setActiveFace] = useState(routeMode === "register" ? "register" : "login");
@@ -294,14 +295,7 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
 
     try {
       await AsyncStorage.setItem("hasSeenGetStarted", "true");
-      const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail.trim(),
-        password: loginPassword,
-      });
-
-      if (error) {
-        setFeedback({ text: error.message, type: "error" });
-      }
+      await login(loginEmail.trim(), loginPassword);
     } catch (err) {
       setFeedback({ text: err.message || "Erro inesperado ao entrar.", type: "error" });
     } finally {
@@ -309,9 +303,17 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
     }
   }
 
-  function handleGoogleLogin() {
+  async function handleGoogleLogin() {
     setLoginGoogleLoading(true);
     setFeedback({ text: "", type: "" });
+    try {
+      await AsyncStorage.setItem("hasSeenGetStarted", "true");
+      await loginWithGoogle("dev-mock:usuario@teste.com:Usuario Teste");
+    } catch (err) {
+      setFeedback({ text: err.message || "Erro ao entrar com Google.", type: "error" });
+    } finally {
+      setLoginGoogleLoading(false);
+    }
   }
 
   async function handleRegister() {
@@ -333,22 +335,15 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
 
     try {
       await AsyncStorage.setItem("hasSeenGetStarted", "true");
-      const { error } = await supabase.auth.signUp({
+      await register({
+        fullName: registerName.trim(),
         email: registerEmail.trim(),
         password: registerPassword,
-        options: { data: { full_name: registerName.trim() } },
       });
-
-      if (error) {
-        setFeedback({ text: error.message, type: "error" });
-      } else {
-        setFeedback({
-          text: "Cadastro realizado com sucesso! Verifique seu e-mail.",
-          type: "success",
-        });
-        
-        setTimeout(() => flipTo("login"), 2000);
-      }
+      setFeedback({
+        text: "Cadastro realizado com sucesso!",
+        type: "success",
+      });
     } catch (err) {
       setFeedback({ text: err.message || "Erro inesperado no cadastro.", type: "error" });
     } finally {
@@ -356,9 +351,17 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
     }
   }
 
-  function handleGoogleRegister() {
+  async function handleGoogleRegister() {
     setRegisterGoogleLoading(true);
     setFeedback({ text: "", type: "" });
+    try {
+      await AsyncStorage.setItem("hasSeenGetStarted", "true");
+      await loginWithGoogle("dev-mock:usuario@teste.com:Usuario Teste");
+    } catch (err) {
+      setFeedback({ text: err.message || "Erro ao cadastrar com Google.", type: "error" });
+    } finally {
+      setRegisterGoogleLoading(false);
+    }
   }
 
   const renderLoginFace = () => (

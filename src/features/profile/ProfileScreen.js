@@ -17,14 +17,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { supabase } from "../../config/supabase";
 import { useTheme } from "../../theme/ThemeContext";
 import { ProfileSkeleton } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import AnimatedProfileInput from "./components/AnimatedProfileInput";
 import { styles, dialogStyles } from "./profile.styles";
+import { useAuth } from "../auth/context/AuthContext";
 
 export default function ProfileScreen({ navigation }) {
+  const { user, logout, updateUser } = useAuth();
   const { currentTheme, isDarkMode, toggleThemeMode } = useTheme();
   const bgSource =
     typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
@@ -112,21 +113,14 @@ export default function ProfileScreen({ navigation }) {
 
   const loadProfile = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("full_name, gender, bio")
-        .eq("id", user.id)
-        .single();
-
-      if (data) {
-        setName(data.full_name || "");
-        setGender(data.gender || "Masculino");
-        setBio(data.bio || "");
+      if (user) {
+        setName(user.fullName || "");
+        const storedProfileJson = await AsyncStorage.getItem(`profile_${user.id}`);
+        if (storedProfileJson) {
+          const parsed = JSON.parse(storedProfileJson);
+          if (parsed.gender) setGender(parsed.gender);
+          if (parsed.bio) setBio(parsed.bio);
+        }
       }
     } catch (err) {
       console.error("Erro ao carregar perfil:", err);
@@ -138,26 +132,18 @@ export default function ProfileScreen({ navigation }) {
   const saveProfile = async () => {
     setLoadingData(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      const { error } = await supabase.from("profiles").upsert({
-        id: user.id,
-        full_name: name,
-        gender: gender,
-        bio: bio,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
+      await updateUser({ fullName: name });
+      await AsyncStorage.setItem(
+        `profile_${user.id}`,
+        JSON.stringify({ gender, bio })
+      );
 
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
       setModalVisible(false);
     } catch (err) {
       Alert.alert("Erro ao salvar", err.message);
-      console.log("Erro técnico:", err);
     } finally {
       setLoadingData(false);
     }
@@ -183,16 +169,9 @@ export default function ProfileScreen({ navigation }) {
     setIsLoggingOut(true);
     try {
       await AsyncStorage.setItem("hasSeenGetStarted", "true");
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.warn("SignOut erro, forçando local:", error);
-        await supabase.auth.signOut({ scope: "local" });
-      }
+      await logout();
     } catch (err) {
       console.error("Erro ao desconectar:", err);
-      try {
-        await supabase.auth.signOut({ scope: "local" });
-      } catch (_) {}
     } finally {
       setIsLoggingOut(false);
       setLogoutModalVisible(false);
