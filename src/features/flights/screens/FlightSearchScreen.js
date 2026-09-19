@@ -7,11 +7,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "react-native-vector-icons/Feather";
 import { LinearGradient } from "expo-linear-gradient";
-import { searchFlights, CABIN_CLASS_MAP } from "../api/flightApi";
+import { searchFlights, CABIN_CLASS_MAP, getAirportsApi } from "../api/flightApi";
 import FlightResults from "./FlightResultsScreen";
 import styles from "../flightSearch.styles";
 import { useTheme } from "../../../theme/ThemeContext";
-import { supabase } from "../../../config/supabase";
 import FadeInView from "../../../shared/components/FadeInView";
 import {
   DestinationModal,
@@ -44,6 +43,7 @@ export default function DetailsTicket({ navigation, route }) {
   const [originAirport, setOriginAirport] = useState(null);
   const [originSuggestions, setOriginSuggestions] = useState([]);
   const [loadingOrigin, setLoadingOrigin] = useState(false);
+  const [allAirports, setAllAirports] = useState([]);
   const [destinationAirport, setDestinationAirport] = useState(null);
   const [destinationOptions, setDestinationOptions] = useState([]);
   const [loadingDestination, setLoadingDestination] = useState(false);
@@ -139,7 +139,50 @@ export default function DetailsTicket({ navigation, route }) {
   }, [selectedItem, currentTheme]);
 
   useEffect(() => {
-    if (selectedItem?.title) fetchDestinationAirports(selectedItem.title);
+    let isMounted = true;
+    const loadAirports = async () => {
+      setLoadingDestination(true);
+      try {
+        const airports = await getAirportsApi();
+        if (!isMounted) return;
+        setAllAirports(airports);
+
+        const targetIata =
+          selectedItem?.nearestAirportIata ||
+          selectedItem?.nearest_airport_iata ||
+          selectedItem?.nearestAirport?.iataCode;
+
+        let match = null;
+        if (targetIata) {
+          match = airports.find((a) => a.codigo_iata === targetIata);
+        }
+        if (!match && selectedItem?.title) {
+          const titleLower = selectedItem.title.toLowerCase();
+          match = airports.find(
+            (a) =>
+              (a.cidade && titleLower.includes(a.cidade.toLowerCase())) ||
+              (a.nome_aeroporto && a.nome_aeroporto.toLowerCase().includes(titleLower))
+          );
+        }
+
+        if (match) {
+          setDestinationOptions([match]);
+          setDestinationAirport(match);
+        } else if (airports.length > 0) {
+          setDestinationOptions(airports.slice(0, 10));
+          setDestinationAirport(airports[0]);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (isMounted) setLoadingDestination(false);
+      }
+    };
+
+    loadAirports();
+    return () => {
+      isMounted = false;
+    };
   }, [selectedItem]);
 
   useEffect(() => {
@@ -150,33 +193,17 @@ export default function DetailsTicket({ navigation, route }) {
       setOriginSuggestions([]);
       return;
     }
-    setLoadingOrigin(true);
-    const timer = setTimeout(async () => {
-      try {
-        const { data } = await supabase
-          .from("aeroportos_origem")
-          .select("*")
-          .or(`nome_aeroporto.ilike.%${originInput}%,cidade.ilike.%${originInput}%,codigo_iata.ilike.%${originInput}%`)
-          .limit(5);
-        if (data) setOriginSuggestions(data);
-      } catch (e) { console.error(e); }
-      finally { setLoadingOrigin(false); }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [originInput, originAirport]);
-
-  const fetchDestinationAirports = async (title) => {
-    setLoadingDestination(true);
-    try {
-      const { data } = await supabase
-        .from("aeroportos_destino").select("*").eq("destino_title", title);
-      if (data) {
-        setDestinationOptions(data);
-        if (data.length > 0) setDestinationAirport(data[0]);
-      }
-    } catch (e) { console.error(e); }
-    finally { setLoadingDestination(false); }
-  };
+    const query = originInput.trim().toLowerCase();
+    const matches = allAirports
+      .filter(
+        (item) =>
+          (item.nome_aeroporto && item.nome_aeroporto.toLowerCase().includes(query)) ||
+          (item.cidade && item.cidade.toLowerCase().includes(query)) ||
+          (item.codigo_iata && item.codigo_iata.toLowerCase().includes(query))
+      )
+      .slice(0, 5);
+    setOriginSuggestions(matches);
+  }, [originInput, originAirport, allAirports]);
 
   const handleSearchFlights = async () => {
     if (!originAirport || !destinationAirport) return;
