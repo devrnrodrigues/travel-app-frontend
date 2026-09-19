@@ -5,7 +5,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Feather from "react-native-vector-icons/Feather";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import styles from "./home.styles";
 import { useTheme } from "../../theme/ThemeContext";
 import { HomeSkeletonList } from "../../shared/components/Skeleton";
@@ -32,7 +31,6 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
   index,
   isActive,
   accentColor,
-  iconName,
   onPress,
 }) {
   const lineAnim = useRef(new Animated.Value(isActive ? 1 : 0.01)).current;
@@ -72,14 +70,6 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
           >
             {cat}
           </Text>
-          {isActive && (
-            <MaterialCommunityIcons
-              name={iconName}
-              size={18}
-              color={accentColor}
-              style={styles.marginLeft5}
-            />
-          )}
         </View>
         {isActive && (
           <Animated.View
@@ -238,7 +228,6 @@ export default function Home({ navigation }) {
                       index={index}
                       isActive={activeCat === index}
                       accentColor={theme.accent}
-                      iconName={theme.icon}
                       onPress={() => setActiveCat(index)}
                     />
                   );
