@@ -421,7 +421,7 @@ export default function ProfileScreen({ navigation }) {
                     ) : (
                       <Ionicons
                         name="person"
-                        size={40}
+                        size={32}
                         color={currentTheme.accent}
                       />
                     )}

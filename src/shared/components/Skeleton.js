@@ -640,83 +640,78 @@ export function ProfileSkeleton({ isDarkMode = true }) {
       style={{
         margin: 20,
         backgroundColor: cardBg,
-        borderRadius: 24,
-        padding: 28,
+        borderRadius: 20,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
         alignItems: "center",
         overflow: "hidden",
         position: "relative",
       }}
     >
-      {}
       <View
         style={{
           position: "absolute",
-          top: 20,
-          right: 20,
-          width: 20,
-          height: 20,
-          borderRadius: 10,
+          top: 14,
+          right: 14,
+          width: 18,
+          height: 18,
+          borderRadius: 9,
           backgroundColor: placeholderBg2,
         }}
       />
 
-      {}
       <View
         style={{
-          width: 90,
-          height: 90,
-          borderRadius: 45,
+          width: 72,
+          height: 72,
+          borderRadius: 36,
           backgroundColor: avatarBg,
         }}
       />
 
-      {}
       <View
         style={{
-          height: 20,
-          width: 140,
-          borderRadius: 6,
+          height: 16,
+          width: 130,
+          borderRadius: 5,
           backgroundColor: placeholderBg1,
-          marginTop: 18,
+          marginTop: 10,
         }}
       />
 
-      {}
       <View
         style={{
-          height: 12,
-          width: 80,
+          height: 11,
+          width: 75,
           borderRadius: 4,
           backgroundColor: placeholderBg2,
-          marginTop: 8,
+          marginTop: 1,
         }}
       />
 
-      {}
       <View
         style={{
-          height: 12,
-          width: "75%",
+          height: 11,
+          width: "70%",
           borderRadius: 4,
           backgroundColor: placeholderBg2,
-          marginTop: 16,
+          marginTop: 13,
         }}
       />
       <View
         style={{
-          height: 12,
-          width: "50%",
+          height: 11,
+          width: "45%",
           borderRadius: 4,
           backgroundColor: placeholderBg2,
-          marginTop: 6,
+          marginTop: 5,
         }}
       />
 
-      {}
       <ShimmerOverlay
         animatedValue={anim}
         width={cardWidth}
-        height={280}
+        height={215}
         isDarkMode={isDarkMode}
       />
     </View>
