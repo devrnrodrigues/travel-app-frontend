@@ -493,7 +493,7 @@ export default function SearchModal({
                   contentContainerStyle={{
                     paddingHorizontal: 20,
                     paddingTop: 6,
-                    paddingBottom: 280,
+                    paddingBottom: 24,
                   }}
                   bounces={true}
                   overScrollMode="always"
