@@ -349,7 +349,7 @@ export default function Favorites({ navigation }) {
   const BOTTOM_NAV_HEIGHT = 112; // Altura e deslocamento do Bottom Tab (35 + 72 + 5)
   const visibleHeight = Math.max(350, listHeight - BOTTOM_NAV_HEIGHT);
   const cardSlot = Math.floor(visibleHeight / VISIBLE_CARDS);
-  const cardMarginBottom = Math.max(8, Math.min(14, Math.floor(cardSlot * 0.12)));
+  const cardMarginBottom = Math.max(6, Math.min(9, Math.floor(cardSlot * 0.075)));
   const cardHeight = Math.max(76, cardSlot - cardMarginBottom);
   const totalContentHeight = (cardHeight * VISIBLE_CARDS) + (cardMarginBottom * (VISIBLE_CARDS - 1));
   const verticalMargin = Math.max(12, Math.floor((visibleHeight - totalContentHeight) / 2));
