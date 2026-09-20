@@ -14,7 +14,15 @@ export default StyleSheet.create({
     paddingHorizontal: 25,
     paddingTop: 20,
   },
-  headerTitle: { fontSize: 32, fontWeight: "800", textShadowColor: 'rgba(0, 0, 0, 0.4)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 4 },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: "800",
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+    flex: 1,
+    marginRight: 10,
+  },
   headerIcons: { flexDirection: "row" },
   iconButton: {
     padding: 12,

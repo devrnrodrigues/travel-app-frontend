@@ -6,6 +6,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import styles from "./home.styles";
 import { useTheme } from "../../theme/ThemeContext";
+import { useAuth } from "../auth/context/AuthContext";
 import { HomeSkeletonList } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import HomeCardItem from "./components/HomeCardItem";
@@ -87,8 +88,15 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
 });
 
 export default function Home({ navigation }) {
+  const { user } = useAuth();
   const { activeCat, setActiveCat, currentTheme, themesByCat, isDarkMode } = useTheme();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+
+  const userName = useMemo(() => {
+    const raw = user?.fullName || user?.name || user?.username || "";
+    const first = raw.trim().split(" ")[0];
+    return first || "visitante";
+  }, [user?.fullName, user?.name, user?.username]);
 
   const selectedCategory = CATEGORIES[activeCat] || CATEGORIES[0];
   const selectedTheme = themesByCat[activeCat] || currentTheme;
@@ -231,7 +239,9 @@ export default function Home({ navigation }) {
           <StatusBar barStyle="light-content" />
           <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-              <Text style={[styles.headerTitle, { color: "#FFF" }]}>Explorar</Text>
+              <Text style={[styles.headerTitle, { color: "#FFF" }]} numberOfLines={1}>
+                {`Olá, ${userName}`}
+              </Text>
               <View style={styles.headerIcons}>
                 <TouchableOpacity
                   style={[
