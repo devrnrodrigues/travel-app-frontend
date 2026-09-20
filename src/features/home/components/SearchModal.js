@@ -142,17 +142,19 @@ export default function SearchModal({
     if (visible) {
       searchSlideAnim.setValue(-SCREEN_HEIGHT);
       searchFadeAnim.setValue(0);
-      Animated.parallel([
+
+      Animated.sequence([
+        Animated.timing(searchFadeAnim, {
+          toValue: 1,
+          duration: 140,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
         Animated.spring(searchSlideAnim, {
           toValue: 0,
           damping: 24,
-          stiffness: 200,
+          stiffness: 220,
           mass: 0.8,
-          useNativeDriver: true,
-        }),
-        Animated.timing(searchFadeAnim, {
-          toValue: 1,
-          duration: 250,
           useNativeDriver: true,
         }),
       ]).start();
@@ -161,7 +163,7 @@ export default function SearchModal({
         if (!isClosingSearch.current) {
           searchInputRef.current?.focus();
         }
-      }, 180);
+      }, 260);
 
       return () => clearTimeout(focusTimer);
     }
