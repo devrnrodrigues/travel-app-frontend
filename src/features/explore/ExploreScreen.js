@@ -64,13 +64,6 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
         <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight]} />
       )}
 
-      {item.realRating && item.realRating !== "N/A" && (
-        <View style={styles.topBadge}>
-          <Ionicons name="star" size={9} color="#FFD700" />
-          <Text style={styles.topBadgeText}>{item.realRating}</Text>
-        </View>
-      )}
-
       <LinearGradient
         colors={["transparent", "rgba(0, 0, 0, 0.86)"]}
         style={styles.bottomOverlay}
@@ -137,7 +130,14 @@ export default function Explore({ navigation }) {
 
   const destinations = useMemo(() => {
     if (!data?.pages) return [];
-    return data.pages.flat();
+    const flat = data.pages.flat();
+    const seen = new Set();
+    return flat.filter((item) => {
+      const key = item?.id;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [data]);
 
   const loading = isLoading && destinations.length === 0;
@@ -154,7 +154,7 @@ export default function Explore({ navigation }) {
     setIsSearchFocused(false);
   }, []);
 
-  const searchBarAnim = useRef(new Animated.Value(0)).current; 
+  const searchBarAnim = useRef(new Animated.Value(0)).current;
   const isHiddenRef = useRef(false);
   const lastScrollY = useRef(0);
   const autoHideTimerRef = useRef(null);
@@ -320,7 +320,7 @@ export default function Explore({ navigation }) {
     [isDarkMode, handleCardPress]
   );
 
-  const keyExtractor = useCallback((item) => String(item.id), []);
+  const keyExtractor = useCallback((item, index) => (item?.id ? `${item.id}-${index}` : String(index)), []);
 
   return (
     <ImageBackground source={bgSource} style={styles.screenDarkBg} resizeMode="cover">
@@ -331,7 +331,6 @@ export default function Explore({ navigation }) {
         <View style={styles.container}>
           <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-          {}
           {loading ? (
             <ScrollView
               contentContainerStyle={styles.flatListContent}
@@ -399,7 +398,7 @@ export default function Explore({ navigation }) {
             </FadeInView>
           )}
 
-          {}
+          { }
           <Animated.View
             pointerEvents={isSearchFocused || !isHiddenRef.current ? "auto" : "none"}
             style={[

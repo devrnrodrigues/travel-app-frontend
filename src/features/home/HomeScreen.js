@@ -144,7 +144,14 @@ export default function Home({ navigation }) {
 
   const destinations = useMemo(() => {
     if (!data?.pages) return [];
-    return data.pages.flat();
+    const flat = data.pages.flat();
+    const seen = new Set();
+    return flat.filter((item) => {
+      const key = item?.id;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [data]);
 
   const loading = isLoading && destinations.length === 0;
@@ -263,7 +270,7 @@ export default function Home({ navigation }) {
                 <FadeInView duration={280} style={styles.flex1}>
                   <FlatList
                     data={destinations}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item, index) => (item?.id ? `${item.id}-${index}` : String(index))}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.cardsList}

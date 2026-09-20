@@ -317,26 +317,6 @@ export function ExploreCardSkeleton({
     >
       <View style={{ flex: 1 }} />
 
-      <View
-        style={[
-          exploreStyles.topBadge,
-          {
-            backgroundColor: badgeBg,
-            paddingHorizontal: 6,
-            paddingVertical: 3.5,
-          },
-        ]}
-      >
-        <View
-          style={{
-            width: 16,
-            height: 7.5,
-            borderRadius: 2,
-            backgroundColor: placeholderBg1,
-          }}
-        />
-      </View>
-
       <LinearGradient
         colors={["transparent", isDarkMode ? "rgba(0, 0, 0, 0.86)" : "rgba(80, 80, 80, 0.65)"]}
         style={exploreStyles.bottomOverlay}
@@ -402,8 +382,8 @@ export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 
 }
 
 export function FavoriteCardSkeleton({
-  cardHeight = 72,
-  cardMarginBottom = 10,
+  cardHeight = 84,
+  cardMarginBottom = 12,
   titleWidth = "60%",
   locationWidth = "38%",
   isDarkMode = true,
@@ -480,9 +460,10 @@ export function FavoriteCardSkeleton({
 
 export function FavoritesSkeletonList({
   isDarkMode = true,
-  cardHeight = 72,
-  cardMarginBottom = 10,
-  count = 6,
+  cardHeight = 84,
+  cardMarginBottom = 12,
+  count = 5,
+  paddingTop = 12,
 }) {
   const anim = useShimmerAnimation();
   const variations = [
@@ -495,7 +476,7 @@ export function FavoritesSkeletonList({
   ];
 
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
+    <View style={{ paddingHorizontal: 20, paddingTop }}>
       {Array.from({ length: count }).map((_, i) => {
         const v = variations[i % variations.length];
         return (
