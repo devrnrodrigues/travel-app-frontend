@@ -24,6 +24,8 @@ export async function getCommentsApi(destinationId) {
       created_at: item.createdAt,
       updatedAt: item.updatedAt,
       updated_at: item.updatedAt,
+      helpfulCount: Number(item.helpfulCount ?? item.helpful_count ?? 0),
+      isHelpful: Boolean(item.isHelpful ?? item.is_helpful ?? false),
     })),
   };
 }
@@ -44,4 +46,8 @@ export async function updateCommentApi(commentId, { rating, content }) {
 
 export async function deleteCommentApi(commentId) {
   return apiClient.delete(`/comments/${commentId}`);
+}
+
+export async function toggleCommentHelpfulApi(commentId) {
+  return apiClient.post(`/comments/${commentId}/helpful`);
 }

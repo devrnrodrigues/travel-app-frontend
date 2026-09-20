@@ -18,6 +18,7 @@ import {
   createCommentApi,
   updateCommentApi,
   deleteCommentApi,
+  toggleCommentHelpfulApi,
 } from "../api/commentService";
 import { DetailsReviewsSkeleton } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
@@ -145,7 +146,6 @@ export default function ReviewsSection({
   const [isDeletingReview, setIsDeletingReview] = useState(false);
   const [activeDropdownId, setActiveDropdownId] = useState(null);
   const [elevatedDropdownId, setElevatedDropdownId] = useState(null);
-  const [helpfulReviews, setHelpfulReviews] = useState({});
   const [reportedReviews, setReportedReviews] = useState({});
 
   const handleToggleDropdown = useCallback((id) => {
@@ -190,11 +190,51 @@ export default function ReviewsSection({
     }
   }, [item?.id]);
 
-  const toggleHelpful = (reviewId) => {
-    setHelpfulReviews((prev) => ({
-      ...prev,
-      [reviewId]: !prev[reviewId],
-    }));
+  const toggleHelpful = async (rev) => {
+    if (!currentUser) {
+      alert("Você precisa estar logado para curtir uma avaliação.");
+      return;
+    }
+
+    const reviewId = rev.id;
+    const wasHelpful = Boolean(rev.isHelpful);
+    const previousCount = Number(rev.helpfulCount) || 0;
+    const newHelpful = !wasHelpful;
+    const newCount = newHelpful ? previousCount + 1 : Math.max(0, previousCount - 1);
+
+    setReviews((prev) =>
+      prev.map((r) =>
+        r.id === reviewId
+          ? { ...r, isHelpful: newHelpful, helpfulCount: newCount }
+          : r
+      )
+    );
+
+    try {
+      const response = await toggleCommentHelpfulApi(reviewId);
+      if (response && response.id) {
+        setReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId
+              ? {
+                  ...r,
+                  isHelpful: Boolean(response.isHelpful),
+                  helpfulCount: Number(response.helpfulCount ?? newCount),
+                }
+              : r
+          )
+        );
+      }
+    } catch (err) {
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? { ...r, isHelpful: wasHelpful, helpfulCount: previousCount }
+            : r
+        )
+      );
+      alert(err.message || "Não foi possível registrar seu voto. Tente novamente.");
+    }
   };
 
   const handleReportReview = (rev) => {
@@ -477,15 +517,15 @@ export default function ReviewsSection({
                         <View style={reviewStyles.commentFooterRow}>
                           <TouchableOpacity
                             style={reviewStyles.helpfulButton}
-                            onPress={() => toggleHelpful(rev.id)}
+                            onPress={() => toggleHelpful(rev)}
                             activeOpacity={0.7}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                           >
                             <Ionicons
-                              name={helpfulReviews[rev.id] ? "thumbs-up" : "thumbs-up-outline"}
+                              name={rev.isHelpful ? "thumbs-up" : "thumbs-up-outline"}
                               size={13}
                               color={
-                                helpfulReviews[rev.id]
+                                rev.isHelpful
                                   ? currentTheme.accent
                                   : !isDarkMode
                                     ? "#9CA3AF"
@@ -496,7 +536,7 @@ export default function ReviewsSection({
                               style={[
                                 reviewStyles.helpfulText,
                                 {
-                                  color: helpfulReviews[rev.id]
+                                  color: rev.isHelpful
                                     ? currentTheme.accent
                                     : !isDarkMode
                                       ? "#9CA3AF"
@@ -504,7 +544,7 @@ export default function ReviewsSection({
                                 },
                               ]}
                             >
-                              {helpfulReviews[rev.id] ? "Útil (1)" : "Útil?"}
+                              {rev.helpfulCount > 0 ? `Útil (${rev.helpfulCount})` : "Útil?"}
                             </Text>
                           </TouchableOpacity>
 
