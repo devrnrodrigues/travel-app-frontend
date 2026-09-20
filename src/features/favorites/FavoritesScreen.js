@@ -21,7 +21,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import styles, { dialogStyles } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
@@ -62,8 +62,9 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
       useNativeDriver: Platform.OS !== "web",
     }).start();
   };
-  const canFoldTop = count > 6 && index < count - 6;
-  const canFoldBottom = count > 6 && index >= 6;
+  const VISIBLE_CARDS = 5;
+  const canFoldTop = count > VISIBLE_CARDS && index < count - VISIBLE_CARDS;
+  const canFoldBottom = count > VISIBLE_CARDS && index >= VISIBLE_CARDS;
 
   let rotateX = "0deg";
   let translateY = 0;
@@ -72,9 +73,9 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
 
   if (canFoldTop && canFoldBottom) {
     const inputRange = [
-      Math.round(itemOffset - 5.95 * cardSlot),
-      Math.round(itemOffset - 5.45 * cardSlot),
-      Math.round(itemOffset - 5.0 * cardSlot),
+      Math.round(itemOffset - 4.95 * cardSlot),
+      Math.round(itemOffset - 4.45 * cardSlot),
+      Math.round(itemOffset - 4.0 * cardSlot),
       Math.round(itemOffset),
       Math.round(itemOffset + 0.45 * cardSlot),
       Math.round(itemOffset + 0.95 * cardSlot),
@@ -127,9 +128,9 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
     });
   } else if (canFoldBottom) {
     const inputRange = [
-      Math.round(itemOffset - 5.95 * cardSlot),
-      Math.round(itemOffset - 5.45 * cardSlot),
-      Math.round(itemOffset - 5.0 * cardSlot),
+      Math.round(itemOffset - 4.95 * cardSlot),
+      Math.round(itemOffset - 4.45 * cardSlot),
+      Math.round(itemOffset - 4.0 * cardSlot),
     ];
     rotateX = scrollY.interpolate({
       inputRange,
@@ -218,54 +219,13 @@ export default function Favorites({ navigation }) {
 
   const queryClient = useQueryClient();
 
-  const PAGE_SIZE = 10;
-
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    hasPreviousPage,
-    fetchPreviousPage,
-    isFetchingPreviousPage,
-  } = useInfiniteQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["favorites"],
-    queryFn: ({ pageParam = 0 }) => getFavoritesApi({ page: pageParam, size: PAGE_SIZE }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages, lastPageParam) => {
-      if (!lastPage || lastPage.length < PAGE_SIZE) {
-        return undefined;
-      }
-      return lastPageParam + 1;
-    },
-    getPreviousPageParam: (firstPage, allPages, firstPageParam) => {
-      if (firstPageParam <= 0) {
-        return undefined;
-      }
-      return firstPageParam - 1;
-    },
-    maxPages: 10,
+    queryFn: () => getFavoritesApi({ page: 0, size: 10 }),
   });
 
-  const favorites = useMemo(() => {
-    if (!data?.pages) return [];
-    return data.pages.flat();
-  }, [data]);
-
+  const favorites = data || [];
   const loading = isLoading && favorites.length === 0;
-
-  const loadNextPage = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const loadPreviousPage = useCallback(() => {
-    if (hasPreviousPage && !isFetchingPreviousPage) {
-      fetchPreviousPage();
-    }
-  }, [hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const lastItemTitleRef = useRef("");
@@ -384,11 +344,16 @@ export default function Favorites({ navigation }) {
     });
   }, [favorites, searchQuery]);
 
-  const usableHeight = Math.max(300, listHeight - BOTTOM_BAR_SPACE - TOP_PADDING);
-  const cardSlot = Math.floor(usableHeight / 6);
-  const cardHeight = Math.max(68, cardSlot - 10);
-  const cardMarginBottom = cardSlot - cardHeight;
-  const paddingBottom = Math.max(110, listHeight - TOP_PADDING - (cardSlot * 6));
+  const VISIBLE_CARDS = 5;
+  const BOTTOM_NAV_HEIGHT = 112; // Altura e deslocamento do Bottom Tab (35 + 72 + 5)
+  const visibleHeight = Math.max(350, listHeight - BOTTOM_NAV_HEIGHT);
+  const cardSlot = Math.floor(visibleHeight / VISIBLE_CARDS);
+  const cardMarginBottom = Math.max(8, Math.min(14, Math.floor(cardSlot * 0.12)));
+  const cardHeight = Math.max(76, cardSlot - cardMarginBottom);
+  const totalContentHeight = (cardHeight * VISIBLE_CARDS) + (cardMarginBottom * (VISIBLE_CARDS - 1));
+  const verticalMargin = Math.max(12, Math.floor((visibleHeight - totalContentHeight) / 2));
+  const paddingTop = verticalMargin;
+  const paddingBottom = verticalMargin + BOTTOM_NAV_HEIGHT;
 
   if (itemToDelete?.title) {
     lastItemTitleRef.current = itemToDelete.title;
@@ -401,15 +366,9 @@ export default function Favorites({ navigation }) {
       const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
       await removeFavoriteApi(destId);
 
-      queryClient.setQueryData(["favorites"], (old) => {
-        if (!old?.pages) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) =>
-            page.filter((fav) => (fav.destinationId || fav.id) !== destId)
-          ),
-        };
-      });
+      queryClient.setQueryData(["favorites"], (old) =>
+        (old || []).filter((fav) => (fav.destinationId || fav.id) !== destId)
+      );
       setItemToDelete(null);
     } catch (error) {
       console.error("Erro ao remover favorito:", error);
@@ -419,7 +378,7 @@ export default function Favorites({ navigation }) {
   };
 
   useEffect(() => {
-    if (favorites.length <= 6 && scrollOffsetRef.current > 0) {
+    if (favorites.length <= VISIBLE_CARDS && scrollOffsetRef.current > 0) {
       scrollOffsetRef.current = 0;
       scrollY.setValue(0);
       flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -541,6 +500,7 @@ export default function Favorites({ navigation }) {
                   isDarkMode={isDarkMode}
                   cardHeight={cardHeight}
                   cardMarginBottom={cardMarginBottom}
+                  paddingTop={paddingTop}
                 />
               ) : (
                 <FadeInView duration={260} style={styles.flex1}>
@@ -551,30 +511,19 @@ export default function Favorites({ navigation }) {
                     showsVerticalScrollIndicator={false}
                     keyExtractor={(item) => item.id.toString()}
                     contentContainerStyle={{
-                      paddingTop: TOP_PADDING,
+                      paddingTop: paddingTop,
                       paddingHorizontal: 20,
                       paddingBottom: paddingBottom,
                     }}
                     bounces={true}
                     overScrollMode="always"
                     scrollEventThrottle={16}
-                    onEndReached={loadNextPage}
-                    onEndReachedThreshold={0.5}
-                    windowSize={5}
-                    maxToRenderPerBatch={10}
-                    initialNumToRender={10}
-                    removeClippedSubviews={Platform.OS === "android"}
                     onScroll={Animated.event(
                       [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                       {
                         useNativeDriver: true,
                         listener: (e) => {
-                          const currentY = e.nativeEvent.contentOffset.y;
-                          const diff = currentY - scrollOffsetRef.current;
-                          scrollOffsetRef.current = currentY;
-                          if (diff < -15 && currentY <= 150) {
-                            loadPreviousPage();
-                          }
+                          scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
                         },
                       }
                     )}
@@ -593,20 +542,6 @@ export default function Favorites({ navigation }) {
                         setItemToDelete={setItemToDelete}
                       />
                     )}
-                    ListHeaderComponent={
-                      isFetchingPreviousPage ? (
-                        <View style={styles.loadingMoreContainer}>
-                          <ActivityIndicator size="small" color={currentTheme.accent} />
-                        </View>
-                      ) : null
-                    }
-                    ListFooterComponent={
-                      isFetchingNextPage ? (
-                        <View style={styles.loadingMoreContainer}>
-                          <ActivityIndicator size="small" color={currentTheme.accent} />
-                        </View>
-                      ) : null
-                    }
                     ListEmptyComponent={
                       <View style={styles.emptyContainer}>
                         {searchQuery.trim() ? (

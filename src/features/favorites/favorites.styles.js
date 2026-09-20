@@ -138,11 +138,6 @@ export default StyleSheet.create({
     marginLeft: 5,
     color: "#FFFFFF",
   },
-  loadingMoreContainer: {
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
