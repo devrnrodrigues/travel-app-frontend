@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import styles from "./styles/details.styles";
@@ -42,6 +43,7 @@ const { width } = Dimensions.get("window");
 const STRICT_THUMB_SIZE = Math.round(width * 0.115);
 
 export default function Details({ route, navigation }) {
+  const queryClient = useQueryClient();
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { item, currentTheme } = route.params;
@@ -212,6 +214,7 @@ export default function Details({ route, navigation }) {
         setIsFavorited(true);
         await addFavoriteApi(item.id);
       }
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
     } catch (error) {
       setIsFavorited((prev) => !prev);
       console.error("Erro ao alternar favorito:", error);

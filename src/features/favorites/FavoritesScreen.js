@@ -17,6 +17,7 @@ import {
   BackHandler,
   Easing,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -219,7 +220,7 @@ export default function Favorites({ navigation }) {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isRefetching, refetch } = useQuery({
     queryKey: ["favorites"],
     queryFn: () => getFavoritesApi({ page: 0, size: 10 }),
   });
@@ -510,6 +511,14 @@ export default function Favorites({ navigation }) {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                     keyExtractor={(item) => item.id.toString()}
+                    refreshControl={
+                      <RefreshControl
+                        refreshing={isRefetching}
+                        onRefresh={refetch}
+                        tintColor={currentTheme.accent || "#4CAF50"}
+                        colors={[currentTheme.accent || "#4CAF50"]}
+                      />
+                    }
                     contentContainerStyle={{
                       paddingTop: paddingTop,
                       paddingHorizontal: 20,
