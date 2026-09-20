@@ -121,8 +121,10 @@ export default function SearchModal({
     };
     const onHide = () => {
       isKeyboardVisible.current = false;
-      searchInputRef.current?.blur();
-      handleSearchBlur();
+      if (!isClosingSearch.current) {
+        searchInputRef.current?.blur();
+        handleSearchBlur();
+      }
     };
 
     const willShowSub = Keyboard.addListener("keyboardWillShow", onShow);
@@ -140,6 +142,7 @@ export default function SearchModal({
 
   useEffect(() => {
     if (visible) {
+      isClosingSearch.current = false;
       searchSlideAnim.setValue(-SCREEN_HEIGHT);
       searchFadeAnim.setValue(0);
 
@@ -173,7 +176,11 @@ export default function SearchModal({
     if (isClosingSearch.current) return;
     isClosingSearch.current = true;
 
-    const keyboardWasOpen = isKeyboardVisible.current || isSearchFocused;
+    searchInputRef.current?.blur();
+    setIsSearchFocused(false);
+    searchFocusAnim.setValue(0);
+
+    const keyboardWasOpen = isKeyboardVisible.current;
     Keyboard.dismiss();
 
     let finishedAnim = false;
@@ -181,10 +188,16 @@ export default function SearchModal({
 
     const finalizeClose = () => {
       if (finishedAnim && finishedKeyboard) {
-        setIsSearchFocused(false);
+        if (hideListener) {
+          hideListener.remove();
+          hideListener = null;
+        }
+        if (fallbackTimeout) {
+          clearTimeout(fallbackTimeout);
+          fallbackTimeout = null;
+        }
         setIsFilterVisible(false);
         filterAnim.setValue(0);
-        searchInputRef.current?.blur();
         isClosingSearch.current = false;
         onClose();
       }
@@ -229,7 +242,7 @@ export default function SearchModal({
       finishedAnim = true;
       finalizeClose();
     });
-  }, [searchSlideAnim, searchFadeAnim, isSearchFocused, onClose]);
+  }, [searchSlideAnim, searchFadeAnim, searchFocusAnim, onClose]);
 
   const windowHeight = Dimensions.get("window").height;
   const baseSearchHeight = Math.max(500, windowHeight - 150);
@@ -301,6 +314,8 @@ export default function SearchModal({
     return null;
   }, [bgSource, currentTheme?.bg]);
 
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
@@ -336,7 +351,15 @@ export default function SearchModal({
         </Animated.View>
 
         <StatusBar barStyle="light-content" translucent={true} backgroundColor="transparent" />
-        <Animated.View style={[styles.flex1, { transform: [{ translateY: searchSlideAnim }] }]}>
+        <Animated.View
+          style={[
+            styles.flex1,
+            {
+              opacity: searchFadeAnim,
+              transform: [{ translateY: searchSlideAnim }],
+            },
+          ]}
+        >
           <SafeAreaView style={styles.searchContainer}>
             <View style={styles.searchHeaderRow}>
               <TouchableOpacity onPress={toggleFilter} style={styles.searchBackBtn}>
