@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
   Animated,
   PanResponder,
   Image,
+  Easing,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -24,6 +26,8 @@ import FadeInView from "../../shared/components/FadeInView";
 import AnimatedProfileInput from "./components/AnimatedProfileInput";
 import { styles, dialogStyles } from "./profile.styles";
 import { useAuth } from "../auth/context/AuthContext";
+import { ALL_COUNTRIES } from "./data/countries";
+import { CountryPillSkeletonGroup } from "./components/CountryPillSkeleton";
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser } = useAuth();
@@ -41,6 +45,192 @@ export default function ProfileScreen({ navigation }) {
   const [nationality, setNationality] = useState("Brasileiro");
   const [bio, setBio] = useState("");
   const [focusedInput, setFocusedInput] = useState(null);
+  const [hasTypedNationality, setHasTypedNationality] = useState(false);
+
+  const isNationalityFocused = focusedInput === "nationality";
+  const countryListAnim = useRef(new Animated.Value(0)).current;
+  const blurTimeoutRef = useRef(null);
+
+  const [isSearchingCountry, setIsSearchingCountry] = useState(false);
+  const searchTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(countryListAnim, {
+      toValue: isNationalityFocused ? 1 : 0,
+      duration: 250,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [isNationalityFocused, countryListAnim]);
+
+  const countryListHeight = countryListAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 48],
+  });
+
+  const countryListOpacity = countryListAnim.interpolate({
+    inputRange: [0, 0.3, 1],
+    outputRange: [0, 0, 1],
+  });
+
+  const countryListMargin = countryListAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 16],
+  });
+
+  const handleNationalityFocus = () => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+    setHasTypedNationality(false);
+    setFocusedInput("nationality");
+  };
+
+  const handleNationalityBlur = () => {
+    blurTimeoutRef.current = setTimeout(() => {
+      setFocusedInput((prev) => (prev === "nationality" ? null : prev));
+    }, 200);
+  };
+
+  const filteredCountries = useMemo(() => {
+    if (!hasTypedNationality) {
+      return ALL_COUNTRIES;
+    }
+    const query = (nationality || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    if (!query) {
+      return ALL_COUNTRIES;
+    }
+
+    return ALL_COUNTRIES.filter((item) => {
+      const labelNorm = item.label
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      const countryNorm = item.country
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      return labelNorm.includes(query) || countryNorm.includes(query);
+    });
+  }, [nationality, hasTypedNationality]);
+
+  const [countryPage, setCountryPage] = useState(1);
+  const COUNTRIES_PAGE_SIZE = 20;
+
+  useEffect(() => {
+    setCountryPage(1);
+  }, [nationality, hasTypedNationality]);
+
+  const paginatedCountries = useMemo(() => {
+    return filteredCountries.slice(0, countryPage * COUNTRIES_PAGE_SIZE);
+  }, [filteredCountries, countryPage]);
+
+  const handleLoadMoreCountries = useCallback(() => {
+    if (paginatedCountries.length < filteredCountries.length) {
+      setCountryPage((prev) => prev + 1);
+    }
+  }, [paginatedCountries.length, filteredCountries.length]);
+
+  const renderCountryItem = useCallback(
+    ({ item }) => {
+      const isSelected =
+        nationality.trim().toLowerCase() === item.label.toLowerCase() ||
+        nationality.trim().toLowerCase() === item.country.toLowerCase();
+
+      return (
+        <TouchableOpacity
+          key={`${item.code}-${item.label}`}
+          style={[
+            styles.countryPill,
+            !isDarkMode && styles.countryPillLight,
+            isSelected && {
+              backgroundColor: currentTheme.accent,
+            },
+          ]}
+          onPress={() => {
+            if (blurTimeoutRef.current) {
+              clearTimeout(blurTimeoutRef.current);
+            }
+            setNationality(item.label);
+            setHasTypedNationality(false);
+          }}
+          activeOpacity={0.7}
+        >
+          <View
+            style={[
+              styles.flagIcon,
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(255, 255, 255, 0.12)"
+                  : "rgba(0, 0, 0, 0.08)",
+                overflow: "hidden",
+              },
+            ]}
+          >
+            <Image
+              source={{ uri: `https://flagcdn.com/w40/${item.code}.png` }}
+              style={styles.flagIcon}
+              resizeMode="cover"
+            />
+          </View>
+          <Text
+            style={[
+              styles.countryPillText,
+              isSelected && { color: "#000", fontWeight: "bold" },
+            ]}
+          >
+            {item.label}
+          </Text>
+        </TouchableOpacity>
+      );
+    },
+    [nationality, isDarkMode, currentTheme.accent]
+  );
+
+  const renderListFooter = useCallback(() => {
+    if (paginatedCountries.length < filteredCountries.length) {
+      return (
+        <View style={{ marginLeft: 8 }}>
+          <CountryPillSkeletonGroup isDarkMode={isDarkMode} count={2} />
+        </View>
+      );
+    }
+    return null;
+  }, [paginatedCountries.length, filteredCountries.length, isDarkMode]);
+
+  const renderListEmpty = useCallback(() => {
+    return (
+      <View style={{ justifyContent: "center", paddingHorizontal: 4 }}>
+        <Text
+          style={{
+            color: !isDarkMode
+              ? "rgba(255, 255, 255, 0.7)"
+              : "rgba(255, 255, 255, 0.5)",
+            fontSize: 13,
+          }}
+        >
+          Nenhum país encontrado
+        </Text>
+      </View>
+    );
+  }, [isDarkMode]);
 
   const modalSlideAnim = useRef(new Animated.Value(600)).current;
   const iconRotateAnim = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
@@ -106,18 +296,7 @@ export default function ProfileScreen({ navigation }) {
     })
   ).current;
 
-  const popularNationalities = [
-    { label: "Brasileiro", code: "br" },
-    { label: "Português", code: "pt" },
-    { label: "Argentino", code: "ar" },
-    { label: "Espanhol", code: "es" },
-    { label: "Americano", code: "us" },
-    { label: "Italiano", code: "it" },
-    { label: "Francês", code: "fr" },
-    { label: "Japonês", code: "jp" },
-    { label: "Canadense", code: "ca" },
-    { label: "Alemão", code: "de" },
-  ];
+
 
   const loadProfile = async () => {
     try {
@@ -328,7 +507,7 @@ export default function ProfileScreen({ navigation }) {
                         </View>
                       </View>
 
-                      <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
+                      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={styles.modalScroll}>
                         <Text
                           style={[
                             styles.label,
@@ -362,58 +541,56 @@ export default function ProfileScreen({ navigation }) {
                           Nacionalidade
                         </Text>
                         <AnimatedProfileInput
-                          isFocused={focusedInput === "nationality"}
+                          isFocused={isNationalityFocused}
                           currentTheme={currentTheme}
                           isDarkMode={isDarkMode}
-                          placeholder="Ex: Brasileiro, Francês, Português..."
-                          placeholderTextColor={
-                            !isDarkMode
-                              ? "rgba(255, 255, 255, 0.65)"
-                              : "rgba(255, 255, 255, 0.5)"
-                          }
+                          style={isNationalityFocused ? { marginBottom: 10 } : null}
                           value={nationality}
-                          onChangeText={setNationality}
-                          onFocus={() => setFocusedInput("nationality")}
-                          onBlur={() => setFocusedInput(null)}
+                          onChangeText={(text) => {
+                            setHasTypedNationality(true);
+                            setNationality(text);
+                            setIsSearchingCountry(true);
+                            if (searchTimeoutRef.current) {
+                              clearTimeout(searchTimeoutRef.current);
+                            }
+                            searchTimeoutRef.current = setTimeout(() => {
+                              setIsSearchingCountry(false);
+                            }, 180);
+                          }}
+                          onFocus={handleNationalityFocus}
+                          onBlur={handleNationalityBlur}
                         />
-                        <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          style={styles.countryScroll}
-                          contentContainerStyle={styles.countryScrollContent}
+                        <Animated.View
+                          style={{
+                            height: countryListHeight,
+                            opacity: countryListOpacity,
+                            marginBottom: countryListMargin,
+                            overflow: "hidden",
+                          }}
                         >
-                          {popularNationalities.map((item) => {
-                            const isSelected = nationality.trim().toLowerCase() === item.label.toLowerCase();
-                            return (
-                              <TouchableOpacity
-                                key={item.label}
-                                style={[
-                                  styles.countryPill,
-                                  !isDarkMode && styles.countryPillLight,
-                                  isSelected && {
-                                    backgroundColor: currentTheme.accent,
-                                  },
-                                ]}
-                                onPress={() => setNationality(item.label)}
-                                activeOpacity={0.7}
-                              >
-                                <Image
-                                  source={{ uri: `https://flagcdn.com/w40/${item.code}.png` }}
-                                  style={styles.flagIcon}
-                                  resizeMode="cover"
-                                />
-                                <Text
-                                  style={[
-                                    styles.countryPillText,
-                                    isSelected && { color: "#000", fontWeight: "bold" },
-                                  ]}
-                                >
-                                  {item.label}
-                                </Text>
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </ScrollView>
+                          {isSearchingCountry ? (
+                            <View style={styles.countryScrollContent}>
+                              <CountryPillSkeletonGroup isDarkMode={isDarkMode} count={4} />
+                            </View>
+                          ) : (
+                            <FlatList
+                              horizontal
+                              data={paginatedCountries}
+                              keyExtractor={(item) => `${item.code}-${item.label}`}
+                              renderItem={renderCountryItem}
+                              ListEmptyComponent={renderListEmpty}
+                              ListFooterComponent={renderListFooter}
+                              keyboardShouldPersistTaps="handled"
+                              showsHorizontalScrollIndicator={false}
+                              contentContainerStyle={styles.countryScrollContent}
+                              onEndReached={handleLoadMoreCountries}
+                              onEndReachedThreshold={0.4}
+                              initialNumToRender={10}
+                              maxToRenderPerBatch={10}
+                              windowSize={5}
+                            />
+                          )}
+                        </Animated.View>
 
                         <Text
                           style={[

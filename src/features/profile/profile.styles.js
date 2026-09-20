@@ -198,13 +198,13 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   countryPill: {
+    height: 35,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 7,
     borderRadius: 20,
     backgroundColor: "rgba(15, 15, 15, 0.6)",
-    gap: 5,
+    gap: 6,
   },
   countryPillLight: {
     backgroundColor: "rgba(45, 45, 45, 0.65)",
