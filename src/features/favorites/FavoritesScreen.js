@@ -163,7 +163,7 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
     >
       <TouchableOpacity
         activeOpacity={0.85}
-        style={[styles.cardBase, !isDarkMode ? styles.cardLight : styles.cardDark, { height: cardHeight, marginBottom: cardMarginBottom }]}
+        style={[styles.cardBase, !isDarkMode ? styles.cardLight : styles.cardDark, { height: cardHeight, marginBottom: index === totalItems - 1 ? 0 : cardMarginBottom }]}
         onPress={() => {
           Keyboard.dismiss();
           navigation.navigate("Details", {
@@ -346,15 +346,15 @@ export default function Favorites({ navigation }) {
   }, [favorites, searchQuery]);
 
   const VISIBLE_CARDS = 5;
-  const BOTTOM_NAV_HEIGHT = 112; // Altura e deslocamento do Bottom Tab (35 + 72 + 5)
-  const visibleHeight = Math.max(350, listHeight - BOTTOM_NAV_HEIGHT);
-  const cardSlot = Math.floor(visibleHeight / VISIBLE_CARDS);
-  const cardMarginBottom = Math.max(6, Math.min(9, Math.floor(cardSlot * 0.075)));
-  const cardHeight = Math.max(76, cardSlot - cardMarginBottom);
+  const NAVBAR_TOP_OFFSET = 107;
+  const availableHeight = Math.max(350, listHeight - (NAVBAR_TOP_OFFSET + 32));
+  const cardSlot = Math.floor(availableHeight / VISIBLE_CARDS);
+  const cardMarginBottom = Math.max(6, Math.min(8, Math.floor(cardSlot * 0.08)));
+  const cardHeight = Math.max(72, cardSlot - cardMarginBottom);
   const totalContentHeight = (cardHeight * VISIBLE_CARDS) + (cardMarginBottom * (VISIBLE_CARDS - 1));
-  const verticalMargin = Math.max(12, Math.floor((visibleHeight - totalContentHeight) / 2));
-  const paddingTop = verticalMargin;
-  const paddingBottom = verticalMargin + BOTTOM_NAV_HEIGHT;
+  const verticalGap = Math.max(10, Math.floor((listHeight - NAVBAR_TOP_OFFSET - totalContentHeight) / 2));
+  const paddingTop = verticalGap;
+  const paddingBottom = NAVBAR_TOP_OFFSET + verticalGap;
 
   if (itemToDelete?.title) {
     lastItemTitleRef.current = itemToDelete.title;

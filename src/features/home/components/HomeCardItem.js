@@ -57,7 +57,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
         {Platform.OS === "android" && !isDarkMode && (
           <Image
             source={cardImgSource}
-            blurRadius={3}
+            blurRadius={8}
             style={styles.cardFullBackground}
           />
         )}
@@ -67,7 +67,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
             StyleSheet.absoluteFill,
             {
               backgroundColor: !isDarkMode
-                ? "rgba(100, 100, 100, 0.40)"
+                ? "rgba(250, 250, 250, 0.30)"
                 : "rgba(12, 12, 12, 0.82)",
               borderRadius: 25,
             },

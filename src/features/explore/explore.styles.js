@@ -30,7 +30,7 @@ export default StyleSheet.create({
     borderRadius: 25,
     height: 50,
     paddingHorizontal: 16,
-    borderWidth: 0,
+    borderWidth: 1.5,
     borderColor: "transparent",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -175,7 +175,12 @@ export default StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.08)",
   },
   searchBarLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.82)",
+    backgroundColor: "rgba(155, 155, 155, 1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 20,
   },
   searchBarFocusedBase: {
     borderWidth: 1.5,
@@ -184,7 +189,7 @@ export default StyleSheet.create({
     backgroundColor: "#121212",
   },
   searchBarFocusedLight: {
-    backgroundColor: "rgba(100, 100, 100, 1)",
+    backgroundColor: "rgba(155, 155, 155, 1)",
   },
   searchInputLight: {
     color: "#FFFFFF",

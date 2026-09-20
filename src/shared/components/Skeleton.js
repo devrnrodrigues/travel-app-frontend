@@ -460,10 +460,10 @@ export function FavoriteCardSkeleton({
 
 export function FavoritesSkeletonList({
   isDarkMode = true,
-  cardHeight = 84,
-  cardMarginBottom = 12,
+  cardHeight = 78,
+  cardMarginBottom = 8,
   count = 5,
-  paddingTop = 12,
+  paddingTop = 14,
 }) {
   const anim = useShimmerAnimation();
   const variations = [
@@ -483,7 +483,7 @@ export function FavoritesSkeletonList({
           <FavoriteCardSkeleton
             key={`fav-skel-${i}`}
             cardHeight={cardHeight}
-            cardMarginBottom={cardMarginBottom}
+            cardMarginBottom={i === count - 1 ? 0 : cardMarginBottom}
             titleWidth={v.title}
             locationWidth={v.loc}
             isDarkMode={isDarkMode}
