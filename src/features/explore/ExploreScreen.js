@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
+  Pressable,
   ScrollView,
   Image,
   ActivityIndicator,
@@ -155,18 +155,15 @@ export default function Explore({ navigation }) {
   }, []);
 
   const searchBarAnim = useRef(new Animated.Value(0)).current;
-  const isHiddenRef = useRef(false);
+  const [isSearchBarVisible, setIsSearchBarVisible] = useState(true);
+  const isSearchBarVisibleRef = useRef(true);
   const lastScrollY = useRef(0);
-  const autoHideTimerRef = useRef(null);
   const isSearchFocusedRef = useRef(false);
 
   const hideSearchBar = useCallback(() => {
-    if (isSearchFocusedRef.current || isHiddenRef.current) return;
-    if (autoHideTimerRef.current) {
-      clearTimeout(autoHideTimerRef.current);
-      autoHideTimerRef.current = null;
-    }
-    isHiddenRef.current = true;
+    if (isSearchFocusedRef.current || !isSearchBarVisibleRef.current) return;
+    isSearchBarVisibleRef.current = false;
+    setIsSearchBarVisible(false);
     Animated.timing(searchBarAnim, {
       toValue: 1,
       duration: 200,
@@ -174,57 +171,24 @@ export default function Explore({ navigation }) {
     }).start();
   }, [searchBarAnim]);
 
-  const scheduleAutoHide = useCallback(() => {
-    if (autoHideTimerRef.current) {
-      clearTimeout(autoHideTimerRef.current);
-      autoHideTimerRef.current = null;
-    }
-    if (!isSearchFocusedRef.current && !isHiddenRef.current) {
-      autoHideTimerRef.current = setTimeout(() => {
-        hideSearchBar();
-      }, 3000);
-    }
-  }, [hideSearchBar]);
-
   const showSearchBar = useCallback(() => {
-    if (autoHideTimerRef.current) {
-      clearTimeout(autoHideTimerRef.current);
-      autoHideTimerRef.current = null;
-    }
-    if (isHiddenRef.current) {
-      isHiddenRef.current = false;
-      Animated.spring(searchBarAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        bounciness: 0,
-        speed: 20,
-      }).start();
-    }
-    scheduleAutoHide();
-  }, [searchBarAnim, scheduleAutoHide]);
+    if (isSearchBarVisibleRef.current) return;
+    isSearchBarVisibleRef.current = true;
+    setIsSearchBarVisible(true);
+    Animated.spring(searchBarAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      bounciness: 0,
+      speed: 20,
+    }).start();
+  }, [searchBarAnim]);
 
   useEffect(() => {
     isSearchFocusedRef.current = isSearchFocused;
     if (isSearchFocused) {
-      if (autoHideTimerRef.current) {
-        clearTimeout(autoHideTimerRef.current);
-        autoHideTimerRef.current = null;
-      }
       showSearchBar();
-    } else {
-      scheduleAutoHide();
     }
-  }, [isSearchFocused, showSearchBar, scheduleAutoHide]);
-
-  useEffect(() => {
-    scheduleAutoHide();
-    return () => {
-      if (autoHideTimerRef.current) {
-        clearTimeout(autoHideTimerRef.current);
-        autoHideTimerRef.current = null;
-      }
-    };
-  }, [scheduleAutoHide]);
+  }, [isSearchFocused, showSearchBar]);
 
   const loadNextPage = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -239,19 +203,20 @@ export default function Explore({ navigation }) {
   }, [hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
 
   const handleScroll = useCallback((event) => {
-    const currentY = event.nativeEvent.contentOffset.y;
+    const { nativeEvent } = event;
+    const currentY = nativeEvent.contentOffset.y;
     const diff = currentY - lastScrollY.current;
 
     if (currentY <= 20) {
-      if (isHiddenRef.current) {
+      if (!isSearchBarVisibleRef.current) {
         showSearchBar();
       }
-    } else if (diff > 18 && !isHiddenRef.current && currentY > 50) {
-      if (!isSearchFocusedRef.current) {
+    } else if (diff > 18 && currentY > 50) {
+      if (!isSearchFocusedRef.current && isSearchBarVisibleRef.current) {
         hideSearchBar();
       }
     } else if (diff < -15) {
-      if (isHiddenRef.current) {
+      if (!isSearchBarVisibleRef.current) {
         showSearchBar();
       }
       if (currentY <= 150) {
@@ -275,12 +240,6 @@ export default function Explore({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       showSearchBar();
-      return () => {
-        if (autoHideTimerRef.current) {
-          clearTimeout(autoHideTimerRef.current);
-          autoHideTimerRef.current = null;
-        }
-      };
     }, [showSearchBar])
   );
 
@@ -400,7 +359,7 @@ export default function Explore({ navigation }) {
 
           { }
           <Animated.View
-            pointerEvents={isSearchFocused || !isHiddenRef.current ? "auto" : "none"}
+            pointerEvents={isSearchBarVisible || isSearchFocused ? "auto" : "none"}
             style={[
               styles.searchBarContainer,
               {
@@ -414,36 +373,37 @@ export default function Explore({ navigation }) {
               isSearchFocused && [styles.searchBarFocusedBase, { borderColor: currentTheme?.accent || "#4CAF50" }, !isDarkMode ? styles.searchBarFocusedLight : styles.searchBarFocusedDark],
             ]}
           >
-            <TouchableWithoutFeedback onPress={() => searchInputRef.current?.focus()}>
-              <View style={styles.searchBarInner}>
-                <Feather
-                  name="search"
-                  size={18}
-                  color={isSearchFocused ? (currentTheme?.accent || "#4CAF50") : "#FFFFFF"}
-                  style={styles.searchIcon}
-                />
-                <TextInput
-                  ref={searchInputRef}
-                  style={[styles.searchInput, !isDarkMode && styles.searchInputLight]}
-                  placeholder="Pesquisar destinos, locais..."
-                  placeholderTextColor={!isDarkMode ? "rgba(255, 255, 255, 0.65)" : (isSearchFocused ? "rgba(255, 255, 255, 0.65)" : "rgba(255, 255, 255, 0.75)")}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
-                  autoCorrect={false}
-                />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity
-                    onPress={() => setSearchQuery("")}
-                    style={styles.clearButton}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  >
-                    <Feather name="x" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
-                )}
-              </View>
-            </TouchableWithoutFeedback>
+            <Pressable
+              style={styles.searchBarInner}
+              onPress={() => searchInputRef.current?.focus()}
+            >
+              <Feather
+                name="search"
+                size={18}
+                color={isSearchFocused ? (currentTheme?.accent || "#4CAF50") : "#FFFFFF"}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                ref={searchInputRef}
+                style={[styles.searchInput, !isDarkMode && styles.searchInputLight]}
+                placeholder="Pesquisar destinos, locais..."
+                placeholderTextColor={!isDarkMode ? "rgba(255, 255, 255, 0.65)" : (isSearchFocused ? "rgba(255, 255, 255, 0.65)" : "rgba(255, 255, 255, 0.75)")}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                autoCorrect={false}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setSearchQuery("")}
+                  style={styles.clearButton}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Feather name="x" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+            </Pressable>
           </Animated.View>
         </View>
       </LinearGradient>

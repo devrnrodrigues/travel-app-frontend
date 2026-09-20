@@ -43,6 +43,7 @@ export default StyleSheet.create({
   },
   searchInput: {
     flex: 1,
+    height: "100%",
     color: "#FFFFFF",
     fontSize: 15,
     paddingVertical: 0,
