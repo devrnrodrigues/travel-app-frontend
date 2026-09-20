@@ -26,8 +26,8 @@ export const styles = StyleSheet.create({
   },
   profileCard: {
     marginHorizontal: 20,
-    marginTop: 6,
-    marginBottom: 12,
+    marginTop: 8,
+    marginBottom: 14,
     backgroundColor: "rgba(12, 12, 12, 0.82)",
     borderRadius: 20,
     paddingVertical: 14,
@@ -278,13 +278,13 @@ export const styles = StyleSheet.create({
   galleryContainer: {
     flex: 1,
     marginHorizontal: 20,
-    marginBottom: 112,
-    gap: 12,
+    marginBottom: 122,
+    gap: 14,
   },
   galleryRow: {
     flex: 1,
     flexDirection: "row",
-    gap: 12,
+    gap: 14,
   },
   galleryCard: {
     flex: 1,
@@ -353,16 +353,14 @@ export const styles = StyleSheet.create({
     backgroundColor: "#000000",
   },
   photoCaptionBox: {
-    height: 18,
+    height: 20,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 2,
   },
   photoCaptionText: {
-    fontFamily: Platform.select({ ios: "Snell Roundhand", android: "serif", default: "cursive" }),
-    fontStyle: "italic",
-    fontSize: 9.5,
-    fontWeight: "600",
+    fontFamily: "Caveat-SemiBold",
+    fontSize: 12.5,
     color: "#2b2b2b",
     letterSpacing: -0.2,
   },
@@ -395,10 +393,8 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(100, 100, 100, 0.50)",
   },
   cardCounterText: {
-    fontFamily: Platform.select({ ios: "Snell Roundhand", android: "serif", default: "cursive" }),
-    fontStyle: "italic",
-    fontSize: 9.5,
-    fontWeight: "700",
+    fontFamily: "Caveat-SemiBold",
+    fontSize: 12,
   },
 });
 

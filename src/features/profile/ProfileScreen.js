@@ -381,10 +381,6 @@ export default function ProfileScreen({ navigation }) {
           style={styles.flex1}
         >
           <SafeAreaView style={styles.flex1}>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>Perfil</Text>
-            </View>
-
             {loading ? (
               <ProfileSkeleton isDarkMode={isDarkMode} />
             ) : (
