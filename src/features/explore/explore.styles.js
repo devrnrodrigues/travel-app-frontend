@@ -4,8 +4,9 @@ const { width } = Dimensions.get("window");
 const HORIZONTAL_PADDING = 0;
 const GAP = 1;
 const COLUMN_WIDTH = (width - GAP * 2) / 3;
+const CARD_HEIGHT = Math.round(COLUMN_WIDTH * 1.38);
 
-export { COLUMN_WIDTH, GAP, HORIZONTAL_PADDING };
+export { COLUMN_WIDTH, CARD_HEIGHT, GAP, HORIZONTAL_PADDING };
 
 export default StyleSheet.create({
   container: {

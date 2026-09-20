@@ -26,10 +26,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTheme } from "../../theme/ThemeContext";
 import { ExploreSkeletonGrid } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
-import styles, { GAP, COLUMN_WIDTH, categoryThemes, defaultTheme } from "./explore.styles";
+import styles, { GAP, COLUMN_WIDTH, CARD_HEIGHT, categoryThemes, defaultTheme } from "./explore.styles";
 import { getDestinations } from "../destinations/api/destinationService";
-
-const CARD_HEIGHT = Math.round(COLUMN_WIDTH * 1.38);
 
 const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode }) {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -336,7 +334,7 @@ export default function Explore({ navigation }) {
           {}
           {loading ? (
             <ScrollView
-              contentContainerStyle={styles.masonryContainer}
+              contentContainerStyle={styles.flatListContent}
               showsVerticalScrollIndicator={false}
               scrollEnabled={false}
             >

@@ -1,5 +1,5 @@
 import homeStyles from "../../features/home/home.styles";
-import exploreStyles, { COLUMN_WIDTH } from "../../features/explore/explore.styles";
+import exploreStyles, { COLUMN_WIDTH, CARD_HEIGHT as EXPLORE_CARD_HEIGHT, GAP } from "../../features/explore/explore.styles";
 import favoritesStyles from "../../features/favorites/favorites.styles";
 import React, { useEffect, useRef } from "react";
 import {
@@ -290,7 +290,7 @@ export function HomeSkeletonList({ isDarkMode = true, currentTheme }) {
 }
 
 export function ExploreCardSkeleton({
-  height = 180,
+  height = EXPLORE_CARD_HEIGHT,
   isDarkMode = true,
   currentTheme,
   animatedValue,
@@ -308,16 +308,15 @@ export function ExploreCardSkeleton({
       style={[
         exploreStyles.gridItem,
         {
+          width: COLUMN_WIDTH,
           height,
           backgroundColor: cardBg,
           overflow: "hidden",
         },
       ]}
     >
-      {}
       <View style={{ flex: 1 }} />
 
-      {}
       <View
         style={[
           exploreStyles.topBadge,
@@ -338,7 +337,6 @@ export function ExploreCardSkeleton({
         />
       </View>
 
-      {}
       <LinearGradient
         colors={["transparent", isDarkMode ? "rgba(0, 0, 0, 0.86)" : "rgba(80, 80, 80, 0.65)"]}
         style={exploreStyles.bottomOverlay}
@@ -362,7 +360,6 @@ export function ExploreCardSkeleton({
         />
       </LinearGradient>
 
-      {}
       <ShimmerOverlay
         animatedValue={anim}
         width={COLUMN_WIDTH}
@@ -373,71 +370,33 @@ export function ExploreCardSkeleton({
   );
 }
 
-export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme }) {
+export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 }) {
   const anim = useShimmerAnimation();
 
-  const col1Heights = [
-    Math.round(COLUMN_WIDTH * 1.50),
-    Math.round(COLUMN_WIDTH * 1.00),
-    Math.round(COLUMN_WIDTH * 1.70),
-    Math.round(COLUMN_WIDTH * 1.20),
-    Math.round(COLUMN_WIDTH * 1.40),
-    Math.round(COLUMN_WIDTH * 1.10),
-  ];
-
-  const col2Heights = [
-    Math.round(COLUMN_WIDTH * 1.10),
-    Math.round(COLUMN_WIDTH * 1.65),
-    Math.round(COLUMN_WIDTH * 0.95),
-    Math.round(COLUMN_WIDTH * 1.80),
-    Math.round(COLUMN_WIDTH * 1.30),
-    Math.round(COLUMN_WIDTH * 1.15),
-  ];
-
-  const col3Heights = [
-    Math.round(COLUMN_WIDTH * 1.75),
-    Math.round(COLUMN_WIDTH * 1.25),
-    Math.round(COLUMN_WIDTH * 1.45),
-    Math.round(COLUMN_WIDTH * 0.90),
-    Math.round(COLUMN_WIDTH * 1.55),
-    Math.round(COLUMN_WIDTH * 1.05),
-  ];
-
   return (
-    <View style={exploreStyles.masonryRow}>
-      <View style={exploreStyles.masonryColumn}>
-        {col1Heights.map((h, i) => (
+    <View style={{ gap: GAP, backgroundColor: "#000000" }}>
+      {Array.from({ length: rows }).map((_, rowIndex) => (
+        <View
+          key={`skel-row-${rowIndex}`}
+          style={{ flexDirection: "row", gap: GAP }}
+        >
           <ExploreCardSkeleton
-            key={`skel-col1-${i}`}
-            height={h}
             isDarkMode={isDarkMode}
             currentTheme={currentTheme}
             animatedValue={anim}
           />
-        ))}
-      </View>
-      <View style={exploreStyles.masonryColumn}>
-        {col2Heights.map((h, i) => (
           <ExploreCardSkeleton
-            key={`skel-col2-${i}`}
-            height={h}
             isDarkMode={isDarkMode}
             currentTheme={currentTheme}
             animatedValue={anim}
           />
-        ))}
-      </View>
-      <View style={exploreStyles.masonryColumn}>
-        {col3Heights.map((h, i) => (
           <ExploreCardSkeleton
-            key={`skel-col3-${i}`}
-            height={h}
             isDarkMode={isDarkMode}
             currentTheme={currentTheme}
             animatedValue={anim}
           />
-        ))}
-      </View>
+        </View>
+      ))}
     </View>
   );
 }
