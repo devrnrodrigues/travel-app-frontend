@@ -189,31 +189,35 @@ export const styles = StyleSheet.create({
   textInputSingle: {
     textAlignVertical: "center",
   },
-  genderContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  countryScroll: {
     marginBottom: 20,
+    marginTop: -8,
   },
-  genderOption: {
-    flex: 1,
+  countryScrollContent: {
+    paddingVertical: 4,
+    gap: 8,
+  },
+  countryPill: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 12,
-    marginHorizontal: 5,
-    borderRadius: 12,
-    borderWidth: 0,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
     backgroundColor: "rgba(15, 15, 15, 0.6)",
-    minWidth: 0,
+    gap: 5,
   },
-  genderOptionLight: {
+  countryPillLight: {
     backgroundColor: "rgba(45, 45, 45, 0.65)",
-    borderWidth: 0,
   },
-  genderText: {
-    marginLeft: 8,
-    fontSize: 12,
-    fontWeight: "600",
+  countryPillText: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "500",
+  },
+  flagIcon: {
+    width: 20,
+    height: 14,
+    borderRadius: 3,
   },
   bioInput: {
     height: 100,

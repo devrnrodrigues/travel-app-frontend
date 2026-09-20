@@ -38,7 +38,7 @@ export default function ProfileScreen({ navigation }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [name, setName] = useState("");
-  const [gender, setGender] = useState("Masculino");
+  const [nationality, setNationality] = useState("Brasileiro");
   const [bio, setBio] = useState("");
   const [focusedInput, setFocusedInput] = useState(null);
 
@@ -106,10 +106,17 @@ export default function ProfileScreen({ navigation }) {
     })
   ).current;
 
-  const genderOptions = [
-    { label: "Masculino", icon: "male" },
-    { label: "Feminino", icon: "female" },
-    { label: "Outro", icon: "male-female" },
+  const popularNationalities = [
+    { label: "Brasileiro", code: "br" },
+    { label: "Português", code: "pt" },
+    { label: "Argentino", code: "ar" },
+    { label: "Espanhol", code: "es" },
+    { label: "Americano", code: "us" },
+    { label: "Italiano", code: "it" },
+    { label: "Francês", code: "fr" },
+    { label: "Japonês", code: "jp" },
+    { label: "Canadense", code: "ca" },
+    { label: "Alemão", code: "de" },
   ];
 
   const loadProfile = async () => {
@@ -119,7 +126,13 @@ export default function ProfileScreen({ navigation }) {
         const storedProfileJson = await AsyncStorage.getItem(`profile_${user.id}`);
         if (storedProfileJson) {
           const parsed = JSON.parse(storedProfileJson);
-          if (parsed.gender) setGender(parsed.gender);
+          if (parsed.nationality) {
+            let val = parsed.nationality.replace(/[\uD83C-\uDBFF\uDC00-\uDFFF]+/g, "").trim();
+            if (val.toLowerCase() === "brasil") val = "Brasileiro";
+            setNationality(val);
+          } else if (parsed.gender) {
+            setNationality("Brasileiro");
+          }
           if (parsed.bio) setBio(parsed.bio);
         }
       }
@@ -138,7 +151,7 @@ export default function ProfileScreen({ navigation }) {
       await updateUser({ fullName: name });
       await AsyncStorage.setItem(
         `profile_${user.id}`,
-        JSON.stringify({ gender, bio })
+        JSON.stringify({ nationality, bio })
       );
 
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
@@ -248,7 +261,7 @@ export default function ProfileScreen({ navigation }) {
                       { color: currentTheme.accent },
                     ]}
                   >
-                    {gender}
+                    {nationality || "Viajante"}
                   </Text>
                   <Text
                     style={[
@@ -346,48 +359,61 @@ export default function ProfileScreen({ navigation }) {
                             !isDarkMode && styles.labelLight,
                           ]}
                         >
-                          Gênero
+                          Nacionalidade
                         </Text>
-                        <View style={styles.genderContainer}>
-                          {genderOptions.map((option) => (
-                            <TouchableOpacity
-                              key={option.label}
-                              style={[
-                                styles.genderOption,
-                                !isDarkMode && styles.genderOptionLight,
-                                gender === option.label && {
-                                  backgroundColor: currentTheme.accent,
-                                  borderColor: currentTheme.accent,
-                                  borderWidth: 0,
-                                },
-                              ]}
-                              onPress={() => setGender(option.label)}
-                            >
-                              <Ionicons
-                                name={option.icon}
-                                size={18}
-                                color={
-                                  gender === option.label
-                                    ? "#000"
-                                    : "#FFFFFF"
-                                }
-                              />
-                              <Text
+                        <AnimatedProfileInput
+                          isFocused={focusedInput === "nationality"}
+                          currentTheme={currentTheme}
+                          isDarkMode={isDarkMode}
+                          placeholder="Ex: Brasileiro, Francês, Português..."
+                          placeholderTextColor={
+                            !isDarkMode
+                              ? "rgba(255, 255, 255, 0.65)"
+                              : "rgba(255, 255, 255, 0.5)"
+                          }
+                          value={nationality}
+                          onChangeText={setNationality}
+                          onFocus={() => setFocusedInput("nationality")}
+                          onBlur={() => setFocusedInput(null)}
+                        />
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          style={styles.countryScroll}
+                          contentContainerStyle={styles.countryScrollContent}
+                        >
+                          {popularNationalities.map((item) => {
+                            const isSelected = nationality.trim().toLowerCase() === item.label.toLowerCase();
+                            return (
+                              <TouchableOpacity
+                                key={item.label}
                                 style={[
-                                  styles.genderText,
-                                  {
-                                    color:
-                                      gender === option.label
-                                        ? "#000"
-                                        : "#FFFFFF",
+                                  styles.countryPill,
+                                  !isDarkMode && styles.countryPillLight,
+                                  isSelected && {
+                                    backgroundColor: currentTheme.accent,
                                   },
                                 ]}
+                                onPress={() => setNationality(item.label)}
+                                activeOpacity={0.7}
                               >
-                                {option.label}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
+                                <Image
+                                  source={{ uri: `https://flagcdn.com/w40/${item.code}.png` }}
+                                  style={styles.flagIcon}
+                                  resizeMode="cover"
+                                />
+                                <Text
+                                  style={[
+                                    styles.countryPillText,
+                                    isSelected && { color: "#000", fontWeight: "bold" },
+                                  ]}
+                                >
+                                  {item.label}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
 
                         <Text
                           style={[
