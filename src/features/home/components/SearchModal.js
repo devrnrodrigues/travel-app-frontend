@@ -116,24 +116,27 @@ export default function SearchModal({
   }, [isFilterVisible, filterAnim, dismissSearchFocus]);
 
   useEffect(() => {
-    const showSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      () => {
-        isKeyboardVisible.current = true;
-      }
-    );
-    const hideSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => {
-        isKeyboardVisible.current = false;
-      }
-    );
+    const onShow = () => {
+      isKeyboardVisible.current = true;
+    };
+    const onHide = () => {
+      isKeyboardVisible.current = false;
+      searchInputRef.current?.blur();
+      handleSearchBlur();
+    };
+
+    const willShowSub = Keyboard.addListener("keyboardWillShow", onShow);
+    const didShowSub = Keyboard.addListener("keyboardDidShow", onShow);
+    const willHideSub = Keyboard.addListener("keyboardWillHide", onHide);
+    const didHideSub = Keyboard.addListener("keyboardDidHide", onHide);
 
     return () => {
-      showSub.remove();
-      hideSub.remove();
+      willShowSub.remove();
+      didShowSub.remove();
+      willHideSub.remove();
+      didHideSub.remove();
     };
-  }, []);
+  }, [handleSearchBlur]);
 
   useEffect(() => {
     if (visible) {
