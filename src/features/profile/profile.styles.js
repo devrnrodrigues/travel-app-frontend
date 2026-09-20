@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   profileCardLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.40)",
+    backgroundColor: "rgba(255, 255, 255, 0.48)",
     borderWidth: 0,
     shadowColor: "transparent",
     shadowOpacity: 0,
