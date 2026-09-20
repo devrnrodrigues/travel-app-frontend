@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
@@ -25,7 +25,9 @@ export const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   profileCard: {
-    margin: 20,
+    marginHorizontal: 20,
+    marginTop: 6,
+    marginBottom: 12,
     backgroundColor: "rgba(12, 12, 12, 0.82)",
     borderRadius: 20,
     paddingVertical: 14,
@@ -272,6 +274,131 @@ export const styles = StyleSheet.create({
   },
   themeToggleDark: {
     backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  galleryContainer: {
+    flex: 1,
+    marginHorizontal: 20,
+    marginBottom: 112,
+    gap: 12,
+  },
+  galleryRow: {
+    flex: 1,
+    flexDirection: "row",
+    gap: 12,
+  },
+  galleryCard: {
+    flex: 1,
+    backgroundColor: "rgba(12, 12, 12, 0.82)",
+    borderRadius: 20,
+    paddingTop: 10,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  galleryCardLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.48)",
+    borderWidth: 0,
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  galleryCardTouch: {
+    flex: 1,
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  stackContainer: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  stackPhoto: {
+    position: "absolute",
+    width: "84%",
+    height: "92%",
+    backgroundColor: "#FFFFFF",
+    paddingTop: 4,
+    paddingHorizontal: 4,
+    paddingBottom: 2,
+    borderRadius: 2,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.32,
+    shadowRadius: 6,
+  },
+  photoMediaBox: {
+    flex: 1,
+    width: "100%",
+    backgroundColor: "#2a303c",
+    overflow: "hidden",
+    position: "relative",
+  },
+  photoImg: {
+    width: "100%",
+    height: "100%",
+  },
+  photoDimOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#000000",
+  },
+  photoCaptionBox: {
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 2,
+  },
+  photoCaptionText: {
+    fontFamily: Platform.select({ ios: "Snell Roundhand", android: "serif", default: "cursive" }),
+    fontStyle: "italic",
+    fontSize: 9.5,
+    fontWeight: "600",
+    color: "#2b2b2b",
+    letterSpacing: -0.2,
+  },
+  cardInfo: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 3,
+    marginTop: 6,
+  },
+  cardTitle: {
+    fontSize: 12.5,
+    fontWeight: "900",
+    letterSpacing: 0.4,
+    color: "#FFFFFF",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    flexShrink: 1,
+    marginRight: 4,
+  },
+  cardCounter: {
+    backgroundColor: "rgba(0, 0, 0, 0.50)",
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 99,
+  },
+  cardCounterLight: {
+    backgroundColor: "rgba(100, 100, 100, 0.50)",
+  },
+  cardCounterText: {
+    fontFamily: Platform.select({ ios: "Snell Roundhand", android: "serif", default: "cursive" }),
+    fontStyle: "italic",
+    fontSize: 9.5,
+    fontWeight: "700",
   },
 });
 

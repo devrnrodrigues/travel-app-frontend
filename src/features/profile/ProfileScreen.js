@@ -28,6 +28,8 @@ import { styles, dialogStyles } from "./profile.styles";
 import { useAuth } from "../auth/context/AuthContext";
 import { ALL_COUNTRIES } from "./data/countries";
 import { CountryPillSkeletonGroup } from "./components/CountryPillSkeleton";
+import PolaroidStackCard from "./components/PolaroidStackCard";
+import { GALLERY_COLLECTIONS } from "./data/mockGallery";
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser } = useAuth();
@@ -386,7 +388,7 @@ export default function ProfileScreen({ navigation }) {
             {loading ? (
               <ProfileSkeleton isDarkMode={isDarkMode} />
             ) : (
-              <FadeInView duration={260}>
+              <FadeInView duration={260} style={styles.flex1}>
                 <View
                   style={[
                     styles.profileCard,
@@ -450,6 +452,33 @@ export default function ProfileScreen({ navigation }) {
                   >
                     {bio || "Sem bio definida."}
                   </Text>
+                </View>
+
+                <View style={styles.galleryContainer}>
+                  <View style={styles.galleryRow}>
+                    <PolaroidStackCard
+                      item={GALLERY_COLLECTIONS[0]}
+                      isDarkMode={isDarkMode}
+                      currentTheme={currentTheme}
+                    />
+                    <PolaroidStackCard
+                      item={GALLERY_COLLECTIONS[1]}
+                      isDarkMode={isDarkMode}
+                      currentTheme={currentTheme}
+                    />
+                  </View>
+                  <View style={styles.galleryRow}>
+                    <PolaroidStackCard
+                      item={GALLERY_COLLECTIONS[2]}
+                      isDarkMode={isDarkMode}
+                      currentTheme={currentTheme}
+                    />
+                    <PolaroidStackCard
+                      item={GALLERY_COLLECTIONS[3]}
+                      isDarkMode={isDarkMode}
+                      currentTheme={currentTheme}
+                    />
+                  </View>
                 </View>
               </FadeInView>
             )}
