@@ -7,34 +7,58 @@ import {
   Animated,
   Platform,
 } from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { styles } from "../profile.styles";
 
 const SLOT_CONFIGS = [
-  { transX: 0, transY: 0, rot: 0, scale: 1, dim: 0 },
-  { transX: 10, transY: -5, rot: 9, scale: 0.92, dim: 0.12 },
-  { transX: -10, transY: -8, rot: -9, scale: 0.86, dim: 0.22 },
+  { transX: 0, transY: 0, rot: 0, scale: 1, dim: 0, opacity: 1 },
+  { transX: 10, transY: -5, rot: 9, scale: 0.92, dim: 0.12, opacity: 1 },
+  { transX: -10, transY: -8, rot: -9, scale: 0.86, dim: 0.22, opacity: 1 },
+  { transX: 0, transY: -10, rot: 0, scale: 0.8, dim: 0.3, opacity: 0 },
 ];
 
 export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
+  const navigation = useNavigation();
+  const [, setTick] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setTick((t) => t + 1);
+    }, [])
+  );
+  const photos = item.photos || [];
+  const total = photos.length;
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [zIndices, setZIndices] = useState([3, 2, 1]);
+  const [zIndices, setZIndices] = useState(() =>
+    photos.map((_, i) => {
+      const offset = (i + total) % total;
+      if (offset === 0) return 10;
+      if (offset === 1) return 9;
+      if (offset === 2) return 8;
+      return 1;
+    })
+  );
 
   const cardScale = useRef(new Animated.Value(1)).current;
 
   const anims = useRef(
-    item.photos.map((_, i) => {
-      const cfg = SLOT_CONFIGS[i % 3];
+    photos.map((_, i) => {
+      const offset = (i + total) % total;
+      const cfg = offset < 3 ? SLOT_CONFIGS[offset] : SLOT_CONFIGS[3];
       return {
         transX: new Animated.Value(cfg.transX),
         transY: new Animated.Value(cfg.transY),
         rot: new Animated.Value(cfg.rot),
         scale: new Animated.Value(cfg.scale),
         dim: new Animated.Value(cfg.dim),
+        opacity: new Animated.Value(cfg.opacity),
       };
     })
   ).current;
 
   const handlePress = useCallback(() => {
+    if (total <= 1) return;
+
     Animated.sequence([
       Animated.timing(cardScale, {
         toValue: 0.96,
@@ -49,20 +73,21 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
       }),
     ]).start();
 
-    const nextIndex = (currentIndex + 1) % 3;
+    const nextIndex = (currentIndex + 1) % total;
     setCurrentIndex(nextIndex);
 
-    const nextZ = item.photos.map((_, i) => {
-      const slot = (i + nextIndex) % 3;
-      if (slot === 0) return 3;
-      if (slot === 1) return 2;
+    const nextZ = photos.map((_, i) => {
+      const offset = (i - nextIndex + total) % total;
+      if (offset === 0) return 10;
+      if (offset === 1) return 9;
+      if (offset === 2) return 8;
       return 1;
     });
     setZIndices(nextZ);
 
-    const parallelAnimations = item.photos.map((_, i) => {
-      const slot = (i + nextIndex) % 3;
-      const cfg = SLOT_CONFIGS[slot];
+    const parallelAnimations = photos.map((_, i) => {
+      const offset = (i - nextIndex + total) % total;
+      const cfg = offset < 3 ? SLOT_CONFIGS[offset] : SLOT_CONFIGS[3];
       return Animated.parallel([
         Animated.spring(anims[i].transX, {
           toValue: cfg.transX,
@@ -93,11 +118,16 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
           duration: 220,
           useNativeDriver: true,
         }),
+        Animated.timing(anims[i].opacity, {
+          toValue: cfg.opacity,
+          duration: 220,
+          useNativeDriver: true,
+        }),
       ]);
     });
 
     Animated.parallel(parallelAnimations).start();
-  }, [currentIndex, item.photos, anims, cardScale]);
+  }, [currentIndex, photos, total, anims, cardScale]);
 
   return (
     <Animated.View
@@ -113,7 +143,7 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
           activeOpacity={0.94}
           onPress={handlePress}
         >
-          {item.photos.map((photo, i) => {
+          {photos.map((photo, i) => {
             const rotDeg = anims[i].rot.interpolate({
               inputRange: [-15, 0, 15],
               outputRange: ["-15deg", "0deg", "15deg"],
@@ -125,8 +155,9 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
                 style={[
                   styles.stackPhoto,
                   {
-                    zIndex: zIndices[i],
-                    elevation: zIndices[i] * 2,
+                    zIndex: zIndices[i] || 1,
+                    elevation: (zIndices[i] || 1) * 2,
+                    opacity: anims[i].opacity,
                     transform: [
                       { translateX: anims[i].transX },
                       { translateY: anims[i].transY },
@@ -151,7 +182,13 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
                   />
                 </View>
                 <View style={styles.photoCaptionBox}>
-                  <Text numberOfLines={1} style={styles.photoCaptionText}>
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.photoCaptionText,
+                      currentTheme?.accent ? { color: currentTheme.accent } : null,
+                    ]}
+                  >
                     {photo.caption}
                   </Text>
                 </View>
@@ -161,20 +198,30 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
         </TouchableOpacity>
 
         <View style={styles.cardInfo}>
-          <Text numberOfLines={1} style={styles.cardTitle}>
-            {item.title}
-          </Text>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() =>
+              navigation.navigate("CollectionGallery", { collection: item })
+            }
+          >
+            <Text numberOfLines={1} style={styles.cardTitle}>
+              {item.title}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.cardCounter,
               !isDarkMode && styles.cardCounterLight,
             ]}
             activeOpacity={0.7}
+            onPress={() =>
+              navigation.navigate("CollectionGallery", { collection: item })
+            }
           >
             <Text
               style={[
                 styles.cardCounterText,
-                { color: currentTheme?.accent || "#4CAF50" },
+                { color: isDarkMode ? "#FFFFFF" : "#000000" },
               ]}
             >
               Abrir

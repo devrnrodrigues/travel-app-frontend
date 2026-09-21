@@ -12,6 +12,7 @@ import LoginScreen from "../features/auth/screens/LoginScreen";
 import RegisterScreen from "../features/auth/screens/RegisterScreen";
 import DetailsScreen from "../features/destinations/DetailsScreen";
 import FlightSearchScreen from "../features/flights/screens/FlightSearchScreen";
+import CollectionGalleryScreen from "../features/profile/screens/CollectionGalleryScreen";
 import { useTheme } from "../theme/ThemeContext";
 
 const Stack = createNativeStackNavigator();
@@ -83,6 +84,14 @@ export default function RootNavigator({ session, hasSeenWelcome }) {
                 presentation: "transparentModal",
                 animation: "fade",
                 animationDuration: 180,
+              }}
+            />
+            <Stack.Screen
+              name="CollectionGallery"
+              component={CollectionGalleryScreen}
+              options={{
+                animation: "fade",
+                animationDuration: 200,
               }}
             />
           </>
