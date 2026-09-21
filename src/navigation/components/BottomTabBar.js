@@ -25,8 +25,8 @@ export default function BottomTabBar({ state, navigation }) {
   const tabBgColor = isDarkMode
     ? "rgba(10, 10, 10, 0.85)"
     : isExplore
-    ? "rgba(150, 150, 150, 0.80)"
-    : "rgba(240, 240, 240, 0.30)";
+    ? "rgba(255, 255, 255, 0.72)"
+    : "rgba(240, 240, 240, 0.40)";
 
   const prevIndexRef = useRef(state.index);
   const sweepOpacity = useRef(new Animated.Value(0)).current;
@@ -184,7 +184,13 @@ export default function BottomTabBar({ state, navigation }) {
               <Feather
                 name={iconName}
                 size={22}
-                color={isFocused ? activeAccent : "#FFFFFF"}
+                color={
+                  isFocused
+                    ? activeAccent
+                    : isExplore && !isDarkMode
+                    ? "#000000"
+                    : "#FFFFFF"
+                }
               />
             </Animated.View>
           </TouchableOpacity>

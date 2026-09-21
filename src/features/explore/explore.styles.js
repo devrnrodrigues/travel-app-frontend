@@ -26,7 +26,7 @@ export default StyleSheet.create({
     zIndex: 9999,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(15, 15, 15, 0.85)",
+    backgroundColor: "rgba(10, 10, 10, 0.85)",
     borderRadius: 25,
     height: 50,
     paddingHorizontal: 16,
@@ -39,7 +39,8 @@ export default StyleSheet.create({
     elevation: 20,
   },
   searchBarLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.82)",
+    backgroundColor: "rgba(255, 255, 255, 0.72)",
+    shadowOpacity: 0.18,
   },
   searchIcon: {
     marginRight: 8,
@@ -177,25 +178,17 @@ export default StyleSheet.create({
   imageSkeletonLight: {
     backgroundColor: "rgba(0, 0, 0, 0.08)",
   },
-  searchBarLight: {
-    backgroundColor: "rgba(155, 155, 155, 1)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 20,
-  },
   searchBarFocusedBase: {
     borderWidth: 1.5,
   },
   searchBarFocusedDark: {
-    backgroundColor: "#121212",
+    backgroundColor: "#000000",
   },
   searchBarFocusedLight: {
-    backgroundColor: "rgba(155, 155, 155, 1)",
+    backgroundColor: "#FFFFFF",
   },
   searchInputLight: {
-    color: "#FFFFFF",
+    color: "#000000",
   },
   loadingMoreContainer: {
     paddingVertical: 24,

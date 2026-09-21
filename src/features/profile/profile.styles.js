@@ -77,13 +77,19 @@ export const styles = StyleSheet.create({
     borderRadius: 36,
   },
   userName: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontSize: 20,
     marginTop: 8,
     fontWeight: "bold",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   userNameLight: {
     color: "#FFFFFF",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   userSubtitle: {
     fontSize: 13.5,
@@ -96,9 +102,15 @@ export const styles = StyleSheet.create({
     marginTop: 13,
     textAlign: "center",
     lineHeight: 18,
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   bioTextLight: {
-    color: "rgba(255, 255, 255, 0.85)",
+    color: "#FFFFFF",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   modalOverlay: {
     flex: 1,

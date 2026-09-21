@@ -426,14 +426,14 @@ export default function Explore({ navigation }) {
               <Feather
                 name="search"
                 size={18}
-                color={isSearchFocused ? (currentTheme?.accent || "#4CAF50") : "#FFFFFF"}
+                color={isSearchFocused ? (currentTheme?.accent || "#4CAF50") : (isDarkMode ? "#FFFFFF" : "#000000")}
                 style={styles.searchIcon}
               />
               <TextInput
                 ref={searchInputRef}
                 style={[styles.searchInput, !isDarkMode && styles.searchInputLight]}
                 placeholder="Pesquisar destinos, locais..."
-                placeholderTextColor={!isDarkMode ? "rgba(255, 255, 255, 0.65)" : (isSearchFocused ? "rgba(255, 255, 255, 0.65)" : "rgba(255, 255, 255, 0.75)")}
+                placeholderTextColor={isDarkMode ? "rgba(255, 255, 255, 0.65)" : "rgba(0, 0, 0, 0.50)"}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 onFocus={() => setIsSearchFocused(true)}
@@ -446,7 +446,7 @@ export default function Explore({ navigation }) {
                   style={styles.clearButton}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                  <Feather name="x" size={16} color="#FFFFFF" />
+                  <Feather name="x" size={16} color={isDarkMode ? "#FFFFFF" : "#000000"} />
                 </TouchableOpacity>
               )}
             </Pressable>
