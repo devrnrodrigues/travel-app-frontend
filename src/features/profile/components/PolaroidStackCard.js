@@ -107,12 +107,12 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
         { transform: [{ scale: cardScale }] },
       ]}
     >
-      <TouchableOpacity
-        style={styles.galleryCardTouch}
-        activeOpacity={1}
-        onPress={handlePress}
-      >
-        <View style={styles.stackContainer}>
+      <View style={styles.galleryCardTouch}>
+        <TouchableOpacity
+          style={styles.stackContainer}
+          activeOpacity={0.94}
+          onPress={handlePress}
+        >
           {item.photos.map((photo, i) => {
             const rotDeg = anims[i].rot.interpolate({
               inputRange: [-15, 0, 15],
@@ -158,17 +158,18 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
               </Animated.View>
             );
           })}
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.cardInfo}>
           <Text numberOfLines={1} style={styles.cardTitle}>
             {item.title}
           </Text>
-          <View
+          <TouchableOpacity
             style={[
               styles.cardCounter,
               !isDarkMode && styles.cardCounterLight,
             ]}
+            activeOpacity={0.7}
           >
             <Text
               style={[
@@ -176,11 +177,11 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
                 { color: currentTheme?.accent || "#4CAF50" },
               ]}
             >
-              {item.photos.length} fotos
+              Abrir
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   );
 }
