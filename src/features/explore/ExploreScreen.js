@@ -15,6 +15,7 @@ import {
   Keyboard,
   Platform,
   FlatList,
+  Easing,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -159,36 +160,75 @@ export default function Explore({ navigation }) {
   const isSearchBarVisibleRef = useRef(true);
   const lastScrollY = useRef(0);
   const isSearchFocusedRef = useRef(false);
+  const autoHideTimerRef = useRef(null);
 
   const hideSearchBar = useCallback(() => {
     if (isSearchFocusedRef.current || !isSearchBarVisibleRef.current) return;
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
     isSearchBarVisibleRef.current = false;
     setIsSearchBarVisible(false);
     Animated.timing(searchBarAnim, {
       toValue: 1,
-      duration: 200,
+      duration: 120,
+      easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start();
   }, [searchBarAnim]);
 
+  const scheduleAutoHide = useCallback(() => {
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+    if (!isSearchFocusedRef.current && isSearchBarVisibleRef.current) {
+      autoHideTimerRef.current = setTimeout(() => {
+        hideSearchBar();
+      }, 3000);
+    }
+  }, [hideSearchBar]);
+
   const showSearchBar = useCallback(() => {
-    if (isSearchBarVisibleRef.current) return;
-    isSearchBarVisibleRef.current = true;
-    setIsSearchBarVisible(true);
-    Animated.spring(searchBarAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-      bounciness: 0,
-      speed: 20,
-    }).start();
-  }, [searchBarAnim]);
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+    if (!isSearchBarVisibleRef.current) {
+      isSearchBarVisibleRef.current = true;
+      setIsSearchBarVisible(true);
+      Animated.timing(searchBarAnim, {
+        toValue: 0,
+        duration: 120,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    }
+    scheduleAutoHide();
+  }, [searchBarAnim, scheduleAutoHide]);
 
   useEffect(() => {
     isSearchFocusedRef.current = isSearchFocused;
     if (isSearchFocused) {
+      if (autoHideTimerRef.current) {
+        clearTimeout(autoHideTimerRef.current);
+        autoHideTimerRef.current = null;
+      }
       showSearchBar();
+    } else {
+      scheduleAutoHide();
     }
-  }, [isSearchFocused, showSearchBar]);
+  }, [isSearchFocused, showSearchBar, scheduleAutoHide]);
+
+  useEffect(() => {
+    return () => {
+      if (autoHideTimerRef.current) {
+        clearTimeout(autoHideTimerRef.current);
+        autoHideTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const loadNextPage = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -240,6 +280,12 @@ export default function Explore({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       showSearchBar();
+      return () => {
+        if (autoHideTimerRef.current) {
+          clearTimeout(autoHideTimerRef.current);
+          autoHideTimerRef.current = null;
+        }
+      };
     }, [showSearchBar])
   );
 

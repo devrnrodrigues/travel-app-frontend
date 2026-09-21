@@ -38,6 +38,9 @@ export default StyleSheet.create({
     shadowRadius: 8,
     elevation: 20,
   },
+  searchBarLight: {
+    backgroundColor: "rgba(100, 100, 100, 0.82)",
+  },
   searchIcon: {
     marginRight: 8,
   },

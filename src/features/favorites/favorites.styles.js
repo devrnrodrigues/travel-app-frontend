@@ -96,8 +96,12 @@ export default StyleSheet.create({
   },
   cardDark: {
     backgroundColor: "rgba(12, 12, 12, 0.82)",
+    borderWidth: 1,
+    borderColor: "rgba(22, 22, 22, 0.6)"
   },
   cardLight: {
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.20)",
     backgroundColor: "rgba(255, 255, 255, 0.40)",
   },
   imageWrapper: {

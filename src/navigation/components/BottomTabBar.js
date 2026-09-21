@@ -133,7 +133,13 @@ export default function BottomTabBar({ state, navigation }) {
       ];
 
   return (
-    <View style={[styles.bottomTab, { backgroundColor: tabBgColor }]}>
+    <View
+      style={[
+        styles.bottomTab,
+        { backgroundColor: tabBgColor },
+        !isDarkMode && styles.bottomTabLight,
+      ]}
+    >
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
 

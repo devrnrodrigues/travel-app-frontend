@@ -29,6 +29,12 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     maxWidth: 500,
     alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "rgba(22, 22, 22, 0.6)",
+  },
+  bottomTabLight: {
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.20)",
   },
   tabItem: {
     width: 48,

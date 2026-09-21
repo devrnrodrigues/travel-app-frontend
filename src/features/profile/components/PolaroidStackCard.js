@@ -41,7 +41,6 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
     })
   );
 
-  const cardScale = useRef(new Animated.Value(1)).current;
 
   const anims = useRef(
     photos.map((_, i) => {
@@ -60,20 +59,6 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
 
   const handlePress = useCallback(() => {
     if (total <= 1) return;
-
-    Animated.sequence([
-      Animated.timing(cardScale, {
-        toValue: 0.96,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(cardScale, {
-        toValue: 1,
-        friction: 6,
-        tension: 80,
-        useNativeDriver: true,
-      }),
-    ]).start();
 
     const nextIndex = (currentIndex + 1) % total;
     setCurrentIndex(nextIndex);
@@ -129,7 +114,7 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
     });
 
     Animated.parallel(parallelAnimations).start();
-  }, [currentIndex, photos, total, anims, cardScale]);
+  }, [currentIndex, photos, total, anims]);
 
   const handleLongPress = useCallback(() => {
     navigation.navigate("CollectionGallery", {
@@ -139,11 +124,10 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
   }, [currentIndex, navigation, item]);
 
   return (
-    <Animated.View
+    <View
       style={[
         styles.galleryCard,
         !isDarkMode && styles.galleryCardLight,
-        { transform: [{ scale: cardScale }] },
       ]}
     >
       <View style={styles.galleryCardTouch}>
@@ -238,6 +222,6 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
           </TouchableOpacity>
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 }
