@@ -6,15 +6,16 @@ import {
   Image,
   Animated,
   Platform,
+  StyleSheet,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { styles } from "../profile.styles";
 
 const SLOT_CONFIGS = [
   { transX: 0, transY: 0, rot: 0, scale: 1, dim: 0, opacity: 1 },
-  { transX: 10, transY: -5, rot: 9, scale: 0.92, dim: 0.12, opacity: 1 },
-  { transX: -10, transY: -8, rot: -9, scale: 0.86, dim: 0.22, opacity: 1 },
-  { transX: 0, transY: -10, rot: 0, scale: 0.8, dim: 0.3, opacity: 0 },
+  { transX: 7, transY: -4, rot: 5.5, scale: 0.94, dim: 0.12, opacity: 1 },
+  { transX: -7, transY: -6, rot: -5.5, scale: 0.88, dim: 0.22, opacity: 1 },
+  { transX: 0, transY: -8, rot: 0, scale: 0.82, dim: 0.3, opacity: 0 },
 ];
 
 export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
@@ -29,6 +30,7 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
   const total = photos.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);
+
   const [zIndices, setZIndices] = useState(() =>
     photos.map((_, i) => {
       const offset = (i + total) % total;
@@ -129,6 +131,13 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
     Animated.parallel(parallelAnimations).start();
   }, [currentIndex, photos, total, anims, cardScale]);
 
+  const handleLongPress = useCallback(() => {
+    navigation.navigate("CollectionGallery", {
+      collection: item,
+      highlightPhotoIndex: currentIndex,
+    });
+  }, [currentIndex, navigation, item]);
+
   return (
     <Animated.View
       style={[
@@ -142,6 +151,8 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
           style={styles.stackContainer}
           activeOpacity={0.94}
           onPress={handlePress}
+          onLongPress={handleLongPress}
+          delayLongPress={300}
         >
           {photos.map((photo, i) => {
             const rotDeg = anims[i].rot.interpolate({
@@ -152,6 +163,7 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
             return (
               <Animated.View
                 key={photo.id}
+                pointerEvents="none"
                 style={[
                   styles.stackPhoto,
                   {
@@ -183,11 +195,8 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
                 </View>
                 <View style={styles.photoCaptionBox}>
                   <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.photoCaptionText,
-                      currentTheme?.accent ? { color: currentTheme.accent } : null,
-                    ]}
+                    numberOfLines={2}
+                    style={styles.photoCaptionText}
                   >
                     {photo.caption}
                   </Text>
@@ -221,7 +230,7 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
             <Text
               style={[
                 styles.cardCounterText,
-                { color: isDarkMode ? "#FFFFFF" : "#000000" },
+                { color: currentTheme?.accent || (isDarkMode ? "#FFFFFF" : "#000000") },
               ]}
             >
               Abrir

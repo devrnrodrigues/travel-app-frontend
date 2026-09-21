@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import {
   KeyboardAvoidingView,
   StyleSheet,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { PinchGestureHandler, State } from "react-native-gesture-handler";
@@ -26,10 +28,24 @@ import { updatePhotoCaption } from "../data/mockGallery";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function CollectionGalleryScreen({ route, navigation }) {
-  const { collection } = route.params || {};
+  const { collection, highlightPhotoIndex } = route.params || {};
   const { isDarkMode, currentTheme } = useTheme();
 
   const [columns, setColumns] = useState(3);
+
+  useEffect(() => {
+    AsyncStorage.getItem("@gallery_grid_columns")
+      .then((saved) => {
+        if (saved) {
+          const parsed = parseInt(saved, 10);
+          if (parsed >= 1 && parsed <= 4) {
+            setColumns(parsed);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
   const [activeViewerIndex, setActiveViewerIndex] = useState(0);
   const [isPinching, setIsPinching] = useState(false);
@@ -46,6 +62,56 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   const gridOpacity = useRef(new Animated.Value(1)).current;
   const modalTranslateY = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.92)).current;
+  const borderBlinkAnim = useRef(new Animated.Value(0)).current;
+
+  useFocusEffect(
+    useCallback(() => {
+      const rawIdx = route.params?.highlightPhotoIndex;
+      if (rawIdx !== undefined && rawIdx !== null) {
+        const targetIdx = Number(rawIdx);
+        borderBlinkAnim.setValue(0);
+
+        const timer = setTimeout(() => {
+          if (targetIdx > 0) {
+            try {
+              flatListRef.current?.scrollToIndex({
+                index: targetIdx,
+                animated: true,
+                viewPosition: 0.5,
+              });
+            } catch (e) {}
+          }
+
+          Animated.sequence([
+            Animated.timing(borderBlinkAnim, {
+              toValue: 1,
+              duration: 500,
+              useNativeDriver: false,
+            }),
+            Animated.timing(borderBlinkAnim, {
+              toValue: 0.05,
+              duration: 450,
+              useNativeDriver: false,
+            }),
+            Animated.timing(borderBlinkAnim, {
+              toValue: 1,
+              duration: 500,
+              useNativeDriver: false,
+            }),
+            Animated.timing(borderBlinkAnim, {
+              toValue: 0,
+              duration: 600,
+              useNativeDriver: false,
+            }),
+          ]).start();
+        }, 350);
+
+        return () => clearTimeout(timer);
+      } else {
+        borderBlinkAnim.setValue(0);
+      }
+    }, [route.params?.highlightPhotoIndex, borderBlinkAnim])
+  );
 
   useEffect(() => {
     if (isEditingCaption) {
@@ -141,7 +207,9 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         if (prev > 1) {
           lastChangeTime.current = now;
           triggerTransitionAnimation();
-          return prev - 1;
+          const next = prev - 1;
+          AsyncStorage.setItem("@gallery_grid_columns", String(next)).catch(() => {});
+          return next;
         }
         return prev;
       });
@@ -150,7 +218,9 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         if (prev < 4) {
           lastChangeTime.current = now;
           triggerTransitionAnimation();
-          return prev + 1;
+          const next = prev + 1;
+          AsyncStorage.setItem("@gallery_grid_columns", String(next)).catch(() => {});
+          return next;
         }
         return prev;
       });
@@ -222,32 +292,67 @@ export default function CollectionGalleryScreen({ route, navigation }) {
 
   const renderGridItem = ({ item, index }) => {
     const isLastInRow = (index + 1) % columns === 0;
+    const rawIdx = route.params?.highlightPhotoIndex;
+    const isHighlighted =
+      rawIdx !== undefined &&
+      rawIdx !== null &&
+      Number(index) === Number(rawIdx);
 
     return (
-      <TouchableOpacity
-        activeOpacity={0.88}
-        onPress={() => {
-          setSelectedPhotoIndex(index);
-          setActiveViewerIndex(index);
+      <View
+        style={{
+          width: itemWidth,
+          height: itemHeight,
+          marginRight: isLastInRow ? 0 : gap,
+          marginBottom: gap,
+          position: "relative",
         }}
-        style={[
-          styles.gridItem,
-          !isDarkMode && styles.gridItemLight,
-          {
-            width: itemWidth,
-            height: itemHeight,
-            borderRadius,
-            marginRight: isLastInRow ? 0 : gap,
-            marginBottom: gap,
-          },
-        ]}
       >
-        <Image
-          source={{ uri: item.url }}
-          style={styles.gridImage}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.88}
+          onPress={() => {
+            setSelectedPhotoIndex(index);
+            setActiveViewerIndex(index);
+          }}
+          style={[
+            styles.gridItem,
+            !isDarkMode && styles.gridItemLight,
+            {
+              width: "100%",
+              height: "100%",
+              borderRadius,
+            },
+          ]}
+        >
+          <Image
+            source={{ uri: item.url }}
+            style={styles.gridImage}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+
+        {isHighlighted && (
+          <Animated.View
+            pointerEvents="none"
+            collapsable={false}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius,
+              borderWidth: 4,
+              borderColor: currentTheme?.accent || "#3B82F6",
+              opacity: borderBlinkAnim,
+              zIndex: 9999,
+              elevation: 0,
+              shadowColor: "transparent",
+              shadowOpacity: 0,
+            }}
+          />
+        )}
+      </View>
     );
   };
 
@@ -319,6 +424,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
             scrollEnabled={!isPinching}
             key={`gallery-cols-${columns}`}
             data={photos}
+            extraData={route.params?.highlightPhotoIndex}
             numColumns={columns}
             keyExtractor={(item) => item.id}
             renderItem={renderGridItem}
@@ -326,6 +432,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
             showsVerticalScrollIndicator={false}
             scrollEventThrottle={16}
             bounces={true}
+            onScrollToIndexFailed={() => {}}
           />
         </Animated.View>
       </PinchGestureHandler>
@@ -494,6 +601,17 @@ export default function CollectionGalleryScreen({ route, navigation }) {
               returnKeyType="done"
               onSubmitEditing={handleSaveCaption}
             />
+
+            <View style={styles.charCountRow}>
+              <Text
+                style={[
+                  styles.charCountText,
+                  !isDarkMode && styles.charCountTextLight,
+                ]}
+              >
+                {editingText.length}/28
+              </Text>
+            </View>
 
             <View style={styles.editDialogButtons}>
               <TouchableOpacity

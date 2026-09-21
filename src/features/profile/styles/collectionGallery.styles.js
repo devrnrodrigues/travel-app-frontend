@@ -120,9 +120,10 @@ export const styles = StyleSheet.create({
   },
   captionPillText: {
     fontFamily: "Caveat-Bold",
-    fontSize: 16,
+    fontSize: 17,
     color: "#FFFFFF",
-    letterSpacing: -0.2,
+    paddingRight: 6,
+    paddingLeft: 2,
   },
   captionPillTextLight: {
     color: "#000000",
@@ -191,6 +192,19 @@ export const styles = StyleSheet.create({
   },
   editDialogInputFocusedLight: {
     borderColor: "#000000",
+  },
+  charCountRow: {
+    alignItems: "flex-end",
+    marginTop: 6,
+    marginRight: 4,
+  },
+  charCountText: {
+    fontSize: 12,
+    color: "#8E8E93",
+    fontWeight: "500",
+  },
+  charCountTextLight: {
+    color: "#8E8E93",
   },
   editDialogButtons: {
     flexDirection: "row",
