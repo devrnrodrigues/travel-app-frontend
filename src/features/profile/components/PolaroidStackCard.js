@@ -72,6 +72,7 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
     });
     setZIndices(nextZ);
 
+    const useNative = Platform.OS !== "web";
     const parallelAnimations = photos.map((_, i) => {
       const offset = (i - nextIndex + total) % total;
       const cfg = offset < 3 ? SLOT_CONFIGS[offset] : SLOT_CONFIGS[3];
@@ -80,35 +81,35 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
           toValue: cfg.transX,
           friction: 7,
           tension: 50,
-          useNativeDriver: true,
+          useNativeDriver: useNative,
         }),
         Animated.spring(anims[i].transY, {
           toValue: cfg.transY,
           friction: 7,
           tension: 50,
-          useNativeDriver: true,
+          useNativeDriver: useNative,
         }),
         Animated.spring(anims[i].rot, {
           toValue: cfg.rot,
           friction: 7,
           tension: 50,
-          useNativeDriver: true,
+          useNativeDriver: useNative,
         }),
         Animated.spring(anims[i].scale, {
           toValue: cfg.scale,
           friction: 7,
           tension: 50,
-          useNativeDriver: true,
+          useNativeDriver: useNative,
         }),
         Animated.timing(anims[i].dim, {
           toValue: cfg.dim,
           duration: 220,
-          useNativeDriver: true,
+          useNativeDriver: useNative,
         }),
         Animated.timing(anims[i].opacity, {
           toValue: cfg.opacity,
           duration: 220,
-          useNativeDriver: true,
+          useNativeDriver: useNative,
         }),
       ]);
     });

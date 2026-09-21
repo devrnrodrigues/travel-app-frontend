@@ -14,6 +14,8 @@ import {
   Image,
   Easing,
   FlatList,
+  Dimensions,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -46,6 +48,7 @@ export default function ProfileScreen({ navigation }) {
   const [name, setName] = useState("");
   const [nationality, setNationality] = useState("Brasileiro");
   const [bio, setBio] = useState("");
+  const [galleryCount, setGalleryCount] = useState(4);
   const [focusedInput, setFocusedInput] = useState(null);
   const [hasTypedNationality, setHasTypedNationality] = useState(false);
 
@@ -56,7 +59,107 @@ export default function ProfileScreen({ navigation }) {
   const [isSearchingCountry, setIsSearchingCountry] = useState(false);
   const searchTimeoutRef = useRef(null);
 
+  const defaultGalleryHeight = useMemo(() => {
+    const screenH = Dimensions.get("window").height;
+    return Math.max(340, screenH - 350);
+  }, []);
+
+  const [galleryHeight, setGalleryHeight] = useState(defaultGalleryHeight);
+
+  const handleGalleryLayout = useCallback((e) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h > 100 && Math.abs(h - galleryHeight) > 6) {
+      setGalleryHeight(h);
+    }
+  }, [galleryHeight]);
+
+  const rowHeight = useMemo(() => {
+    return Math.max(160, Math.floor((galleryHeight - 12) / 2));
+  }, [galleryHeight]);
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const getRowAnimProps = useCallback(
+    (rowIndex) => {
+      const S = rowHeight + 12;
+      const enterStart = (rowIndex - 2) * S;
+      const enterEnd = (rowIndex - 1) * S;
+      const exitStart = rowIndex * S;
+      const exitEnd = (rowIndex + 0.85) * S;
+
+      let inputRange = [];
+      let opacityRange = [];
+      let scaleRange = [];
+      let translateYRange = [];
+
+      if (rowIndex === 0) {
+        inputRange = [-50, 0, exitStart + S * 0.35, exitEnd];
+        opacityRange = [1, 1, 0.65, 0];
+        scaleRange = [1, 1, 0.97, 0.92];
+        translateYRange = [0, 0, -4, -14];
+      } else if (rowIndex === 1) {
+        inputRange = [0, exitStart, exitStart + S * 0.35, exitEnd];
+        opacityRange = [1, 1, 0.65, 0];
+        scaleRange = [1, 1, 0.97, 0.92];
+        translateYRange = [0, 0, -4, -14];
+      } else if (rowIndex === 2) {
+        inputRange = [
+          Math.max(0, enterStart),
+          enterStart + S * 0.45,
+          enterEnd,
+          exitStart,
+          exitStart + S * 0.35,
+          exitEnd,
+        ];
+        opacityRange = [0, 0.65, 1, 1, 0.65, 0];
+        scaleRange = [0.92, 0.96, 1, 1, 0.97, 0.92];
+        translateYRange = [14, 6, 0, 0, -4, -14];
+      } else {
+        inputRange = [
+          0,
+          Math.max(0, enterStart),
+          enterStart + S * 0.45,
+          enterEnd,
+          exitStart + S,
+        ];
+        opacityRange = [0, 0, 0.65, 1, 1];
+        scaleRange = [0.92, 0.92, 0.96, 1, 1];
+        translateYRange = [14, 14, 6, 0, 0];
+      }
+
+      const opacity = scrollY.interpolate({
+        inputRange,
+        outputRange: opacityRange,
+        extrapolate: "clamp",
+      });
+
+      const scale = scrollY.interpolate({
+        inputRange,
+        outputRange: scaleRange,
+        extrapolate: "clamp",
+      });
+
+      const translateY = scrollY.interpolate({
+        inputRange,
+        outputRange: translateYRange,
+        extrapolate: "clamp",
+      });
+
+      return { opacity, transform: [{ scale }, { translateY }] };
+    },
+    [rowHeight, scrollY]
+  );
+
   useEffect(() => {
+    AsyncStorage.getItem("@profile_gallery_count").then((val) => {
+      if (val) {
+        const parsed = parseInt(val, 10);
+        if (parsed >= 1 && parsed <= 8) {
+          setGalleryCount(parsed);
+        }
+      }
+    });
+
     return () => {
       if (blurTimeoutRef.current) {
         clearTimeout(blurTimeoutRef.current);
@@ -315,6 +418,15 @@ export default function ProfileScreen({ navigation }) {
             setNationality("Brasileiro");
           }
           if (parsed.bio) setBio(parsed.bio);
+          if (parsed.galleryCount && parsed.galleryCount >= 1 && parsed.galleryCount <= 8) {
+            setGalleryCount(parsed.galleryCount);
+          } else {
+            const savedCount = await AsyncStorage.getItem("@profile_gallery_count");
+            if (savedCount) {
+              const num = parseInt(savedCount, 10);
+              if (num >= 1 && num <= 8) setGalleryCount(num);
+            }
+          }
         }
       }
     } catch (err) {
@@ -324,6 +436,21 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
+  const handleGalleryCountChange = useCallback(async (count) => {
+    setGalleryCount(count);
+    try {
+      await AsyncStorage.setItem("@profile_gallery_count", String(count));
+      if (user) {
+        const storedProfileJson = await AsyncStorage.getItem(`profile_${user.id}`);
+        const parsed = storedProfileJson ? JSON.parse(storedProfileJson) : {};
+        parsed.galleryCount = count;
+        await AsyncStorage.setItem(`profile_${user.id}`, JSON.stringify(parsed));
+      }
+    } catch (e) {
+      console.error("Erro ao salvar contagem de galerias:", e);
+    }
+  }, [user]);
+
   const saveProfile = async () => {
     setLoadingData(true);
     try {
@@ -332,8 +459,9 @@ export default function ProfileScreen({ navigation }) {
       await updateUser({ fullName: name });
       await AsyncStorage.setItem(
         `profile_${user.id}`,
-        JSON.stringify({ nationality, bio })
+        JSON.stringify({ nationality, bio, galleryCount })
       );
+      await AsyncStorage.setItem("@profile_gallery_count", String(galleryCount));
 
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
       setModalVisible(false);
@@ -450,31 +578,131 @@ export default function ProfileScreen({ navigation }) {
                   </Text>
                 </View>
 
-                <View style={styles.galleryContainer}>
-                  <View style={styles.galleryRow}>
-                    <PolaroidStackCard
-                      item={GALLERY_COLLECTIONS[0]}
-                      isDarkMode={isDarkMode}
-                      currentTheme={currentTheme}
-                    />
-                    <PolaroidStackCard
-                      item={GALLERY_COLLECTIONS[1]}
-                      isDarkMode={isDarkMode}
-                      currentTheme={currentTheme}
-                    />
-                  </View>
-                  <View style={styles.galleryRow}>
-                    <PolaroidStackCard
-                      item={GALLERY_COLLECTIONS[2]}
-                      isDarkMode={isDarkMode}
-                      currentTheme={currentTheme}
-                    />
-                    <PolaroidStackCard
-                      item={GALLERY_COLLECTIONS[3]}
-                      isDarkMode={isDarkMode}
-                      currentTheme={currentTheme}
-                    />
-                  </View>
+                <View
+                  style={[
+                    styles.galleryContainer,
+                    galleryCount > 4 && styles.galleryContainerScrollable,
+                  ]}
+                  onLayout={handleGalleryLayout}
+                >
+                  {galleryCount <= 4 ? (
+                    <>
+                      <View style={styles.galleryRow}>
+                        {galleryCount >= 1 ? (
+                          <PolaroidStackCard
+                            item={GALLERY_COLLECTIONS[0]}
+                            isDarkMode={isDarkMode}
+                            currentTheme={currentTheme}
+                          />
+                        ) : (
+                          <View style={styles.gallerySpacer} />
+                        )}
+                        {galleryCount >= 2 ? (
+                          <PolaroidStackCard
+                            item={GALLERY_COLLECTIONS[1]}
+                            isDarkMode={isDarkMode}
+                            currentTheme={currentTheme}
+                          />
+                        ) : (
+                          <View style={styles.gallerySpacer} />
+                        )}
+                      </View>
+                      <View style={styles.galleryRow}>
+                        {galleryCount >= 3 ? (
+                          <PolaroidStackCard
+                            item={GALLERY_COLLECTIONS[2]}
+                            isDarkMode={isDarkMode}
+                            currentTheme={currentTheme}
+                          />
+                        ) : (
+                          <View style={styles.gallerySpacer} />
+                        )}
+                        {galleryCount >= 4 ? (
+                          <PolaroidStackCard
+                            item={GALLERY_COLLECTIONS[3]}
+                            isDarkMode={isDarkMode}
+                            currentTheme={currentTheme}
+                          />
+                        ) : (
+                          <View style={styles.gallerySpacer} />
+                        )}
+                      </View>
+                    </>
+                  ) : (
+                    <Animated.ScrollView
+                      style={styles.galleryScroll}
+                      contentContainerStyle={styles.galleryScrollContent}
+                      showsVerticalScrollIndicator={false}
+                      bounces={true}
+                      nestedScrollEnabled={true}
+                      scrollEventThrottle={16}
+                      onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: Platform.OS !== "web" }
+                      )}
+                    >
+                      {Array.from({ length: Math.ceil(galleryCount / 2) }).map(
+                        (_, rowIndex) => {
+                          const leftIdx = rowIndex * 2;
+                          const rightIdx = rowIndex * 2 + 1;
+                          const leftItem =
+                            leftIdx < galleryCount
+                              ? GALLERY_COLLECTIONS[
+                                  leftIdx % GALLERY_COLLECTIONS.length
+                                ]
+                              : null;
+                          const rightItem =
+                            rightIdx < galleryCount
+                              ? GALLERY_COLLECTIONS[
+                                  rightIdx % GALLERY_COLLECTIONS.length
+                                ]
+                              : null;
+                          const animStyle = getRowAnimProps(rowIndex);
+
+                          return (
+                            <Animated.View
+                              key={rowIndex}
+                              style={[
+                                styles.galleryRow,
+                                {
+                                  height: rowHeight,
+                                  minHeight: rowHeight,
+                                  flexGrow: 0,
+                                  flexShrink: 0,
+                                  ...(Platform.OS === "web"
+                                    ? { flexBasis: rowHeight, width: "100%" }
+                                    : { flex: 0 }),
+                                },
+                                animStyle,
+                              ]}
+                            >
+                              {leftItem ? (
+                                <PolaroidStackCard
+                                  key={`card_${leftIdx}`}
+                                  item={leftItem}
+                                  isDarkMode={isDarkMode}
+                                  currentTheme={currentTheme}
+                                />
+                              ) : (
+                                <View style={styles.gallerySpacer} />
+                              )}
+
+                              {rightItem ? (
+                                <PolaroidStackCard
+                                  key={`card_${rightIdx}`}
+                                  item={rightItem}
+                                  isDarkMode={isDarkMode}
+                                  currentTheme={currentTheme}
+                                />
+                              ) : (
+                                <View style={styles.gallerySpacer} />
+                              )}
+                            </Animated.View>
+                          );
+                        }
+                      )}
+                    </Animated.ScrollView>
+                  )}
                 </View>
               </FadeInView>
             )}
@@ -643,6 +871,78 @@ export default function ProfileScreen({ navigation }) {
                           onFocus={() => setFocusedInput("bio")}
                           onBlur={() => setFocusedInput(null)}
                         />
+
+                        <Text
+                          style={[
+                            styles.label,
+                            !isDarkMode && styles.labelLight,
+                            { marginTop: 14 },
+                          ]}
+                        >
+                          Coleções na Galeria
+                        </Text>
+                        <View style={styles.collectionCountGrid}>
+                          <View style={styles.collectionCountRow}>
+                            {[1, 2, 3, 4].map((num) => {
+                              const isSelected = galleryCount === num;
+                              return (
+                                <TouchableOpacity
+                                  key={num}
+                                  style={[
+                                    styles.collectionCountBtn,
+                                    !isDarkMode && styles.collectionCountBtnLight,
+                                    isSelected && {
+                                      backgroundColor: currentTheme.accent,
+                                      borderColor: currentTheme.accent,
+                                    },
+                                  ]}
+                                  activeOpacity={0.75}
+                                  onPress={() => handleGalleryCountChange(num)}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.collectionCountText,
+                                      !isDarkMode && styles.collectionCountTextLight,
+                                      isSelected && styles.collectionCountTextActive,
+                                    ]}
+                                  >
+                                    {num}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                          <View style={styles.collectionCountRow}>
+                            {[5, 6, 7, 8].map((num) => {
+                              const isSelected = galleryCount === num;
+                              return (
+                                <TouchableOpacity
+                                  key={num}
+                                  style={[
+                                    styles.collectionCountBtn,
+                                    !isDarkMode && styles.collectionCountBtnLight,
+                                    isSelected && {
+                                      backgroundColor: currentTheme.accent,
+                                      borderColor: currentTheme.accent,
+                                    },
+                                  ]}
+                                  activeOpacity={0.75}
+                                  onPress={() => handleGalleryCountChange(num)}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.collectionCountText,
+                                      !isDarkMode && styles.collectionCountTextLight,
+                                      isSelected && styles.collectionCountTextActive,
+                                    ]}
+                                  >
+                                    {num}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                        </View>
 
                         <TouchableOpacity
                           style={[

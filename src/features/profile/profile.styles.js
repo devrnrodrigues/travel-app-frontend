@@ -304,11 +304,29 @@ export const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 118,
     gap: 12,
+    ...(Platform.OS === "web" ? { minHeight: 0 } : {}),
+  },
+  galleryContainerScrollable: {
+    gap: 0,
+    overflow: "hidden",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
+  },
+  galleryScroll: {
+    flex: 1,
+    width: "100%",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
+  },
+  galleryScrollContent: {
+    gap: 12,
+    paddingBottom: 4,
+    ...(Platform.OS === "web" ? { width: "100%", minHeight: "100%" } : {}),
   },
   galleryRow: {
     flex: 1,
+    width: "100%",
     flexDirection: "row",
     gap: 12,
+    ...(Platform.OS === "web" ? { minHeight: 0 } : {}),
   },
   galleryCard: {
     flex: 1,
@@ -324,6 +342,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0,
     shadowRadius: 0,
     shadowOffset: { width: 0, height: 0 },
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
   },
   galleryCardLight: {
     backgroundColor: "rgba(240, 240, 240, 0.30)",
@@ -336,8 +355,10 @@ export const styles = StyleSheet.create({
   },
   galleryCardTouch: {
     flex: 1,
+    width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
   },
   stackContainer: {
     flex: 1,
@@ -345,11 +366,12 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
   },
   stackPhoto: {
     position: "absolute",
-    width: "90%",
-    height: "89%",
+    width: "92%",
+    height: "83%",
     backgroundColor: "#FFFFFF",
     paddingTop: 5,
     paddingHorizontal: 5,
@@ -366,6 +388,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#2a303c",
     overflow: "hidden",
     position: "relative",
+    ...(Platform.OS === "web" ? { minHeight: 0 } : {}),
   },
   photoImg: {
     width: "100%",
@@ -436,6 +459,44 @@ export const styles = StyleSheet.create({
   cardCounterText: {
     fontFamily: "Caveat-SemiBold",
     fontSize: 12,
+  },
+  gallerySpacer: {
+    flex: 1,
+  },
+  collectionCountGrid: {
+    gap: 8,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  collectionCountRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  collectionCountBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  collectionCountBtnLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.06)",
+    borderColor: "rgba(0, 0, 0, 0.10)",
+  },
+  collectionCountText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  collectionCountTextLight: {
+    color: "#1A1A1A",
+  },
+  collectionCountTextActive: {
+    color: "#000000",
+    fontWeight: "800",
   },
 });
 
