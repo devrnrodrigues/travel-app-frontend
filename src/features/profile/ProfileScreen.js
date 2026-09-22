@@ -913,7 +913,6 @@ export default function ProfileScreen({ navigation }) {
                                     !isDarkMode && styles.collectionCountBtnLight,
                                     isSelected && {
                                       backgroundColor: currentTheme.accent,
-                                      borderColor: currentTheme.accent,
                                     },
                                   ]}
                                   activeOpacity={0.75}
@@ -943,7 +942,6 @@ export default function ProfileScreen({ navigation }) {
                                     !isDarkMode && styles.collectionCountBtnLight,
                                     isSelected && {
                                       backgroundColor: currentTheme.accent,
-                                      borderColor: currentTheme.accent,
                                     },
                                   ]}
                                   activeOpacity={0.75}

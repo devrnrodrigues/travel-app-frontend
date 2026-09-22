@@ -149,7 +149,8 @@ export const styles = StyleSheet.create({
   },
   editDialogBoxLight: {
     backgroundColor: "#FFFFFF",
-    borderColor: "rgba(0, 0, 0, 0.06)",
+    borderWidth: 0,
+    borderColor: "transparent",
     shadowOpacity: 0.15,
   },
   editDialogTitle: {
