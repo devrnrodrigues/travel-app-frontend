@@ -14,6 +14,12 @@ const HomeCardItem = React.memo(function HomeCardItem({
   const [imageLoaded, setImageLoaded] = useState(isLocal);
   const imgAnim = useRef(new Animated.Value(isLocal ? 1 : 0)).current;
 
+  const hasRating =
+    Number(item.rating) > 0 &&
+    item.realRating !== "0.0" &&
+    item.realRating !== "0" &&
+    Boolean(item.realRating);
+
   const cardImgSource = isLocal
     ? (item.image_url || currentTheme.bg)
     : { uri: item.image_url };
@@ -99,17 +105,19 @@ const HomeCardItem = React.memo(function HomeCardItem({
               {item.location}
             </Text>
           </View>
-          <View
-            style={[
-              styles.ratingContainer,
-              !isDarkMode && styles.cardInfoLightBg,
-            ]}
-          >
-            <Ionicons name="star" size={14} color={currentTheme.accent} />
-            <Text style={[styles.ratingText, { color: currentTheme.accent, fontWeight: "700" }]}>
-              {item.realRating}
-            </Text>
-          </View>
+          {hasRating ? (
+            <View
+              style={[
+                styles.ratingContainer,
+                !isDarkMode && styles.cardInfoLightBg,
+              ]}
+            >
+              <Ionicons name="star" size={14} color={currentTheme.accent} />
+              <Text style={[styles.ratingText, { color: currentTheme.accent, fontWeight: "700" }]}>
+                {item.realRating}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
     </TouchableOpacity>

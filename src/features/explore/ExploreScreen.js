@@ -49,6 +49,19 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
     }
   }, [onPress, item]);
 
+  const reviewCount = Number(
+    item?.reviewCount ??
+    item?.reviewsCount ??
+    (Array.isArray(item?.reviews) ? item.reviews.length : 0)
+  );
+  const hasReviews = reviewCount >= 1;
+  const ratingValue =
+    item?.realRating && item.realRating !== "0.0"
+      ? item.realRating
+      : item?.rating != null && Number(item.rating) > 0
+      ? Number(item.rating).toFixed(1)
+      : null;
+
   return (
     <TouchableOpacity
       activeOpacity={0.88}
@@ -64,6 +77,13 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
       {!imageLoaded && (
         <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight]} />
       )}
+
+      {hasReviews && ratingValue ? (
+        <View style={styles.topBadge}>
+          <Ionicons name="star" size={9.5} color="#FFD700" />
+          <Text style={styles.topBadgeText}>{ratingValue}</Text>
+        </View>
+      ) : null}
 
       <LinearGradient
         colors={["transparent", "rgba(0, 0, 0, 0.86)"]}
