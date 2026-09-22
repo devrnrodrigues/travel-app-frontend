@@ -1,6 +1,7 @@
 import homeStyles from "../../features/home/home.styles";
 import exploreStyles, { COLUMN_WIDTH, CARD_HEIGHT as EXPLORE_CARD_HEIGHT, GAP } from "../../features/explore/explore.styles";
 import favoritesStyles from "../../features/favorites/favorites.styles";
+import { styles as profileStyles } from "../../features/profile/profile.styles";
 import React, { useEffect, useRef } from "react";
 import {
   View,
@@ -625,95 +626,214 @@ export function SearchSkeletonList({
   );
 }
 
-export function ProfileSkeleton({ isDarkMode = true }) {
-  const anim = useShimmerAnimation();
-
-  const cardBg = !isDarkMode ? "rgba(100, 100, 100, 0.40)" : "rgba(12, 12, 12, 0.82)";
-  const avatarBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.35)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.45)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.28)";
-
-  const cardWidth = width - 40;
-
+function PolaroidStackCardSkeleton({
+  isDarkMode,
+  anim,
+  placeholderBg1,
+  placeholderBg2,
+  photoBg,
+}) {
   return (
     <View
-      style={{
-        margin: 20,
-        backgroundColor: cardBg,
-        borderRadius: 20,
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        alignItems: "center",
-        overflow: "hidden",
-        position: "relative",
-      }}
+      style={[
+        profileStyles.galleryCard,
+        !isDarkMode && profileStyles.galleryCardLight,
+        { overflow: "hidden", position: "relative" },
+      ]}
     >
-      <View
-        style={{
-          position: "absolute",
-          top: 14,
-          right: 14,
-          width: 18,
-          height: 18,
-          borderRadius: 9,
-          backgroundColor: placeholderBg2,
-        }}
-      />
+      <View style={profileStyles.galleryCardTouch}>
+        <View style={profileStyles.stackContainer}>
+          <View
+            style={[
+              profileStyles.stackPhoto,
+              {
+                position: "absolute",
+                transform: [
+                  { translateX: 6 },
+                  { translateY: -4 },
+                  { rotate: "5.5deg" },
+                  { scale: 0.94 },
+                ],
+                opacity: isDarkMode ? 0.35 : 0.6,
+                backgroundColor: isDarkMode ? "#1A1A1A" : "#ECECEC",
+              },
+            ]}
+          />
+          <View
+            style={[
+              profileStyles.stackPhoto,
+              {
+                backgroundColor: isDarkMode ? "#222222" : "#FFFFFF",
+              },
+            ]}
+          >
+            <View
+              style={[
+                profileStyles.photoMediaBox,
+                { backgroundColor: photoBg },
+              ]}
+            />
+            <View style={profileStyles.photoCaptionBox}>
+              <View
+                style={{
+                  height: 10,
+                  width: "60%",
+                  borderRadius: 3,
+                  backgroundColor: placeholderBg2,
+                }}
+              />
+            </View>
+          </View>
+        </View>
 
-      <View
-        style={{
-          width: 72,
-          height: 72,
-          borderRadius: 36,
-          backgroundColor: avatarBg,
-        }}
-      />
-
-      <View
-        style={{
-          height: 16,
-          width: 130,
-          borderRadius: 5,
-          backgroundColor: placeholderBg1,
-          marginTop: 10,
-        }}
-      />
-
-      <View
-        style={{
-          height: 11,
-          width: 75,
-          borderRadius: 4,
-          backgroundColor: placeholderBg2,
-          marginTop: 1,
-        }}
-      />
-
-      <View
-        style={{
-          height: 11,
-          width: "70%",
-          borderRadius: 4,
-          backgroundColor: placeholderBg2,
-          marginTop: 13,
-        }}
-      />
-      <View
-        style={{
-          height: 11,
-          width: "45%",
-          borderRadius: 4,
-          backgroundColor: placeholderBg2,
-          marginTop: 5,
-        }}
-      />
+        <View style={profileStyles.cardInfo}>
+          <View
+            style={{
+              height: 12,
+              width: "50%",
+              borderRadius: 4,
+              backgroundColor: placeholderBg1,
+            }}
+          />
+          <View
+            style={[
+              profileStyles.cardCounter,
+              !isDarkMode && profileStyles.cardCounterLight,
+            ]}
+          >
+            <View
+              style={{
+                height: 10,
+                width: 26,
+                borderRadius: 3,
+                backgroundColor: placeholderBg2,
+              }}
+            />
+          </View>
+        </View>
+      </View>
 
       <ShimmerOverlay
         animatedValue={anim}
-        width={cardWidth}
-        height={215}
+        width={(width - 44) / 2}
+        height={320}
         isDarkMode={isDarkMode}
       />
+    </View>
+  );
+}
+
+export function ProfileSkeleton({ isDarkMode = true }) {
+  const anim = useShimmerAnimation();
+
+  const avatarBg = !isDarkMode ? "rgba(255, 255, 255, 0.20)" : "rgba(255, 255, 255, 0.08)";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.45)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.25)";
+  const photoBg = isDarkMode ? "#2a303c" : "#e2e8f0";
+
+  return (
+    <View style={profileStyles.flex1}>
+      <View
+        style={[
+          profileStyles.profileCard,
+          !isDarkMode && profileStyles.profileCardLight,
+          { overflow: "hidden", position: "relative" },
+        ]}
+      >
+        <View style={profileStyles.settingsButton}>
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              backgroundColor: placeholderBg2,
+            }}
+          />
+        </View>
+
+        <View style={[profileStyles.avatar, !isDarkMode && profileStyles.avatarLight]}>
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: avatarBg,
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            height: 20,
+            width: 140,
+            borderRadius: 6,
+            backgroundColor: placeholderBg1,
+            marginTop: 8,
+          }}
+        />
+
+        <View
+          style={{
+            height: 13,
+            width: 85,
+            borderRadius: 4,
+            backgroundColor: placeholderBg2,
+            marginTop: 4,
+          }}
+        />
+
+        <View
+          style={{
+            height: 12,
+            width: "65%",
+            borderRadius: 4,
+            backgroundColor: placeholderBg2,
+            marginTop: 13,
+          }}
+        />
+
+        <ShimmerOverlay
+          animatedValue={anim}
+          width={width - 40}
+          height={240}
+          isDarkMode={isDarkMode}
+        />
+      </View>
+
+      <View style={profileStyles.galleryContainer}>
+        <View style={profileStyles.galleryRow}>
+          <PolaroidStackCardSkeleton
+            isDarkMode={isDarkMode}
+            anim={anim}
+            placeholderBg1={placeholderBg1}
+            placeholderBg2={placeholderBg2}
+            photoBg={photoBg}
+          />
+          <PolaroidStackCardSkeleton
+            isDarkMode={isDarkMode}
+            anim={anim}
+            placeholderBg1={placeholderBg1}
+            placeholderBg2={placeholderBg2}
+            photoBg={photoBg}
+          />
+        </View>
+        <View style={profileStyles.galleryRow}>
+          <PolaroidStackCardSkeleton
+            isDarkMode={isDarkMode}
+            anim={anim}
+            placeholderBg1={placeholderBg1}
+            placeholderBg2={placeholderBg2}
+            photoBg={photoBg}
+          />
+          <PolaroidStackCardSkeleton
+            isDarkMode={isDarkMode}
+            anim={anim}
+            placeholderBg1={placeholderBg1}
+            placeholderBg2={placeholderBg2}
+            photoBg={photoBg}
+          />
+        </View>
+      </View>
     </View>
   );
 }
