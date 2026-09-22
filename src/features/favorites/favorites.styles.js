@@ -145,6 +145,29 @@ export default StyleSheet.create({
     marginLeft: 5,
     color: "#FFFFFF",
   },
+  ratingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.38)",
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  ratingBadgeLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.22)",
+  },
+  ratingStar: {
+    marginRight: 3,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  ratingTextLight: {
+    color: "#FFFFFF",
+  },
   emptyContainer: {
     flex: 1,
     alignItems: "center",

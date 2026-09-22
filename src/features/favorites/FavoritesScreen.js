@@ -24,6 +24,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import styles, { dialogStyles } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
 import { FavoritesSkeletonList, SkeletonBox } from "../../shared/components/Skeleton";
@@ -54,6 +55,22 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
   const imgAnim = useRef(new Animated.Value(0)).current;
   const itemOffset = index * cardSlot;
   const count = typeof totalItems === "number" ? totalItems : 0;
+
+  const reviewCount = Number(
+    item?.reviewCount ??
+    item?.reviewsCount ??
+    item?.destinationReviewCount ??
+    (Array.isArray(item?.reviews) ? item.reviews.length : 0)
+  );
+  const hasRating = reviewCount >= 1;
+  const ratingValue =
+    item?.realRating && item.realRating !== "0.0" && item.realRating !== "0"
+      ? item.realRating
+      : item?.rating != null && Number(item.rating) > 0
+      ? Number(item.rating).toFixed(1)
+      : item?.destinationRating != null && Number(item.destinationRating) > 0
+      ? Number(item.destinationRating).toFixed(1)
+      : null;
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -209,6 +226,15 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
             </Text>
           </View>
         </View>
+
+        {hasRating && ratingValue ? (
+          <View style={[styles.ratingBadge, !isDarkMode && styles.ratingBadgeLight]}>
+            <Ionicons name="star" size={11} color="#FFD700" style={styles.ratingStar} />
+            <Text style={[styles.ratingText, !isDarkMode && styles.ratingTextLight]}>
+              {ratingValue}
+            </Text>
+          </View>
+        ) : null}
       </TouchableOpacity>
     </Animated.View>
   );

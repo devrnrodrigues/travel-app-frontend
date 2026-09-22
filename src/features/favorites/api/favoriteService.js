@@ -28,6 +28,13 @@ export async function getFavoritesApi({ page = 0, size = 10 } = {}) {
 
       const imageUrl = await resolveDestinationImage(destinationLike, destinationLike.category);
 
+      const rawRating = fav.destinationRating ?? fav.rating ?? 0.0;
+      const reviewCount = Number(fav.destinationReviewCount ?? fav.reviewCount ?? 0);
+      const realRating =
+        rawRating !== null && rawRating !== undefined && Number(rawRating) > 0
+          ? Number(rawRating).toFixed(1)
+          : "0.0";
+
       return {
         id: fav.destinationId,
         destinationId: fav.destinationId,
@@ -39,7 +46,9 @@ export async function getFavoritesApi({ page = 0, size = 10 } = {}) {
         categories: fav.destinationCategories || [],
         coverImageUrl: fav.destinationCoverImageUrl || imageUrl,
         image_url: imageUrl,
-        realRating: "0.0",
+        rating: rawRating,
+        reviewCount,
+        realRating,
         createdAt: fav.createdAt,
       };
     })
