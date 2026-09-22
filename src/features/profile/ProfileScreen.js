@@ -17,6 +17,7 @@ import {
   Dimensions,
   Platform,
   Keyboard,
+  StyleSheet,
 } from "react-native";
 
 const { height: WINDOW_HEIGHT } = Dimensions.get("window");
@@ -49,6 +50,58 @@ export default function ProfileScreen({ navigation }) {
     typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
 
   const [loading, setLoading] = useState(true);
+  const [showSkeleton, setShowSkeleton] = useState(loading);
+  const transitionAnim = useRef(new Animated.Value(loading ? 0 : 1)).current;
+
+  useEffect(() => {
+    if (loading) {
+      setShowSkeleton(true);
+      transitionAnim.setValue(0);
+    } else {
+      Animated.timing(transitionAnim, {
+        toValue: 1,
+        duration: 460,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: Platform.OS !== "web",
+      }).start(({ finished }) => {
+        if (finished) {
+          setShowSkeleton(false);
+        }
+      });
+    }
+  }, [loading]);
+
+  const cardOpacity = transitionAnim.interpolate({
+    inputRange: [0, 0.15, 1],
+    outputRange: [0, 0.2, 1],
+  });
+  const cardTranslateY = transitionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [14, 0],
+  });
+  const cardScale = transitionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.97, 1],
+  });
+
+  const galleryOpacity = transitionAnim.interpolate({
+    inputRange: [0, 0.35, 1],
+    outputRange: [0, 0.1, 1],
+  });
+  const galleryTranslateY = transitionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [18, 0],
+  });
+  const galleryScale = transitionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.96, 1],
+  });
+
+  const skeletonOpacity = transitionAnim.interpolate({
+    inputRange: [0, 0.75, 1],
+    outputRange: [1, 0.25, 0],
+  });
+
   const [loadingData, setLoadingData] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
@@ -529,14 +582,19 @@ export default function ProfileScreen({ navigation }) {
           style={styles.flex1}
         >
           <SafeAreaView style={styles.flex1}>
-            {loading ? (
-              <ProfileSkeleton isDarkMode={isDarkMode} />
-            ) : (
-              <FadeInView duration={260} style={styles.flex1}>
-                <View
+            <View style={styles.flex1}>
+              <View style={styles.flex1} pointerEvents={loading ? "none" : "auto"}>
+                <Animated.View
                   style={[
                     styles.profileCard,
                     !isDarkMode && styles.profileCardLight,
+                    {
+                      opacity: cardOpacity,
+                      transform: [
+                        { translateY: cardTranslateY },
+                        { scale: cardScale },
+                      ],
+                    },
                   ]}
                 >
                   <TouchableOpacity
@@ -596,12 +654,19 @@ export default function ProfileScreen({ navigation }) {
                   >
                     {bio || "Sem bio definida."}
                   </Text>
-                </View>
+                </Animated.View>
 
-                <View
+                <Animated.View
                   style={[
                     styles.galleryContainer,
                     galleryCount > 4 && styles.galleryContainerScrollable,
+                    {
+                      opacity: galleryOpacity,
+                      transform: [
+                        { translateY: galleryTranslateY },
+                        { scale: galleryScale },
+                      ],
+                    },
                   ]}
                   onLayout={handleGalleryLayout}
                 >
@@ -723,9 +788,18 @@ export default function ProfileScreen({ navigation }) {
                       )}
                     </Animated.ScrollView>
                   )}
-                </View>
-              </FadeInView>
-            )}
+                </Animated.View>
+              </View>
+
+              {showSkeleton && (
+                <Animated.View
+                  style={[StyleSheet.absoluteFill, { opacity: skeletonOpacity }]}
+                  pointerEvents={loading ? "auto" : "none"}
+                >
+                  <ProfileSkeleton isDarkMode={isDarkMode} />
+                </Animated.View>
+              )}
+            </View>
 
             <Modal
               animationType="fade"
