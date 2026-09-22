@@ -387,7 +387,7 @@ export const countryModalStyles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "rgba(0, 0, 0, 0.78)",
+    backgroundColor: "#000000",
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     paddingHorizontal: 22,

@@ -66,7 +66,7 @@ export function ReviewFormModal({
               style={[
                 reviewStyles.formCard,
                 !isDarkMode && {
-                  backgroundColor: "rgba(100, 100, 100, 0.82)",
+                  backgroundColor: "#FFFFFF",
                   borderWidth: 0,
                   shadowColor: "transparent",
                   shadowOpacity: 0,
@@ -77,7 +77,7 @@ export function ReviewFormModal({
             >
               <View style={[reviewStyles.modalHeader, { alignItems: "flex-start" }]}>
                 <View style={reviewStyles.flex1MarginRight10}>
-                  <Text style={[reviewStyles.modalTitle, !isDarkMode && { color: "#FFFFFF" }]}>
+                  <Text style={[reviewStyles.modalTitle, !isDarkMode && { color: "#000000" }]}>
                     {editingReviewId ? "Editar Avaliação" : "Nova Avaliação"}
                   </Text>
                   {editingReviewId && openedFromAvaliarBtn && (
@@ -87,11 +87,11 @@ export function ReviewFormModal({
                   )}
                 </View>
                 <TouchableOpacity onPress={onClose} style={reviewStyles.marginTop2}>
-                  <Ionicons name="close-circle" size={24} color={!isDarkMode ? "#FFFFFF" : "rgba(255,255,255,0.6)"} />
+                  <Ionicons name="close-circle" size={24} color={!isDarkMode ? "#000000" : "rgba(255,255,255,0.6)"} />
                 </TouchableOpacity>
               </View>
 
-              <Text style={[reviewStyles.formLabel, !isDarkMode && { color: "rgba(255, 255, 255, 0.9)" }]}>Sua nota para este local:</Text>
+              <Text style={[reviewStyles.formLabel, !isDarkMode && { color: "#222222" }]}>Sua nota para este local:</Text>
               <View style={reviewStyles.starsRow}>
                 {[1, 2, 3, 4, 5].map((num) => (
                   <TouchableOpacity key={num} onPress={() => setSelectedRating(num)} style={reviewStyles.marginRight8}>
@@ -122,13 +122,13 @@ export function ReviewFormModal({
               >
                 <TextInput
                   placeholder="Escreva sua experiência..."
-                  placeholderTextColor={!isDarkMode ? "rgba(255, 255, 255, 0.65)" : "#FFFFFF"}
+                  placeholderTextColor={!isDarkMode ? "rgba(0, 0, 0, 0.40)" : "#FFFFFF"}
                   value={inputComment}
                   onChangeText={setInputComment}
                   multiline
                   onFocus={handleCommentFocus}
                   onBlur={handleCommentBlur}
-                  style={reviewStyles.reviewModalTextInput}
+                  style={[reviewStyles.reviewModalTextInput, !isDarkMode && reviewStyles.reviewModalTextInputLight]}
                 />
               </Animated.View>
 
@@ -176,7 +176,7 @@ export function DeleteReviewModal({
               style={[
                 reviewStyles.dialogCard,
                 !isDarkMode && {
-                  backgroundColor: "rgba(100, 100, 100, 0.82)",
+                  backgroundColor: "#FFFFFF",
                   borderWidth: 0,
                   shadowColor: "transparent",
                   shadowOpacity: 0,
@@ -189,7 +189,7 @@ export function DeleteReviewModal({
                 <Text
                   style={[
                     reviewStyles.dialogTitle,
-                    { color: "#FFFFFF" },
+                    { color: !isDarkMode ? "#000000" : "#FFFFFF" },
                   ]}
                 >
                   Excluir comentário?
@@ -197,7 +197,7 @@ export function DeleteReviewModal({
                 <Text
                   style={[
                     reviewStyles.dialogMessage,
-                    { color: "rgba(255, 255, 255, 0.85)" },
+                    { color: !isDarkMode ? "#555555" : "rgba(255, 255, 255, 0.85)" },
                   ]}
                 >
                   Deseja realmente remover sua avaliação deste destino?
@@ -233,7 +233,7 @@ export function DeleteReviewModal({
                 <Text
                   style={[
                     reviewStyles.dialogCancelText,
-                    { color: "#FFFFFF" },
+                    { color: !isDarkMode ? "#000000" : "#FFFFFF" },
                   ]}
                 >
                   Cancelar

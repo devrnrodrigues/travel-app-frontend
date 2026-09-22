@@ -352,7 +352,7 @@ const reviewStyles = StyleSheet.create({
   },
 
   formCard: {
-    backgroundColor: "rgba(0, 0, 0, 0.94)",
+    backgroundColor: "#000000",
     padding: 22,
     borderRadius: 24,
     width: "100%",
@@ -402,7 +402,7 @@ const reviewStyles = StyleSheet.create({
   },
 
   inputLight: {
-    backgroundColor: "rgba(45, 45, 45, 0.65)",
+    backgroundColor: "#F2F2F7",
     shadowColor: "transparent",
     shadowOpacity: 0,
     shadowRadius: 0,
@@ -455,7 +455,7 @@ const reviewStyles = StyleSheet.create({
   dialogCard: {
     width: "100%",
     maxWidth: 275,
-    backgroundColor: "rgba(0, 0, 0, 0.94)",
+    backgroundColor: "#000000",
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 0,
@@ -541,6 +541,9 @@ const reviewStyles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     textAlignVertical: "top",
+  },
+  reviewModalTextInputLight: {
+    color: "#000000",
   },
 });
 

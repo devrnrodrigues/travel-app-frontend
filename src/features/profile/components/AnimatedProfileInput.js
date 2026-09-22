@@ -40,6 +40,7 @@ export default function AnimatedProfileInput({
       <TextInput
         style={[
           styles.textInput,
+          !isDarkMode && styles.textInputLight,
           props.multiline ? styles.textInputMultiline : styles.textInputSingle,
         ]}
         {...props}

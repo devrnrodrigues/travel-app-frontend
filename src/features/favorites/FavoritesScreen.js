@@ -600,23 +600,16 @@ export default function Favorites({ navigation }) {
               <View
                 style={[
                   dialogStyles.dialogCard,
-                  !isDarkMode && {
-                    backgroundColor: "rgba(100, 100, 100, 0.82)",
-                    borderWidth: 0,
-                    shadowColor: "transparent",
-                    shadowOpacity: 0,
-                    shadowRadius: 0,
-                    elevation: 0,
-                  },
+                  !isDarkMode && dialogStyles.dialogCardLight,
                 ]}
               >
                 <View style={dialogStyles.contentSection}>
-                  <Text style={dialogStyles.title}>
+                  <Text style={[dialogStyles.title, !isDarkMode && dialogStyles.titleLight]}>
                     Remover dos favoritos?
                   </Text>
-                  <Text style={dialogStyles.message}>
+                  <Text style={[dialogStyles.message, !isDarkMode && dialogStyles.messageLight]}>
                     Deseja remover{" "}
-                    <Text style={styles.boldWhiteText}>
+                    <Text style={[styles.boldWhiteText, !isDarkMode && { color: "#000000" }]}>
                       "{itemToDelete?.title || lastItemTitleRef.current}"
                     </Text>{" "}
                     da sua lista de destinos salvos?
@@ -625,7 +618,10 @@ export default function Favorites({ navigation }) {
 
                 { }
                 <TouchableOpacity
-                  style={dialogStyles.actionButton}
+                  style={[
+                    dialogStyles.actionButton,
+                    !isDarkMode && dialogStyles.actionButtonLight,
+                  ]}
                   onPress={confirmDelete}
                   disabled={isDeleting}
                   activeOpacity={0.65}
@@ -639,12 +635,16 @@ export default function Favorites({ navigation }) {
 
                 { }
                 <TouchableOpacity
-                  style={[dialogStyles.actionButton, dialogStyles.lastButton]}
+                  style={[
+                    dialogStyles.actionButton,
+                    dialogStyles.lastButton,
+                    !isDarkMode && dialogStyles.actionButtonLight,
+                  ]}
                   onPress={() => setItemToDelete(null)}
                   disabled={isDeleting}
                   activeOpacity={0.65}
                 >
-                  <Text style={dialogStyles.cancelText}>Cancelar</Text>
+                  <Text style={[dialogStyles.cancelText, !isDarkMode && dialogStyles.cancelTextLight]}>Cancelar</Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>

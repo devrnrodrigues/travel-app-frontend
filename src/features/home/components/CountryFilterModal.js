@@ -144,7 +144,7 @@ export default function CountryFilterModal({
                   transform: [{ translateY: countryModalSlideAnim }],
                 },
                 !isDarkMode && {
-                  backgroundColor: "rgba(100, 100, 100, 0.82)",
+                  backgroundColor: "#FFFFFF",
                   borderWidth: 0,
                   shadowColor: "transparent",
                   shadowOpacity: 0,
@@ -154,11 +154,30 @@ export default function CountryFilterModal({
               ]}
             >
               <View {...countryPanResponder.panHandlers} style={countryModalStyles.dragHandleArea}>
-                <View style={countryModalStyles.indicator} />
+                <View
+                  style={[
+                    countryModalStyles.indicator,
+                    !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.2)" },
+                  ]}
+                />
                 <View style={countryModalStyles.header}>
                   <View>
-                    <Text style={countryModalStyles.title}>Filtrar por País</Text>
-                    <Text style={countryModalStyles.subtitle}>Escolha um destino pelo mundo</Text>
+                    <Text
+                      style={[
+                        countryModalStyles.title,
+                        !isDarkMode && { color: "#000000" },
+                      ]}
+                    >
+                      Filtrar por País
+                    </Text>
+                    <Text
+                      style={[
+                        countryModalStyles.subtitle,
+                        !isDarkMode && { color: "rgba(0, 0, 0, 0.5)" },
+                      ]}
+                    >
+                      Escolha um destino pelo mundo
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -185,7 +204,12 @@ export default function CountryFilterModal({
                       activeOpacity={0.7}
                       style={[
                         countryModalStyles.countryItem,
-                        isSelected && [styles.countryItemActive, { borderColor: currentTheme.accent }],
+                        !isDarkMode && { backgroundColor: "#F7F7F9" },
+                        isSelected && [
+                          styles.countryItemActive,
+                          !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+                          { borderColor: currentTheme.accent },
+                        ],
                       ]}
                     >
                       <View style={styles.rowCenter}>
@@ -199,6 +223,7 @@ export default function CountryFilterModal({
                         <Text
                           style={[
                             countryModalStyles.countryName,
+                            !isDarkMode && { color: "#000000" },
                             isSelected && { color: currentTheme.accent, fontWeight: "bold" },
                           ]}
                         >

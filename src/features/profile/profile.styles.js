@@ -124,7 +124,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 480,
     alignSelf: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.78)",
+    backgroundColor: "#000000",
     borderWidth: 1,
     borderColor: "rgba(22, 22, 22, 0.6)",
     borderTopLeftRadius: 28,
@@ -137,9 +137,9 @@ export const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   modalContentLight: {
-    backgroundColor: "rgba(80, 80, 80, 0.82)",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.20)",
+    borderColor: "rgba(0, 0, 0, 0.08)",
     borderWidth: 0,
   },
   dragHandleArea: {
@@ -156,7 +156,7 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   indicatorLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
   modalHeader: {
     flexDirection: "row",
@@ -171,7 +171,7 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   modalTitleLight: {
-    color: "#FFFFFF",
+    color: "#000000",
   },
   backButton: {
     padding: 5,
@@ -186,7 +186,7 @@ export const styles = StyleSheet.create({
     marginLeft: 5,
   },
   labelLight: {
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "#222222",
   },
   input: {
     backgroundColor: "#0D0D0D",
@@ -202,13 +202,16 @@ export const styles = StyleSheet.create({
     padding: 0,
   },
   inputContainerLight: {
-    backgroundColor: "rgba(45, 45, 45, 0.65)",
+    backgroundColor: "#F2F2F7",
   },
   textInput: {
     flex: 1,
     color: "#FFFFFF",
     padding: 15,
     outlineStyle: "none",
+  },
+  textInputLight: {
+    color: "#000000",
   },
   textInputMultiline: {
     textAlignVertical: "top",
@@ -234,12 +237,15 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   countryPillLight: {
-    backgroundColor: "rgba(45, 45, 45, 0.65)",
+    backgroundColor: "#F2F2F7",
   },
   countryPillText: {
     color: "#FFFFFF",
     fontSize: 12.5,
     fontWeight: "500",
+  },
+  countryPillTextLight: {
+    color: "#000000",
   },
   flagIcon: {
     width: 20,
@@ -513,14 +519,14 @@ export const dialogStyles = StyleSheet.create({
   dialogCard: {
     width: "100%",
     maxWidth: 275,
-    backgroundColor: "rgba(0, 0, 0, 0.84)",
+    backgroundColor: "#000000",
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 0,
     borderColor: "transparent",
   },
   dialogCardLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.82)",
+    backgroundColor: "#FFFFFF",
     borderWidth: 0,
     shadowColor: "transparent",
     shadowOpacity: 0,
@@ -540,11 +546,17 @@ export const dialogStyles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 8,
   },
+  titleLight: {
+    color: "#000000",
+  },
   message: {
     fontSize: 13.5,
     color: "#E5E5E5",
     textAlign: "center",
     lineHeight: 19,
+  },
+  messageLight: {
+    color: "#555555",
   },
   actionButton: {
     width: "100%",
@@ -554,6 +566,9 @@ export const dialogStyles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: "transparent",
+  },
+  actionButtonLight: {
+    borderTopColor: "rgba(0, 0, 0, 0.08)",
   },
   lastButton: {
     borderBottomLeftRadius: 22,
@@ -568,5 +583,8 @@ export const dialogStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  cancelTextLight: {
+    color: "#000000",
   },
 });

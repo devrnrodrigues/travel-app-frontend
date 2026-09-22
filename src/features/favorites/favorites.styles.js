@@ -193,11 +193,19 @@ export const dialogStyles = StyleSheet.create({
   dialogCard: {
     width: "100%",
     maxWidth: 275,
-    backgroundColor: "rgba(0, 0, 0, 0.78)",
+    backgroundColor: "#000000",
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 0,
     borderColor: "transparent",
+  },
+  dialogCardLight: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 0,
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   contentSection: {
     paddingTop: 24,
@@ -212,11 +220,17 @@ export const dialogStyles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 8,
   },
+  titleLight: {
+    color: "#000000",
+  },
   message: {
     fontSize: 13.5,
     color: "#E5E5E5",
     textAlign: "center",
     lineHeight: 19,
+  },
+  messageLight: {
+    color: "#555555",
   },
   actionButton: {
     width: "100%",
@@ -226,6 +240,9 @@ export const dialogStyles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: "transparent",
+  },
+  actionButtonLight: {
+    borderTopColor: "rgba(0, 0, 0, 0.08)",
   },
   lastButton: {
     borderBottomLeftRadius: 22,
@@ -240,5 +257,8 @@ export const dialogStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  cancelTextLight: {
+    color: "#000000",
   },
 });

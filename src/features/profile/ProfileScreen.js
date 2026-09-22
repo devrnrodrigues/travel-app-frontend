@@ -307,6 +307,7 @@ export default function ProfileScreen({ navigation }) {
           <Text
             style={[
               styles.countryPillText,
+              !isDarkMode && styles.countryPillTextLight,
               isSelected && { color: "#000", fontWeight: "bold" },
             ]}
           >
@@ -764,7 +765,7 @@ export default function ProfileScreen({ navigation }) {
                             <Ionicons
                               name="chevron-back"
                               size={28}
-                              color="#FFFFFF"
+                              color={!isDarkMode ? "#000000" : "#FFFFFF"}
                             />
                           </TouchableOpacity>
                           <Text
@@ -795,7 +796,7 @@ export default function ProfileScreen({ navigation }) {
                           placeholder="Seu nome"
                           placeholderTextColor={
                             !isDarkMode
-                              ? "rgba(255, 255, 255, 0.65)"
+                              ? "rgba(0, 0, 0, 0.40)"
                               : "rgba(255, 255, 255, 0.5)"
                           }
                           value={name}
@@ -880,7 +881,7 @@ export default function ProfileScreen({ navigation }) {
                           placeholder="Conte um pouco sobre você..."
                           placeholderTextColor={
                             !isDarkMode
-                              ? "rgba(255, 255, 255, 0.65)"
+                              ? "rgba(0, 0, 0, 0.40)"
                               : "rgba(255, 255, 255, 0.5)"
                           }
                           multiline={true}
@@ -1015,7 +1016,7 @@ export default function ProfileScreen({ navigation }) {
                               size={14}
                               color={
                                 !isDarkMode
-                                  ? "#FFFFFF"
+                                  ? "#000000"
                                   : currentTheme.accent
                               }
                             />
@@ -1046,14 +1047,17 @@ export default function ProfileScreen({ navigation }) {
                       ]}
                     >
                       <View style={dialogStyles.contentSection}>
-                        <Text style={dialogStyles.title}>Sair da conta?</Text>
-                        <Text style={dialogStyles.message}>
+                        <Text style={[dialogStyles.title, !isDarkMode && dialogStyles.titleLight]}>Sair da conta?</Text>
+                        <Text style={[dialogStyles.message, !isDarkMode && dialogStyles.messageLight]}>
                           Tem certeza de que deseja sair? Você precisará fazer login novamente para acessar seus dados.
                         </Text>
                       </View>
 
                       <TouchableOpacity
-                        style={dialogStyles.actionButton}
+                        style={[
+                          dialogStyles.actionButton,
+                          !isDarkMode && dialogStyles.actionButtonLight,
+                        ]}
                         onPress={confirmLogout}
                         disabled={isLoggingOut}
                         activeOpacity={0.65}
@@ -1069,12 +1073,13 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           dialogStyles.actionButton,
                           dialogStyles.lastButton,
+                          !isDarkMode && dialogStyles.actionButtonLight,
                         ]}
                         onPress={handleCancelLogout}
                         disabled={isLoggingOut}
                         activeOpacity={0.65}
                       >
-                        <Text style={dialogStyles.cancelText}>Cancelar</Text>
+                        <Text style={[dialogStyles.cancelText, !isDarkMode && dialogStyles.cancelTextLight]}>Cancelar</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableWithoutFeedback>

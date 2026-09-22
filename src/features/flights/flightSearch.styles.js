@@ -489,7 +489,7 @@ export default StyleSheet.create({
   },
   modalContent: {
     width: width * 0.90,
-    backgroundColor: "rgba(0, 0, 0, 0.94)",
+    backgroundColor: "#000000",
     borderRadius: 24,
     padding: 20,
     borderWidth: 0,
@@ -498,7 +498,7 @@ export default StyleSheet.create({
   modalDestinationContent: {
     width: width * 0.90,
     maxHeight: height * 0.50,
-    backgroundColor: "rgba(0, 0, 0, 0.94)",
+    backgroundColor: "#000000",
     borderRadius: 24,
     padding: 20,
     borderWidth: 0,

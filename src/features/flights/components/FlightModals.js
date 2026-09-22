@@ -33,7 +33,7 @@ export function DestinationModal({
           style={[
             styles.modalDestinationContent,
             !isDarkMode && {
-              backgroundColor: "rgba(100, 100, 100, 0.82)",
+              backgroundColor: "#FFFFFF",
               borderWidth: 0,
               shadowColor: "transparent",
               shadowOpacity: 0,
@@ -42,7 +42,7 @@ export function DestinationModal({
             },
           ]}
         >
-          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#FFFFFF" }]}>
+          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#000000" }]}>
             Selecione o Aeroporto de Chegada
           </Text>
           <FlatList
@@ -50,21 +50,21 @@ export function DestinationModal({
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(255, 255, 255, 0.1)" }]}
+                style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(0, 0, 0, 0.08)" }]}
                 onPress={() => {
                   onSelectAirport(item);
                   onClose();
                 }}
               >
                 <Feather name="navigation" size={16} color={currentTheme.accent} style={styles.marginRight10} />
-                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#FFFFFF" }]}>
+                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#000000" }]}>
                   {item.nome_aeroporto} ({item.codigo_iata})
                 </Text>
               </TouchableOpacity>
             )}
           />
           <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(255, 255, 255, 0.75)" }]}>Cancelar</Text>
+            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(0, 0, 0, 0.6)" }]}>Cancelar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -96,7 +96,7 @@ export function CabinClassModal({
           style={[
             styles.modalDestinationContent,
             !isDarkMode && {
-              backgroundColor: "rgba(100, 100, 100, 0.82)",
+              backgroundColor: "#FFFFFF",
               borderWidth: 0,
               shadowColor: "transparent",
               shadowOpacity: 0,
@@ -105,7 +105,7 @@ export function CabinClassModal({
             },
           ]}
         >
-          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#FFFFFF" }]}>
+          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#000000" }]}>
             Selecione a Classe do Voo
           </Text>
           <FlatList
@@ -113,19 +113,19 @@ export function CabinClassModal({
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(255, 255, 255, 0.1)" }]}
+                style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(0, 0, 0, 0.08)" }]}
                 onPress={() => {
                   onSelectClass(item.label);
                   onClose();
                 }}
               >
                 <Feather name="layers" size={16} color={currentTheme.accent} style={styles.marginRight10} />
-                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#FFFFFF" }]}>{item.label}</Text>
+                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#000000" }]}>{item.label}</Text>
               </TouchableOpacity>
             )}
           />
           <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(255, 255, 255, 0.75)" }]}>Cancelar</Text>
+            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(0, 0, 0, 0.6)" }]}>Cancelar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -154,7 +154,7 @@ export function CurrencyModal({
           style={[
             styles.modalDestinationContent,
             !isDarkMode && {
-              backgroundColor: "rgba(100, 100, 100, 0.82)",
+              backgroundColor: "#FFFFFF",
               borderWidth: 0,
               shadowColor: "transparent",
               shadowOpacity: 0,
@@ -163,7 +163,7 @@ export function CurrencyModal({
             },
           ]}
         >
-          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#FFFFFF" }]}>
+          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#000000" }]}>
             Selecione o Tipo de Moeda
           </Text>
           <FlatList
@@ -171,19 +171,19 @@ export function CurrencyModal({
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(255, 255, 255, 0.1)" }]}
+                style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(0, 0, 0, 0.08)" }]}
                 onPress={() => {
                   onSelectCurrency(item);
                   onClose();
                 }}
               >
                 <Feather name="dollar-sign" size={16} color={currentTheme.accent} style={styles.marginRight10} />
-                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#FFFFFF" }]}>{item}</Text>
+                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#000000" }]}>{item}</Text>
               </TouchableOpacity>
             )}
           />
           <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(255, 255, 255, 0.75)" }]}>Cancelar</Text>
+            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(0, 0, 0, 0.6)" }]}>Cancelar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -254,7 +254,7 @@ export function CalendarModal({
           style={[
             styles.modalContent,
             !isDarkMode && {
-              backgroundColor: "rgba(100, 100, 100, 0.82)",
+              backgroundColor: "#FFFFFF",
               borderWidth: 0,
               shadowColor: "transparent",
               shadowOpacity: 0,
@@ -265,24 +265,24 @@ export function CalendarModal({
         >
           <View style={styles.calendarSelectorRow}>
             <TouchableOpacity
-              style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(255, 255, 255, 0.15)" }]}
+              style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" }]}
               onPress={() => changeMonth(-1)}
             >
-              <Feather name="chevron-left" size={18} color="#FFFFFF" />
+              <Feather name="chevron-left" size={18} color={!isDarkMode ? "#000000" : "#FFFFFF"} />
             </TouchableOpacity>
-            <Text style={[styles.calendarTitleText, !isDarkMode && { color: "#FFFFFF" }]}>
+            <Text style={[styles.calendarTitleText, !isDarkMode && { color: "#000000" }]}>
               {MONTH_NAMES[currentCalendarMonth]} {currentCalendarYear}
             </Text>
             <TouchableOpacity
-              style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(255, 255, 255, 0.15)" }]}
+              style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" }]}
               onPress={() => changeMonth(1)}
             >
-              <Feather name="chevron-right" size={18} color="#FFFFFF" />
+              <Feather name="chevron-right" size={18} color={!isDarkMode ? "#000000" : "#FFFFFF"} />
             </TouchableOpacity>
           </View>
           <View style={styles.calendarHeaderRow}>
             {WEEKDAYS.map((day, i) => (
-              <Text key={i} style={[styles.calendarHeaderCell, !isDarkMode && { color: "rgba(255, 255, 255, 0.7)" }]}>{day}</Text>
+              <Text key={i} style={[styles.calendarHeaderCell, !isDarkMode && { color: "rgba(0, 0, 0, 0.5)" }]}>{day}</Text>
             ))}
           </View>
           <View style={styles.calendarGrid}>
@@ -305,9 +305,9 @@ export function CalendarModal({
                 >
                   <Text style={[
                     styles.calendarDayText,
-                    !isDarkMode && { color: "#FFFFFF" },
+                    !isDarkMode && { color: "#000000" },
                     isSelected && styles.calendarDayTextActive,
-                    isPast && (styles.calendarDayTextDisabled || { color: "rgba(255, 255, 255, 0.35)" }),
+                    isPast && (styles.calendarDayTextDisabled || { color: "rgba(0, 0, 0, 0.25)" }),
                     item.isEmpty && styles.calendarDayTextEmpty,
                   ]}>
                     {item.dayStr}
@@ -317,7 +317,7 @@ export function CalendarModal({
             })}
           </View>
           <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
-            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "#6B7280" }]}>Fechar</Text>
+            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(0, 0, 0, 0.6)" }]}>Fechar</Text>
           </TouchableOpacity>
         </View>
       </View>
