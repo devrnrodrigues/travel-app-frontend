@@ -63,7 +63,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
         {Platform.OS === "android" && !isDarkMode && (
           <Image
             source={cardImgSource}
-            blurRadius={8}
+            blurRadius={3}
             style={styles.cardFullBackground}
           />
         )}
@@ -82,7 +82,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
 
         {Platform.OS !== "android" && !isDarkMode && (
           <BlurView
-            intensity={16}
+            intensity={20}
             tint="light"
             style={styles.cardOverlayImage}
           />

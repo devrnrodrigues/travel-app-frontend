@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { ThemeProvider } from "./src/theme/ThemeContext";
@@ -47,7 +47,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={styles.flex1}>
-      <SafeAreaProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <AuthProvider>

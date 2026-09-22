@@ -268,6 +268,7 @@ export function HomeSkeletonList({ isDarkMode = true, currentTheme }) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={homeStyles.flex1}
       contentContainerStyle={homeStyles.cardsList}
       scrollEnabled={true}
     >
@@ -770,8 +771,8 @@ export function ProfileSkeleton({ isDarkMode = true }) {
 
         <View
           style={{
-            height: 20,
-            width: 140,
+            height: 22,
+            width: 150,
             borderRadius: 6,
             backgroundColor: placeholderBg1,
             marginTop: 8,
@@ -780,21 +781,22 @@ export function ProfileSkeleton({ isDarkMode = true }) {
 
         <View
           style={{
-            height: 13,
-            width: 85,
+            height: 14,
+            width: 90,
             borderRadius: 4,
             backgroundColor: placeholderBg2,
-            marginTop: 4,
+            marginTop: 3,
           }}
         />
 
         <View
           style={{
-            height: 12,
+            height: 16,
             width: "65%",
             borderRadius: 4,
             backgroundColor: placeholderBg2,
             marginTop: 13,
+            marginBottom: 8,
           }}
         />
 
