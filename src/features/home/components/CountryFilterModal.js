@@ -1,7 +1,26 @@
 import React, { useRef, useEffect, useCallback, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal, Animated, TouchableWithoutFeedback, PanResponder } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Animated,
+  TouchableWithoutFeedback,
+  PanResponder,
+  Dimensions,
+  Easing,
+} from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import styles, { countryModalStyles } from "../home.styles";
+
+const { height: WINDOW_HEIGHT } = Dimensions.get("window");
+const SCREEN_HEIGHT = Math.max(
+  WINDOW_HEIGHT,
+  Dimensions.get("screen").height || 0,
+  900
+);
+const MODAL_DISMISS_OFFSET = SCREEN_HEIGHT + 50;
 
 const POPULAR_COUNTRIES = [
   "Todos os países",
@@ -31,11 +50,13 @@ export default function CountryFilterModal({
   currentTheme,
   isDarkMode,
 }) {
-  const countryModalSlideAnim = useRef(new Animated.Value(400)).current;
+  const countryModalSlideAnim = useRef(new Animated.Value(MODAL_DISMISS_OFFSET)).current;
+  const isClosingModal = useRef(false);
 
   useEffect(() => {
     if (visible) {
-      countryModalSlideAnim.setValue(400);
+      isClosingModal.current = false;
+      countryModalSlideAnim.setValue(MODAL_DISMISS_OFFSET);
       Animated.spring(countryModalSlideAnim, {
         toValue: 0,
         damping: 24,
@@ -46,12 +67,16 @@ export default function CountryFilterModal({
   }, [visible, countryModalSlideAnim]);
 
   const handleCloseCountryModal = useCallback(() => {
+    if (isClosingModal.current) return;
+    isClosingModal.current = true;
     Animated.timing(countryModalSlideAnim, {
-      toValue: 400,
-      duration: 180,
+      toValue: MODAL_DISMISS_OFFSET,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(() => {
       onClose();
+      isClosingModal.current = false;
     });
   }, [countryModalSlideAnim, onClose]);
 
@@ -61,13 +86,16 @@ export default function CountryFilterModal({
       onMoveShouldSetPanResponder: (_, gestureState) => {
         return gestureState.dy > 5;
       },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        return gestureState.dy > 5;
+      },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           countryModalSlideAnim.setValue(gestureState.dy);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+        if (gestureState.dy > 80 || gestureState.vy > 0.4) {
           handleCloseCountryModal();
         } else {
           Animated.spring(countryModalSlideAnim, {

@@ -16,7 +16,16 @@ import {
   FlatList,
   Dimensions,
   Platform,
+  Keyboard,
 } from "react-native";
+
+const { height: WINDOW_HEIGHT } = Dimensions.get("window");
+const SCREEN_HEIGHT = Math.max(
+  WINDOW_HEIGHT,
+  Dimensions.get("screen").height || 0,
+  900
+);
+const MODAL_DISMISS_OFFSET = SCREEN_HEIGHT + 50;
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -337,7 +346,8 @@ export default function ProfileScreen({ navigation }) {
     );
   }, [isDarkMode]);
 
-  const modalSlideAnim = useRef(new Animated.Value(600)).current;
+  const modalSlideAnim = useRef(new Animated.Value(MODAL_DISMISS_OFFSET)).current;
+  const isClosingModal = useRef(false);
   const iconRotateAnim = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
 
   useEffect(() => {
@@ -355,7 +365,8 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     if (modalVisible) {
-      modalSlideAnim.setValue(600);
+      isClosingModal.current = false;
+      modalSlideAnim.setValue(MODAL_DISMISS_OFFSET);
       Animated.spring(modalSlideAnim, {
         toValue: 0,
         damping: 24,
@@ -366,12 +377,17 @@ export default function ProfileScreen({ navigation }) {
   }, [modalVisible, modalSlideAnim]);
 
   const handleCloseModal = useCallback(() => {
+    if (isClosingModal.current) return;
+    isClosingModal.current = true;
+    Keyboard.dismiss();
     Animated.timing(modalSlideAnim, {
-      toValue: 600,
-      duration: 180,
+      toValue: MODAL_DISMISS_OFFSET,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(() => {
       setModalVisible(false);
+      isClosingModal.current = false;
     });
   }, [modalSlideAnim]);
 
@@ -381,13 +397,16 @@ export default function ProfileScreen({ navigation }) {
       onMoveShouldSetPanResponder: (_, gestureState) => {
         return gestureState.dy > 5;
       },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        return gestureState.dy > 5;
+      },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           modalSlideAnim.setValue(gestureState.dy);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+        if (gestureState.dy > 80 || gestureState.vy > 0.4) {
           handleCloseModal();
         } else {
           Animated.spring(modalSlideAnim, {
@@ -464,7 +483,7 @@ export default function ProfileScreen({ navigation }) {
       await AsyncStorage.setItem("@profile_gallery_count", String(galleryCount));
 
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
-      setModalVisible(false);
+      handleCloseModal();
     } catch (err) {
       Alert.alert("Erro ao salvar", err.message);
     } finally {
