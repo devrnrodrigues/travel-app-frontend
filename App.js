@@ -1,5 +1,4 @@
-import React from "react";
-import { View, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,6 +6,7 @@ import { useFonts } from "expo-font";
 import { ThemeProvider } from "./src/theme/ThemeContext";
 import { AuthProvider, useAuth } from "./src/features/auth/context/AuthContext";
 import RootNavigator from "./src/navigation/RootNavigator";
+import AppSplashScreen from "./src/shared/components/AppSplashScreen";
 import { styles } from "./src/navigation/styles/bottomTab.styles";
 
 const queryClient = new QueryClient({
@@ -20,14 +20,18 @@ const queryClient = new QueryClient({
   },
 });
 
-function AppContent() {
+function AppContent({ fontsLoaded }) {
   const { session, hasSeenWelcome, isLoading } = useAuth();
+  const [splashFinished, setSplashFinished] = useState(false);
 
-  if (isLoading) {
+  const isReady = Boolean(fontsLoaded && !isLoading);
+
+  if (!splashFinished) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#249689" />
-      </View>
+      <AppSplashScreen
+        isReady={isReady}
+        onAnimationEnd={() => setSplashFinished(true)}
+      />
     );
   }
 
@@ -41,21 +45,13 @@ export default function App() {
     "Caveat": require("./assets/fonts/Caveat-SemiBold.ttf"),
   });
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#249689" />
-      </View>
-    );
-  }
-
   return (
     <GestureHandlerRootView style={styles.flex1}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <AuthProvider>
-              <AppContent />
+              <AppContent fontsLoaded={fontsLoaded} />
             </AuthProvider>
           </ThemeProvider>
         </QueryClientProvider>
