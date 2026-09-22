@@ -631,8 +631,11 @@ function PolaroidStackCardSkeleton({
   anim,
   placeholderBg1,
   placeholderBg2,
-  photoBg,
 }) {
+  const backCardBg = isDarkMode ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.15)";
+  const frontCardBg = isDarkMode ? "rgba(255, 255, 255, 0.07)" : "rgba(255, 255, 255, 0.22)";
+  const photoBg = isDarkMode ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.12)";
+
   return (
     <View
       style={[
@@ -655,7 +658,9 @@ function PolaroidStackCardSkeleton({
                   { scale: 0.94 },
                 ],
                 opacity: isDarkMode ? 0.35 : 0.6,
-                backgroundColor: isDarkMode ? "#1A1A1A" : "#ECECEC",
+                backgroundColor: backCardBg,
+                shadowOpacity: 0,
+                elevation: 0,
               },
             ]}
           />
@@ -663,7 +668,9 @@ function PolaroidStackCardSkeleton({
             style={[
               profileStyles.stackPhoto,
               {
-                backgroundColor: isDarkMode ? "#222222" : "#FFFFFF",
+                backgroundColor: frontCardBg,
+                shadowOpacity: 0,
+                elevation: 0,
               },
             ]}
           >
@@ -726,10 +733,9 @@ function PolaroidStackCardSkeleton({
 export function ProfileSkeleton({ isDarkMode = true }) {
   const anim = useShimmerAnimation();
 
-  const avatarBg = !isDarkMode ? "rgba(255, 255, 255, 0.20)" : "rgba(255, 255, 255, 0.08)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.45)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.25)";
-  const photoBg = isDarkMode ? "#2a303c" : "#e2e8f0";
+  const avatarBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.35)";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.35)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.20)";
 
   return (
     <View style={profileStyles.flex1}>
@@ -807,14 +813,12 @@ export function ProfileSkeleton({ isDarkMode = true }) {
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
-            photoBg={photoBg}
           />
           <PolaroidStackCardSkeleton
             isDarkMode={isDarkMode}
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
-            photoBg={photoBg}
           />
         </View>
         <View style={profileStyles.galleryRow}>
@@ -823,14 +827,12 @@ export function ProfileSkeleton({ isDarkMode = true }) {
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
-            photoBg={photoBg}
           />
           <PolaroidStackCardSkeleton
             isDarkMode={isDarkMode}
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
-            photoBg={photoBg}
           />
         </View>
       </View>

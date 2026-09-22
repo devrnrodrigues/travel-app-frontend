@@ -416,7 +416,6 @@ export default function Favorites({ navigation }) {
               { }
               <Animated.View
                 style={[
-                  isDarkMode ? styles.iconButtonDark : styles.iconButtonLight,
                   {
                     position: "absolute",
                     right: 20,
@@ -429,6 +428,13 @@ export default function Favorites({ navigation }) {
                     flexDirection: "row",
                     alignItems: "center",
                     overflow: "hidden",
+                    backgroundColor: searchWidthAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [
+                        isDarkMode ? "rgba(0, 0, 0, 0.70)" : "rgba(100, 100, 100, 0.40)",
+                        isDarkMode ? "#000000" : "#FFFFFF",
+                      ],
+                    }),
                     borderWidth: isSearchOpen ? (isFocused ? 1.8 : 1.5) : 0,
                     borderColor: isSearchOpen ? currentTheme.accent : "transparent",
                   },
@@ -454,12 +460,15 @@ export default function Favorites({ navigation }) {
                     />
                     <TextInput
                       ref={searchInputRef}
-                      style={styles.searchInput}
+                      style={[
+                        styles.searchInput,
+                        !isDarkMode && styles.searchInputLight,
+                      ]}
                       placeholder="Buscar nos favoritos..."
                       placeholderTextColor={
                         isDarkMode
                           ? "rgba(255, 255, 255, 0.45)"
-                          : "rgba(255, 255, 255, 0.65)"
+                          : "rgba(0, 0, 0, 0.40)"
                       }
                       value={searchQuery}
                       onChangeText={setSearchQuery}
@@ -479,7 +488,7 @@ export default function Favorites({ navigation }) {
                         <Feather
                           name="x-circle"
                           size={16}
-                          color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(255, 255, 255, 0.7)"}
+                          color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)"}
                         />
                       </TouchableOpacity>
                     )}
@@ -488,7 +497,7 @@ export default function Favorites({ navigation }) {
                       hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
                       style={styles.searchCloseBtn}
                     >
-                      <Feather name="x" size={19} color="#FFFFFF" />
+                      <Feather name="x" size={19} color={isDarkMode ? "#FFFFFF" : "#000000"} />
                     </TouchableOpacity>
                   </View>
                 )}

@@ -75,6 +75,9 @@ export default StyleSheet.create({
     fontSize: 15,
     paddingVertical: 0,
   },
+  searchInputLight: {
+    color: "#000000",
+  },
   searchActionBtn: {
     padding: 4,
     marginRight: 2,
