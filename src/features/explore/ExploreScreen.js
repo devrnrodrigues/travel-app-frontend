@@ -350,7 +350,17 @@ export default function Explore({ navigation }) {
   return (
     <ImageBackground source={bgSource} style={styles.screenDarkBg} resizeMode="cover">
       <LinearGradient
-        colors={["rgba(10, 10, 10, 0.72)", "rgba(5, 5, 5, 0.88)"]}
+        colors={
+          currentTheme?.colors && currentTheme.colors.length >= 3
+            ? [
+                currentTheme.colors[0],
+                currentTheme.colors[1],
+                "rgba(0, 0, 0, 0.72)",
+                "rgba(0, 0, 0, 0.96)",
+              ]
+            : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
+        }
+        locations={[0, 0.38, 0.72, 1]}
         style={styles.flex1}
       >
         <View style={styles.container}>

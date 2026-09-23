@@ -422,7 +422,17 @@ export default function Favorites({ navigation }) {
     <View style={styles.root}>
       <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
         <LinearGradient
-          colors={["rgba(0, 0, 0, 0.50)", "rgba(0, 0, 0, 0.68)"]}
+          colors={
+            currentTheme?.colors && currentTheme.colors.length >= 3
+              ? [
+                  currentTheme.colors[0],
+                  currentTheme.colors[1],
+                  "rgba(0, 0, 0, 0.72)",
+                  "rgba(0, 0, 0, 0.96)",
+                ]
+              : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
+          }
+          locations={[0, 0.38, 0.72, 1]}
           style={styles.flex1}
         >
           <SafeAreaView style={styles.container}>

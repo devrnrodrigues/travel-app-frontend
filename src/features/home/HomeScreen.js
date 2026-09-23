@@ -222,8 +222,17 @@ export default function Home({ navigation }) {
 
       <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
         <LinearGradient
-          colors={["rgba(0, 0, 0, 0.55)", "transparent", "rgba(0, 0, 0, 0.75)"]}
-          locations={[0, 0.45, 1]}
+          colors={
+            currentTheme?.colors && currentTheme.colors.length >= 3
+              ? [
+                  currentTheme.colors[0],
+                  currentTheme.colors[1],
+                  "rgba(0, 0, 0, 0.72)",
+                  "rgba(0, 0, 0, 0.96)",
+                ]
+              : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
+          }
+          locations={[0, 0.38, 0.72, 1]}
           style={styles.flex1}
         >
           <Animated.View
