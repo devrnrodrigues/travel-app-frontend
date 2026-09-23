@@ -11,7 +11,14 @@ import {
   BackHandler,
   Easing,
   StyleSheet,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from "react-native";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -42,12 +49,95 @@ import ReviewsSection from "./components/ReviewsSection";
 const { width } = Dimensions.get("window");
 const STRICT_THUMB_SIZE = Math.round(width * 0.115);
 
+function formatTimeAgo(dateString) {
+  if (!dateString) return "poucos instantes";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (isNaN(diffInSeconds) || diffInSeconds < 60) {
+    return "poucos instantes";
+  }
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} ${diffInMinutes === 1 ? "minuto" : "minutos"}`;
+  }
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const remainingMinutes = diffInMinutes % 60;
+  if (diffInHours < 24) {
+    const horaStr = `${diffInHours} ${diffInHours === 1 ? "hora" : "horas"}`;
+    if (remainingMinutes > 0) {
+      return `${horaStr} e ${remainingMinutes} ${remainingMinutes === 1 ? "minuto" : "minutos"}`;
+    }
+    return horaStr;
+  }
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} ${diffInDays === 1 ? "dia" : "dias"}`;
+}
+
+function getFirstParagraph(text) {
+  if (!text) return "";
+  const paragraphs = text.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0);
+  return (paragraphs[0] || text).trim();
+}
+
+function getTruncatedFirstParagraph(text) {
+  const firstParagraph = getFirstParagraph(text);
+  if (!firstParagraph) return "";
+
+  const words = firstParagraph.split(/\s+/);
+  if (words.length === 0) return firstParagraph;
+
+  const lastWord = words[words.length - 1];
+  const cleanWord = lastWord.replace(/[.,!?;:]+$/, "");
+  const halfWord =
+    cleanWord.length > 2
+      ? cleanWord.slice(0, Math.ceil(cleanWord.length / 2))
+      : cleanWord;
+
+  const rest = words.slice(0, -1).join(" ");
+  return rest ? `${rest} ${halfWord}...` : `${halfWord}...`;
+}
+
+function getRemainingParagraphs(text) {
+  if (!text) return "";
+  const paragraphs = text.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0);
+  if (paragraphs.length <= 1) return "";
+  return paragraphs.slice(1).join("\n\n").trim();
+}
+
 export default function Details({ route, navigation }) {
   const queryClient = useQueryClient();
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { item, currentTheme } = route.params;
   const [description, setDescription] = useState("");
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const descExpandAnim = useRef(new Animated.Value(0)).current;
+
+  const toggleDescription = () => {
+    if (!isDescriptionExpanded) {
+      setIsDescriptionExpanded(true);
+      descExpandAnim.setValue(0);
+      Animated.timing(descExpandAnim, {
+        toValue: 1,
+        duration: 320,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(descExpandAnim, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          setIsDescriptionExpanded(false);
+        }
+      });
+    }
+  };
   const [weather, setWeather] = useState(null);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingAi, setLoadingAi] = useState(true);
@@ -238,8 +328,11 @@ export default function Details({ route, navigation }) {
   const fetchAiDescription = async () => {
     try {
       setLoadingAi(true);
-      const text = await getAiDescription(item);
-      setDescription(text);
+      const geminiText = await getAiDescription(item);
+      const loremParagraphs =
+        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\nSed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.";
+      const fullText = geminiText ? `${geminiText.trim()}\n\n${loremParagraphs}` : loremParagraphs;
+      setDescription(fullText);
     } catch (error) {
       console.error(error);
       setDescription("Não foi possível carregar a descrição gerada por IA.");
@@ -282,6 +375,7 @@ export default function Details({ route, navigation }) {
   useEffect(() => {
     setShowWeatherInfo(false);
     weatherInfoAnim.setValue(0);
+    setIsDescriptionExpanded(false);
     setMainImage(item.image_url);
     setLoadingPexels(true);
     setThumbnails([
@@ -394,7 +488,75 @@ export default function Details({ route, navigation }) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, { paddingTop: 16, paddingBottom: 24 }]}
         >
-          <View style={styles.marginBottom24}>
+          <View style={styles.rowCenterMarginBottom8}>
+            <Text style={[styles.descriptionHeader, { marginBottom: 0, flex: 1 }, !isDarkMode && { color: "#111827" }]}>
+              Descrição
+            </Text>
+          </View>
+
+          {loadingAi ? (
+            <DetailsDescriptionSkeleton isDarkMode={isDarkMode} />
+          ) : (
+            <FadeInView duration={240}>
+              {!isDescriptionExpanded ? (
+                <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>
+                  {getTruncatedFirstParagraph(description)}{" "}
+                  <Text
+                    onPress={toggleDescription}
+                    style={{ color: currentTheme.accent, fontWeight: "700" }}
+                  >
+                    ver mais
+                  </Text>
+                </Text>
+              ) : (
+                <View>
+                  <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>
+                    {getFirstParagraph(description)}
+                  </Text>
+                  {getRemainingParagraphs(description) ? (
+                    <Animated.View
+                      style={{
+                        opacity: descExpandAnim,
+                        transform: [
+                          {
+                            translateY: descExpandAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [-12, 0],
+                            }),
+                          },
+                        ],
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.descriptionBody,
+                          { marginTop: 12 },
+                          !isDarkMode && { color: "#374151" },
+                        ]}
+                      >
+                        {getRemainingParagraphs(description)}{" "}
+                        <Text
+                          onPress={toggleDescription}
+                          style={{ color: currentTheme.accent, fontWeight: "700" }}
+                        >
+                          ver menos
+                        </Text>
+                      </Text>
+                    </Animated.View>
+                  ) : (
+                    <Text
+                      onPress={toggleDescription}
+                      style={{ color: currentTheme.accent, fontWeight: "700" }}
+                    >
+                      {" "}ver menos
+                    </Text>
+                  )}
+                </View>
+              )}
+            </FadeInView>
+          )}
+
+          <View style={[styles.marginBottom24, { marginTop: 24 }]}>
             <View style={styles.rowSpaceBetween}>
               <View style={styles.rowCenter}>
                 <Text style={[styles.descriptionHeader, { marginBottom: 0 }, !isDarkMode && { color: "#111827" }]}>
@@ -415,7 +577,7 @@ export default function Details({ route, navigation }) {
               </View>
             </View>
 
-            <Animated.View style={[styles.weatherNoticeWrapper, { maxHeight: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }), opacity: weatherInfoAnim.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0.5, 1] }), marginTop: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 4] }) }]}>
+            <Animated.View style={[styles.weatherNoticeWrapper, { maxHeight: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 24] }), opacity: weatherInfoAnim.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0.5, 1] }), marginTop: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 4] }) }]}>
               <Text
                 numberOfLines={1}
                 style={[
@@ -428,12 +590,12 @@ export default function Details({ route, navigation }) {
               >
                 {!loadingWeather && !weather
                   ? "Sem informações de clima disponíveis"
-                  : "Informações de vento e temperatura em tempo real"}
+                  : `Informações de clima atualizado há ${formatTimeAgo(weather?.updatedAt)}`}
               </Text>
             </Animated.View>
           </View>
 
-          <View style={styles.statsContainer}>
+          <View style={[styles.statsContainer, { marginBottom: (!loadingWeather && weather) ? 0 : 24 }]}>
             <Animated.View
               style={[
                 styles.statCard,
@@ -524,37 +686,37 @@ export default function Details({ route, navigation }) {
                 },
               ]}
             >
-              <Text style={[styles.statLabel, !isDarkMode && { color: "#6B7280" }]}>Avaliação</Text>
-              {loadingReviews ? (
-                <SkeletonBox width={34} height={18} borderRadius={5} isDarkMode={isDarkMode} />
+              <Text style={[styles.statLabel, !isDarkMode && { color: "#6B7280" }]}>Chuva</Text>
+              {loadingWeather ? (
+                <SkeletonBox width={36} height={18} borderRadius={5} isDarkMode={isDarkMode} />
               ) : (
                 <FadeInView duration={200}>
                   <Text style={[styles.statValue, { color: currentTheme.accent }]}>
-                    {averageRating}
+                    {weather?.rainProbability != null
+                      ? `${weather.rainProbability}%`
+                      : weather?.humidity != null
+                      ? `${weather.humidity}%`
+                      : "N/A"}
                   </Text>
                 </FadeInView>
               )}
             </Animated.View>
           </View>
 
-          <View style={styles.rowCenterMarginBottom8}>
-            <Text style={[styles.descriptionHeader, { marginBottom: 0, flex: 1 }, !isDarkMode && { color: "#111827" }]}>
-              Descrição
-            </Text>
-          </View>
-
-          {loadingAi ? (
-            <DetailsDescriptionSkeleton isDarkMode={isDarkMode} />
-          ) : (
-            <FadeInView duration={240}>
-              <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>{description}</Text>
-            </FadeInView>
-          )}
-
           {!loadingWeather && weather && (
             <FadeInView duration={240}>
-              <Text style={[styles.weatherAlert, !isDarkMode && { color: "#6B7280", fontStyle: "italic" }]}>
-                {`Condição climática atual local: ${weather.condition} com ${weather.humidity}% de chance de chuva.`}
+              <Text
+                style={[
+                  styles.weatherAlert,
+                  {
+                    marginTop: 24,
+                    marginBottom: 0,
+                    color: isDarkMode ? "rgba(255, 255, 255, 0.62)" : "#6B7280",
+                    fontStyle: "italic",
+                  },
+                ]}
+              >
+                {`Condição climática atual: ${weather.condition}.`}
               </Text>
             </FadeInView>
           )}
