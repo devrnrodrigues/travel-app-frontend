@@ -60,9 +60,10 @@ export default StyleSheet.create({
     gap: GAP,
   },
   flatListContent: {
+    flexGrow: 1,
     gap: GAP,
-    paddingBottom: 40,
-    backgroundColor: "#000000",
+    paddingBottom: 110,
+    backgroundColor: "transparent",
   },
   masonryContainer: {
     paddingHorizontal: 0,
@@ -85,8 +86,9 @@ export default StyleSheet.create({
     position: "relative",
     backgroundColor: "#000000",
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#000000",
+  },
+  gridItemLight: {
+    backgroundColor: "#FFFFFF",
   },
   gridImage: {
     width: "100%",

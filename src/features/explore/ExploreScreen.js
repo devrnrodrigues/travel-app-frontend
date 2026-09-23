@@ -65,7 +65,11 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
   return (
     <TouchableOpacity
       activeOpacity={0.88}
-      style={[styles.gridItem, { width: COLUMN_WIDTH, height: CARD_HEIGHT }]}
+      style={[
+        styles.gridItem,
+        { width: COLUMN_WIDTH, height: CARD_HEIGHT },
+        !isDarkMode && styles.gridItemLight,
+      ]}
       onPress={handlePress}
     >
       <Animated.Image
@@ -368,7 +372,10 @@ export default function Explore({ navigation }) {
 
           {loading ? (
             <ScrollView
-              contentContainerStyle={styles.flatListContent}
+              contentContainerStyle={[
+                styles.flatListContent,
+                { backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" },
+              ]}
               showsVerticalScrollIndicator={false}
               scrollEnabled={false}
             >
@@ -377,12 +384,16 @@ export default function Explore({ navigation }) {
           ) : (
             <FadeInView duration={280} style={styles.flex1}>
               <FlatList
+                style={styles.flex1}
                 data={filteredDestinations}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 numColumns={3}
                 columnWrapperStyle={styles.columnWrapper}
-                contentContainerStyle={styles.flatListContent}
+                contentContainerStyle={[
+                  styles.flatListContent,
+                  { backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" },
+                ]}
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
                 onScrollBeginDrag={dismissSearchFocus}

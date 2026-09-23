@@ -315,6 +315,7 @@ export function ExploreCardSkeleton({
           backgroundColor: cardBg,
           overflow: "hidden",
         },
+        !isDarkMode && exploreStyles.gridItemLight,
       ]}
     >
       <View style={{ flex: 1 }} />
@@ -356,7 +357,7 @@ export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 
   const anim = useShimmerAnimation();
 
   return (
-    <View style={{ gap: GAP, backgroundColor: "#000000" }}>
+    <View style={{ gap: GAP, backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" }}>
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <View
           key={`skel-row-${rowIndex}`}
