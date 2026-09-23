@@ -62,7 +62,6 @@ export default StyleSheet.create({
   flatListContent: {
     flexGrow: 1,
     gap: GAP,
-    paddingBottom: 110,
     backgroundColor: "transparent",
   },
   masonryContainer: {

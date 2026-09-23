@@ -441,7 +441,7 @@ export default function Favorites({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover" blurRadius={4}>
+      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
         <LinearGradient
           colors={
             currentTheme?.colors && currentTheme.colors.length >= 3
