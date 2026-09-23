@@ -43,6 +43,9 @@ import { ALL_COUNTRIES } from "./data/countries";
 import { CountryPillSkeletonGroup } from "./components/CountryPillSkeleton";
 import PolaroidStackCard from "./components/PolaroidStackCard";
 import { GALLERY_COLLECTIONS } from "./data/mockGallery";
+import * as ImagePicker from "expo-image-picker";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import { uploadAvatarApi } from "./api/profileService";
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser } = useAuth();
@@ -83,6 +86,11 @@ export default function ProfileScreen({ navigation }) {
   const [loadingData, setLoadingData] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [avatarModalVisible, setAvatarModalVisible] = useState(false);
+  const [addCollectionModalVisible, setAddCollectionModalVisible] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [isCollectionNameFocused, setIsCollectionNameFocused] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [name, setName] = useState("");
@@ -97,6 +105,53 @@ export default function ProfileScreen({ navigation }) {
   const isNationalityFocused = focusedInput === "nationality";
   const countryListAnim = useRef(new Animated.Value(0)).current;
   const blurTimeoutRef = useRef(null);
+
+  const handlePickAndUploadAvatar = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "É necessário permitir o acesso à galeria para alterar a foto de perfil."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const selectedUri = result.assets[0].uri;
+      setIsUploadingAvatar(true);
+
+      const manipulated = await manipulateAsync(
+        selectedUri,
+        [],
+        { format: SaveFormat.WEBP }
+      );
+
+      const updatedUser = await uploadAvatarApi(manipulated.uri);
+      if (updatedUser?.avatarUrl) {
+        await updateUser({ avatarUrl: updatedUser.avatarUrl });
+      }
+    } catch (err) {
+      console.error(err);
+      const detail =
+        (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+        err?.message ||
+        err?.stack ||
+        "Não foi possível enviar a imagem.";
+      Alert.alert("Erro ao enviar", String(detail));
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const [isSearchingCountry, setIsSearchingCountry] = useState(false);
   const searchTimeoutRef = useRef(null);
@@ -631,11 +686,14 @@ export default function ProfileScreen({ navigation }) {
                     />
                   </TouchableOpacity>
 
-                  <View
+                  <TouchableOpacity
                     style={[
                       styles.avatar,
                       !isDarkMode && styles.avatarLight,
                     ]}
+                    activeOpacity={0.8}
+                    delayLongPress={300}
+                    onLongPress={() => setAvatarModalVisible(true)}
                   >
                     {user?.avatarUrl ? (
                       <Image
@@ -650,7 +708,7 @@ export default function ProfileScreen({ navigation }) {
                         color={currentTheme.accent}
                       />
                     )}
-                  </View>
+                  </TouchableOpacity>
                   <Text
                     style={[
                       styles.userName,
@@ -1012,6 +1070,43 @@ export default function ProfileScreen({ navigation }) {
                           onBlur={() => setFocusedInput(null)}
                         />
 
+                        <TouchableOpacity
+                          style={[
+                            styles.addCollectionTriggerBtn,
+                            !isDarkMode && styles.addCollectionTriggerBtnLight,
+                          ]}
+                          activeOpacity={0.75}
+                          onPress={() => setAddCollectionModalVisible(true)}
+                        >
+                          <View style={styles.addCollectionTriggerLeft}>
+                            <View
+                              style={[
+                                styles.addCollectionTriggerIconBox,
+                                !isDarkMode && styles.addCollectionTriggerIconBoxLight,
+                              ]}
+                            >
+                              <Ionicons
+                                name="images"
+                                size={17}
+                                color={!isDarkMode ? "#000000" : "#FFFFFF"}
+                              />
+                            </View>
+                            <Text
+                              style={[
+                                styles.addCollectionTriggerText,
+                                !isDarkMode && styles.addCollectionTriggerTextLight,
+                              ]}
+                            >
+                              Adicionar coleção
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={18}
+                            color={!isDarkMode ? "rgba(0, 0, 0, 0.4)" : "rgba(255, 255, 255, 0.4)"}
+                          />
+                        </TouchableOpacity>
+
                         <Text
                           style={[
                             styles.label,
@@ -1019,7 +1114,7 @@ export default function ProfileScreen({ navigation }) {
                             { marginTop: 14 },
                           ]}
                         >
-                          Coleções na Galeria
+                          Coleções na galeria
                         </Text>
                         <View style={styles.collectionCountGrid}>
                           <View style={styles.collectionCountRow}>
@@ -1276,6 +1371,211 @@ export default function ProfileScreen({ navigation }) {
                       >
                         <Text style={[dialogStyles.cancelText, !isDarkMode && dialogStyles.cancelTextLight]}>Cancelar</Text>
                       </TouchableOpacity>
+                    </View>
+                  </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
+            </Modal>
+
+            <Modal
+              visible={avatarModalVisible}
+              transparent={true}
+              animationType="fade"
+              statusBarTranslucent={true}
+              navigationBarTranslucent={true}
+              onRequestClose={() => !isUploadingAvatar && setAvatarModalVisible(false)}
+            >
+              <TouchableWithoutFeedback onPress={() => !isUploadingAvatar && setAvatarModalVisible(false)}>
+                <View style={styles.avatarModalOverlay}>
+                  <TouchableWithoutFeedback>
+                    <View style={styles.avatarModalContent}>
+                      <View style={styles.avatarModalImageWrapper}>
+                        {user?.avatarUrl ? (
+                          <Image
+                            source={{ uri: user.avatarUrl }}
+                            style={styles.avatarModalImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.avatarModalPlaceholder}>
+                            <Ionicons
+                              name="person"
+                              size={120}
+                              color={currentTheme.accent}
+                            />
+                          </View>
+                        )}
+                        {isUploadingAvatar && (
+                          <View style={styles.avatarUploadingOverlay}>
+                            <ActivityIndicator size="large" color={currentTheme.accent} />
+                          </View>
+                        )}
+                      </View>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.avatarEditBadge,
+                          {
+                            backgroundColor: isUploadingAvatar
+                              ? "rgba(120, 120, 120, 0.35)"
+                              : currentTheme.accent,
+                            opacity: isUploadingAvatar ? 0.6 : 1,
+                          },
+                        ]}
+                        activeOpacity={0.8}
+                        disabled={isUploadingAvatar}
+                        onPress={handlePickAndUploadAvatar}
+                      >
+                        <Ionicons
+                          name="camera"
+                          size={22}
+                          color={isUploadingAvatar ? "rgba(255, 255, 255, 0.5)" : "#000000"}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
+            </Modal>
+
+            <Modal
+              visible={addCollectionModalVisible}
+              transparent={true}
+              animationType="fade"
+              statusBarTranslucent={true}
+              navigationBarTranslucent={true}
+              onRequestClose={() => setAddCollectionModalVisible(false)}
+            >
+              <TouchableWithoutFeedback onPress={() => setAddCollectionModalVisible(false)}>
+                <View style={styles.addCollectionModalOverlay}>
+                  <TouchableWithoutFeedback>
+                    <View
+                      style={[
+                        styles.addCollectionModalCard,
+                        !isDarkMode && styles.addCollectionModalCardLight,
+                      ]}
+                    >
+                      <View style={styles.addCollectionModalHeader}>
+                        <Text
+                          style={[
+                            styles.addCollectionModalTitle,
+                            !isDarkMode && styles.addCollectionModalTitleLight,
+                          ]}
+                        >
+                          Adicionar coleção
+                        </Text>
+                      </View>
+
+                      <Text
+                        style={[
+                          styles.addCollectionSectionTitle,
+                          !isDarkMode && styles.addCollectionSectionTitleLight,
+                          { marginTop: 12, marginBottom: 6 },
+                        ]}
+                      >
+                        Nome
+                      </Text>
+                      <AnimatedProfileInput
+                        isFocused={isCollectionNameFocused}
+                        currentTheme={currentTheme}
+                        isDarkMode={isDarkMode}
+                        placeholder="Ex: viagem para europa, praias..."
+                        placeholderTextColor={
+                          !isDarkMode
+                            ? "rgba(0, 0, 0, 0.40)"
+                            : "rgba(255, 255, 255, 0.5)"
+                        }
+                        value={newCollectionName}
+                        onChangeText={setNewCollectionName}
+                        onFocus={() => setIsCollectionNameFocused(true)}
+                        onBlur={() => setIsCollectionNameFocused(false)}
+                      />
+
+                      <Text
+                        style={[
+                          styles.addCollectionSectionTitle,
+                          !isDarkMode && styles.addCollectionSectionTitleLight,
+                          { marginTop: 8, marginBottom: 6 },
+                        ]}
+                      >
+                        Fotos
+                      </Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.addCollectionPhotoBox,
+                          !isDarkMode && styles.addCollectionPhotoBoxLight,
+                        ]}
+                        activeOpacity={0.75}
+                        onPress={() => {}}
+                      >
+                        <View
+                          style={[
+                            styles.addCollectionPhotoIconCircle,
+                            { backgroundColor: `${currentTheme.accent}22` },
+                          ]}
+                        >
+                          <Ionicons
+                            name="cloud-upload-outline"
+                            size={26}
+                            color={currentTheme.accent}
+                          />
+                        </View>
+                        <Text
+                          style={[
+                            styles.addCollectionPhotoTitle,
+                            !isDarkMode && styles.addCollectionPhotoTitleLight,
+                          ]}
+                        >
+                          Inserir fotos
+                        </Text>
+                        <Text
+                          style={[
+                            styles.addCollectionPhotoSubtitle,
+                            !isDarkMode && styles.addCollectionPhotoSubtitleLight,
+                          ]}
+                        >
+                          Toque para escolher fotos do dispositivo
+                        </Text>
+                      </TouchableOpacity>
+
+                      <View style={styles.addCollectionModalActions}>
+                        <TouchableOpacity
+                          style={[
+                            styles.addCollectionCancelBtn,
+                            !isDarkMode && styles.addCollectionCancelBtnLight,
+                          ]}
+                          activeOpacity={0.7}
+                          onPress={() => {
+                            setNewCollectionName("");
+                            setAddCollectionModalVisible(false);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.addCollectionCancelText,
+                              !isDarkMode && styles.addCollectionCancelTextLight,
+                            ]}
+                          >
+                            Cancelar
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.addCollectionSaveBtn,
+                            { backgroundColor: currentTheme.accent },
+                          ]}
+                          activeOpacity={0.8}
+                          onPress={() => {
+                            setNewCollectionName("");
+                            setAddCollectionModalVisible(false);
+                          }}
+                        >
+                          <Text style={styles.addCollectionSaveText}>
+                            Salvar
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </TouchableWithoutFeedback>
                 </View>
