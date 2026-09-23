@@ -108,8 +108,12 @@ export default function ImageGalleryModal({
     return list;
   }, [validThumbnails]);
 
+  const currentImageRef = useRef(mainImage);
+  const prevVisibleRef = useRef(false);
+
   useEffect(() => {
-    if (visible) {
+    if (visible && !prevVisibleRef.current) {
+      currentImageRef.current = mainImage;
       const targetIndex = validThumbnails.indexOf(mainImage);
       const safeIndex = targetIndex >= 0 ? targetIndex : 0;
       const N = validThumbnails.length;
@@ -136,6 +140,7 @@ export default function ImageGalleryModal({
         return () => clearTimeout(timer);
       }
     }
+    prevVisibleRef.current = visible;
   }, [visible, mainImage, validThumbnails]);
 
   const handleModalScrollEnd = (e) => {
@@ -144,13 +149,21 @@ export default function ImageGalleryModal({
     if (slideW <= 0) return;
 
     const currentSlide = Math.round(offsetX / slideW);
+    activeModalIndexRef.current = currentSlide;
     const N = validThumbnails.length;
     if (N === 0) return;
 
     const realIndex = ((currentSlide % N) + N) % N;
-    if (validThumbnails[realIndex] && onSelectImage) {
-      onSelectImage(validThumbnails[realIndex]);
+    if (validThumbnails[realIndex]) {
+      currentImageRef.current = validThumbnails[realIndex];
     }
+  };
+
+  const handleClose = () => {
+    if (currentImageRef.current && onSelectImage) {
+      onSelectImage(currentImageRef.current);
+    }
+    onClose();
   };
 
   return (
@@ -160,12 +173,12 @@ export default function ImageGalleryModal({
       animationType="fade"
       statusBarTranslucent={true}
       navigationBarTranslucent={true}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.fullImageModalOverlay}>
         <Pressable
           style={StyleSheet.absoluteFillObject}
-          onPress={onClose}
+          onPress={handleClose}
         />
 
         <FlatList
@@ -175,18 +188,12 @@ export default function ImageGalleryModal({
           showsHorizontalScrollIndicator={false}
           bounces={true}
           style={styles.fullScreenCover}
-          contentContainerStyle={{ alignItems: "center", justifyContent: "center" }}
+          contentContainerStyle={{ alignItems: "center" }}
           getItemLayout={(_, index) => ({
             length: width,
             offset: width * index,
             index,
           })}
-          onLayout={() => {
-            modalFlatListRef.current?.scrollToOffset({
-              offset: activeModalIndexRef.current * width,
-              animated: false,
-            });
-          }}
           onMomentumScrollEnd={handleModalScrollEnd}
           keyExtractor={(_, index) => `modal-thumb-${index}`}
           windowSize={5}
@@ -195,12 +202,12 @@ export default function ImageGalleryModal({
           removeClippedSubviews={false}
           renderItem={({ item: imgUri }) => (
             <View style={styles.modalSlide}>
-              <TouchableWithoutFeedback onPress={onClose}>
+              <TouchableWithoutFeedback onPress={handleClose}>
                 <View style={styles.fullWidthFlex} />
               </TouchableWithoutFeedback>
 
               <View style={styles.galleryRow}>
-                <TouchableWithoutFeedback onPress={onClose}>
+                <TouchableWithoutFeedback onPress={handleClose}>
                   <View style={styles.flex1FullHeight} />
                 </TouchableWithoutFeedback>
 
@@ -214,12 +221,12 @@ export default function ImageGalleryModal({
                   </View>
                 </View>
 
-                <TouchableWithoutFeedback onPress={onClose}>
+                <TouchableWithoutFeedback onPress={handleClose}>
                   <View style={styles.flex1FullHeight} />
                 </TouchableWithoutFeedback>
               </View>
 
-              <TouchableWithoutFeedback onPress={onClose}>
+              <TouchableWithoutFeedback onPress={handleClose}>
                 <View style={styles.fullWidthFlex} />
               </TouchableWithoutFeedback>
             </View>

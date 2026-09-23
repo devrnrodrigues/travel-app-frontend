@@ -25,7 +25,7 @@ export default function BottomTabBar({ state, navigation }) {
   const tabBgColor = isDarkMode
     ? "rgba(10, 10, 10, 0.85)"
     : isExplore
-    ? "rgba(255, 255, 255, 0.72)"
+    ? "rgba(240, 240, 240, 0.80)"
     : "rgba(240, 240, 240, 0.40)";
 
   const prevIndexRef = useRef(state.index);
@@ -188,8 +188,8 @@ export default function BottomTabBar({ state, navigation }) {
                   isFocused
                     ? activeAccent
                     : isExplore && !isDarkMode
-                    ? "#000000"
-                    : "#FFFFFF"
+                    ? "#ffffffff"
+                    : "#ffffffff"
                 }
               />
             </Animated.View>

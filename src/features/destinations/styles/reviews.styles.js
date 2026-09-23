@@ -409,6 +409,36 @@ const reviewStyles = StyleSheet.create({
     elevation: 0,
   },
 
+  addImageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "rgba(255, 255, 255, 0.22)",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    marginBottom: 8,
+  },
+
+  addImageButtonLight: {
+    borderColor: "rgba(0, 0, 0, 0.18)",
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+  },
+
+  addImageButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.85)",
+    marginLeft: 8,
+  },
+
+  addImageButtonTextLight: {
+    color: "#374151",
+  },
+
   submitBtn: {
     paddingVertical: 14,
     borderRadius: 12,

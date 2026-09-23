@@ -133,6 +133,28 @@ export function ReviewFormModal({
               </Animated.View>
 
               <TouchableOpacity
+                activeOpacity={0.7}
+                style={[
+                  reviewStyles.addImageButton,
+                  !isDarkMode && reviewStyles.addImageButtonLight,
+                ]}
+              >
+                <Ionicons
+                  name="images-outline"
+                  size={18}
+                  color={currentTheme.accent}
+                />
+                <Text
+                  style={[
+                    reviewStyles.addImageButtonText,
+                    !isDarkMode && reviewStyles.addImageButtonTextLight,
+                  ]}
+                >
+                  Adicionar fotos
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 onPress={onSubmit}
                 disabled={isSubmitting}
                 style={[reviewStyles.submitBtn, { backgroundColor: currentTheme.accent }]}
