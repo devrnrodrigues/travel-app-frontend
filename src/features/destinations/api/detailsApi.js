@@ -16,6 +16,7 @@ export async function getWeather(destinationId) {
       rainProbability: data.rainProbability ?? 0,
       wind: Math.round(data.windSpeed ?? 0),
       condition: data.conditionText || "Tempo estável",
+      updatedAt: data.updatedAt,
     };
   } catch {
     return null;
