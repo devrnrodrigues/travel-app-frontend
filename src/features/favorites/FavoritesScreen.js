@@ -19,14 +19,17 @@ import {
   Platform,
   RefreshControl,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import styles, { dialogStyles } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
+import { useAuth } from "../auth/context/AuthContext";
 import { FavoritesSkeletonList, SkeletonBox } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import { getFavoritesApi, removeFavoriteApi } from "./api/favoriteService";
@@ -86,7 +89,6 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
 
   let rotateX = "0deg";
   let translateY = 0;
-  let scale = 1;
   let opacity = 1;
 
   if (canFoldTop && canFoldBottom) {
@@ -106,11 +108,6 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
     translateY = scrollY.interpolate({
       inputRange,
       outputRange: [20, 8, 0, 0, -8, -20],
-      extrapolate: "clamp",
-    });
-    scale = scrollY.interpolate({
-      inputRange,
-      outputRange: [0.94, 0.98, 1, 1, 0.98, 0.94],
       extrapolate: "clamp",
     });
     opacity = scrollY.interpolate({
@@ -134,11 +131,6 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
       outputRange: [0, -8, -20],
       extrapolate: "clamp",
     });
-    scale = scrollY.interpolate({
-      inputRange,
-      outputRange: [1, 0.98, 0.94],
-      extrapolate: "clamp",
-    });
     opacity = scrollY.interpolate({
       inputRange,
       outputRange: [1, 0.9, 0],
@@ -160,11 +152,6 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
       outputRange: [20, 8, 0],
       extrapolate: "clamp",
     });
-    scale = scrollY.interpolate({
-      inputRange,
-      outputRange: [0.94, 0.98, 1],
-      extrapolate: "clamp",
-    });
     opacity = scrollY.interpolate({
       inputRange,
       outputRange: [0, 0.9, 1],
@@ -176,11 +163,18 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
 
   return (
     <Animated.View
-      style={[{ transform: [{ perspective: 700 }, { translateY }, { rotateX }, { scale }], opacity }]}
+      style={[{ transform: [{ perspective: 700 }, { translateY }, { rotateX }], opacity }]}
     >
       <TouchableOpacity
         activeOpacity={0.85}
-        style={[styles.cardBase, !isDarkMode ? styles.cardLight : styles.cardDark, { height: cardHeight, marginBottom: index === totalItems - 1 ? 0 : cardMarginBottom }]}
+        style={[
+          styles.cardBase,
+          !isDarkMode ? styles.cardLight : styles.cardDark,
+          {
+            height: cardHeight,
+            marginBottom: index === totalItems - 1 ? 0 : cardMarginBottom,
+          },
+        ]}
         onPress={() => {
           Keyboard.dismiss();
           navigation.navigate("Details", {
@@ -242,16 +236,28 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
 
 export default function Favorites({ navigation }) {
   const { currentTheme, isDarkMode } = useTheme();
+  const { user } = useAuth();
   const bgSource = typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
 
   const queryClient = useQueryClient();
+  const userId = user?.id || user?._id || "anon";
 
   const { data, isLoading, isRefetching, refetch } = useQuery({
-    queryKey: ["favorites"],
+    queryKey: ["favorites", userId],
     queryFn: () => getFavoritesApi({ page: 0, size: 10 }),
+    enabled: !!user,
   });
 
-  const favorites = data || [];
+  const { data: isFavoritesHidden } = useQuery({
+    queryKey: ["hideFavorites"],
+    queryFn: async () => {
+      const val = await AsyncStorage.getItem("@debug_hide_favorites");
+      return val === "true";
+    },
+    initialData: false,
+  });
+
+  const favorites = isFavoritesHidden ? [] : (data || []);
   const loading = isLoading && favorites.length === 0;
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -281,6 +287,15 @@ export default function Favorites({ navigation }) {
       setListHeight(h);
     }
   }, [listHeight]);
+
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  const handleContainerLayout = useCallback((e) => {
+    const h = e.nativeEvent.layout.height;
+    if (h > 0 && Math.abs(h - containerHeight) > 2) {
+      setContainerHeight(h);
+    }
+  }, [containerHeight]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -372,15 +387,20 @@ export default function Favorites({ navigation }) {
   }, [favorites, searchQuery]);
 
   const VISIBLE_CARDS = 5;
-  const NAVBAR_TOP_OFFSET = 107;
-  const availableHeight = Math.max(350, listHeight - (NAVBAR_TOP_OFFSET + 32));
-  const cardSlot = Math.floor(availableHeight / VISIBLE_CARDS);
-  const cardMarginBottom = Math.max(6, Math.min(8, Math.floor(cardSlot * 0.08)));
-  const cardHeight = Math.max(72, cardSlot - cardMarginBottom);
-  const totalContentHeight = (cardHeight * VISIBLE_CARDS) + (cardMarginBottom * (VISIBLE_CARDS - 1));
-  const verticalGap = Math.max(10, Math.floor((listHeight - NAVBAR_TOP_OFFSET - totalContentHeight) / 2));
-  const paddingTop = verticalGap;
-  const paddingBottom = NAVBAR_TOP_OFFSET + verticalGap;
+  const count = filteredFavorites.length;
+  const targetCards = Math.min(VISIBLE_CARDS, Math.max(1, count));
+  const innerHeight = containerHeight > 0 ? containerHeight : Math.max(300, listHeight - 126);
+  const basePadding = 12;
+  const cardGap = 8;
+  const totalGaps = (VISIBLE_CARDS - 1) * cardGap;
+  const cardHeight = Math.max(68, Math.floor((innerHeight - (basePadding * 2) - totalGaps) / VISIBLE_CARDS));
+  const cardMarginBottom = cardGap;
+  const cardSlot = cardHeight + cardMarginBottom;
+
+  const totalCardsHeight = (cardHeight * targetCards) + ((targetCards - 1) * cardMarginBottom);
+  const verticalPadding = count >= VISIBLE_CARDS
+    ? Math.max(basePadding, Math.floor((innerHeight - totalCardsHeight) / 2))
+    : basePadding;
 
   if (itemToDelete?.title) {
     lastItemTitleRef.current = itemToDelete.title;
@@ -393,7 +413,7 @@ export default function Favorites({ navigation }) {
       const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
       await removeFavoriteApi(destId);
 
-      queryClient.setQueryData(["favorites"], (old) =>
+      queryClient.setQueriesData({ queryKey: ["favorites"] }, (old) =>
         (old || []).filter((fav) => (fav.destinationId || fav.id) !== destId)
       );
       setItemToDelete(null);
@@ -415,12 +435,13 @@ export default function Favorites({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       scrollY.setValue(scrollOffsetRef.current);
-    }, [])
+      queryClient.invalidateQueries({ queryKey: ["hideFavorites"] });
+    }, [queryClient])
   );
 
   return (
     <View style={styles.root}>
-      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
+      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover" blurRadius={4}>
         <LinearGradient
           colors={
             currentTheme?.colors && currentTheme.colors.length >= 3
@@ -435,7 +456,7 @@ export default function Favorites({ navigation }) {
           locations={[0, 0.38, 0.72, 1]}
           style={styles.flex1}
         >
-          <SafeAreaView style={styles.container}>
+          <SafeAreaView edges={["top"]} style={styles.container}>
             { }
             <View
               style={styles.searchBarWrapper}
@@ -541,90 +562,141 @@ export default function Favorites({ navigation }) {
             </View>
 
             <View style={styles.flex1} onLayout={handleListLayout}>
-              {loading ? (
-                <FavoritesSkeletonList
-                  isDarkMode={isDarkMode}
-                  cardHeight={cardHeight}
-                  cardMarginBottom={cardMarginBottom}
-                  paddingTop={paddingTop}
-                />
-              ) : (
-                <FadeInView duration={260} style={styles.flex1}>
-                  <Animated.FlatList
-                    ref={flatListRef}
-                    data={filteredFavorites}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                    keyExtractor={(item) => item.id.toString()}
-                    refreshControl={
-                      <RefreshControl
-                        refreshing={isRefetching}
-                        onRefresh={refetch}
-                        tintColor={currentTheme.accent || "#4CAF50"}
-                        colors={[currentTheme.accent || "#4CAF50"]}
-                      />
-                    }
-                    contentContainerStyle={{
-                      paddingTop: paddingTop,
-                      paddingHorizontal: 20,
-                      paddingBottom: paddingBottom,
-                    }}
-                    bounces={true}
-                    overScrollMode="always"
-                    scrollEventThrottle={16}
-                    onScroll={Animated.event(
-                      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                      {
-                        useNativeDriver: true,
-                        listener: (e) => {
-                          scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
-                        },
-                      }
-                    )}
-                    renderItem={({ item, index }) => (
-                      <FavoriteCardItem
-                        item={item}
-                        index={index}
-                        totalItems={filteredFavorites.length}
-                        scrollY={scrollY}
-                        cardSlot={cardSlot}
-                        cardHeight={cardHeight}
-                        cardMarginBottom={cardMarginBottom}
-                        currentTheme={currentTheme}
-                        isDarkMode={isDarkMode}
-                        navigation={navigation}
-                        setItemToDelete={setItemToDelete}
-                      />
-                    )}
-                    ListEmptyComponent={
-                      <View style={styles.emptyContainer}>
-                        {searchQuery.trim() ? (
-                          <>
-                            <Feather
-                              name="search"
-                              size={38}
-                              color={isDarkMode ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.55)"}
-                              style={styles.emptyIcon}
-                            />
-                            <Text style={styles.emptyTitle}>
-                              Nenhum resultado
-                            </Text>
-                            <Text
-                              style={isDarkMode ? styles.emptySubtitleDark : styles.emptySubtitleLight}
-                            >
-                              Nenhum destino salvo corresponde a "{searchQuery}".
-                            </Text>
-                          </>
-                        ) : (
-                          <Text style={styles.whiteText}>
-                            Nenhum destino salvo ainda.
-                          </Text>
-                        )}
-                      </View>
-                    }
+              <View
+                style={[
+                  styles.favoritesBlurContainer,
+                  isDarkMode && styles.favoritesBlurContainerDark,
+                  filteredFavorites.length === 0 && styles.favoritesBlurContainerEmpty,
+                ]}
+                onLayout={handleContainerLayout}
+              >
+                {Platform.OS !== "web" && (
+                  <BlurView
+                    intensity={Platform.OS === "android" ? 25 : 20}
+                    tint={isDarkMode ? "dark" : "light"}
+                    experimentalBlurMethod="dimezisBlurView"
+                    style={StyleSheet.absoluteFill}
                   />
-                </FadeInView>
-              )}
+                )}
+                <View
+                  style={[
+                    styles.emptyBlurCardOverlay,
+                    !isDarkMode && styles.emptyBlurCardOverlayLight,
+                  ]}
+                />
+
+                {loading ? (
+                  <FavoritesSkeletonList
+                    isDarkMode={isDarkMode}
+                    cardHeight={cardHeight}
+                    cardMarginBottom={cardMarginBottom}
+                    paddingTop={verticalPadding}
+                    paddingHorizontal={12}
+                  />
+                ) : (
+                  <FadeInView duration={340} style={styles.flex1}>
+                    <Animated.FlatList
+                      ref={flatListRef}
+                      data={filteredFavorites}
+                      keyboardShouldPersistTaps="handled"
+                      showsVerticalScrollIndicator={false}
+                      keyExtractor={(item) => item.id.toString()}
+                      refreshControl={
+                        <RefreshControl
+                          refreshing={isRefetching}
+                          onRefresh={refetch}
+                          tintColor={currentTheme.accent || "#4CAF50"}
+                          colors={[currentTheme.accent || "#4CAF50"]}
+                        />
+                      }
+                      contentContainerStyle={[
+                        {
+                          paddingTop: verticalPadding,
+                          paddingHorizontal: 12,
+                          paddingBottom: verticalPadding,
+                        },
+                        filteredFavorites.length === 0 && {
+                          flexGrow: 1,
+                        },
+                      ]}
+                      bounces={true}
+                      overScrollMode="always"
+                      scrollEventThrottle={16}
+                      onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        {
+                          useNativeDriver: true,
+                          listener: (e) => {
+                            scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+                          },
+                        }
+                      )}
+                      renderItem={({ item, index }) => (
+                        <FavoriteCardItem
+                          item={item}
+                          index={index}
+                          totalItems={filteredFavorites.length}
+                          scrollY={scrollY}
+                          cardSlot={cardSlot}
+                          cardHeight={cardHeight}
+                          cardMarginBottom={cardMarginBottom}
+                          currentTheme={currentTheme}
+                          isDarkMode={isDarkMode}
+                          navigation={navigation}
+                          setItemToDelete={setItemToDelete}
+                        />
+                      )}
+                      ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                          {searchQuery.trim() ? (
+                            <>
+                              <Feather
+                                name="search"
+                                size={32}
+                                color="rgba(248, 248, 252, 0.85)"
+                                style={styles.emptyIcon}
+                              />
+                              <Text style={styles.emptyTitle}>
+                                Nenhum resultado
+                              </Text>
+                              <Text style={styles.emptySubtitle}>
+                                Nenhum destino salvo corresponde a "{searchQuery}".
+                              </Text>
+                            </>
+                          ) : (
+                            <>
+                              <Ionicons
+                                name="heart-outline"
+                                size={36}
+                                color="rgba(255, 255, 255, 0.92)"
+                                style={styles.emptyIcon}
+                              />
+                              <Text style={styles.emptySubtitle}>
+                                Toque no coração nos destinos que você mais gostar para guardá-los aqui.
+                              </Text>
+                              <TouchableOpacity
+                                style={styles.emptyActionBtn}
+                                onPress={() => navigation.navigate("Explore")}
+                                activeOpacity={0.75}
+                              >
+                                <Feather
+                                  name="compass"
+                                  size={14}
+                                  color="rgba(255, 255, 255, 0.94)"
+                                  style={{ marginRight: 6 }}
+                                />
+                                <Text style={styles.emptyActionBtnText}>
+                                  Explorar destinos
+                                </Text>
+                              </TouchableOpacity>
+                            </>
+                          )}
+                        </View>
+                      }
+                    />
+                  </FadeInView>
+                )}
+              </View>
             </View>
           </SafeAreaView>
         </LinearGradient>

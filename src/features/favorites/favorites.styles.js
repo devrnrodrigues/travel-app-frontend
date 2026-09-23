@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions, Platform } from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -168,34 +168,95 @@ export default StyleSheet.create({
   ratingTextLight: {
     color: "#FFFFFF",
   },
+  favoritesBlurContainer: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 118,
+    borderRadius: 26,
+    overflow: "hidden",
+    backgroundColor: "transparent",
+    ...(Platform.OS === "web"
+      ? {
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+        }
+      : {}),
+  },
+  favoritesBlurContainerDark: {
+    backgroundColor: "rgba(10, 10, 10, 0.45)",
+  },
+  favoritesBlurContainerEmpty: {
+    marginTop: 22,
+    marginBottom: 132,
+  },
   emptyContainer: {
     flex: 1,
+    width: "100%",
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 50,
-    paddingHorizontal: 30,
+    paddingHorizontal: 24,
+    paddingVertical: 36,
+  },
+  emptyBlurCard: {
+    flex: 1,
+    width: "100%",
+    minHeight: 380,
+    borderRadius: 26,
+    overflow: "hidden",
+    paddingHorizontal: 24,
+    paddingVertical: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    ...(Platform.OS === "web"
+      ? {
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+        }
+      : {}),
+  },
+  emptyBlurCardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10, 10, 10, 0.55)",
+  },
+  emptyBlurCardOverlayLight: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
   },
   emptyIcon: {
     marginBottom: 12,
   },
   emptyTitle: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 6,
+    letterSpacing: -0.2,
   },
-  emptySubtitleDark: {
-    color: "rgba(255, 255, 255, 0.6)",
-    fontSize: 13,
+  emptySubtitle: {
+    fontSize: 13.5,
+    color: "rgba(255, 255, 255, 0.94)",
     textAlign: "center",
+    lineHeight: 19,
+    maxWidth: 250,
+    marginBottom: 18,
   },
-  emptySubtitleLight: {
-    color: "rgba(255, 255, 255, 0.8)",
+  emptyActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 0,
+  },
+  emptyActionBtnText: {
+    color: "rgba(255, 255, 255, 0.95)",
     fontSize: 13,
-    textAlign: "center",
-  },
-  whiteText: {
-    color: "#FFFFFF",
+    fontWeight: "600",
   },
   boldWhiteText: {
     fontWeight: "700",

@@ -466,6 +466,7 @@ export function FavoritesSkeletonList({
   cardMarginBottom = 8,
   count = 5,
   paddingTop = 14,
+  paddingHorizontal = 12,
 }) {
   const anim = useShimmerAnimation();
   const variations = [
@@ -478,7 +479,7 @@ export function FavoritesSkeletonList({
   ];
 
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop }}>
+    <View style={{ paddingHorizontal, paddingTop }}>
       {Array.from({ length: count }).map((_, i) => {
         const v = variations[i % variations.length];
         return (
