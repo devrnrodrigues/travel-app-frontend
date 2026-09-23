@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQueryClient } from "@tanstack/react-query";
 import { loginApi, registerApi, loginWithGoogleApi, logoutApi } from "../api/authService";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +45,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
+    queryClient.clear();
     const data = await loginApi(email, password);
     const userData = data.user;
 
@@ -60,9 +63,10 @@ export function AuthProvider({ children }) {
     setHasSeenWelcome(userSeen === "true" || globalSeen === "true");
 
     return data;
-  }, []);
+  }, [queryClient]);
 
   const register = useCallback(async ({ fullName, email, password }) => {
+    queryClient.clear();
     const data = await registerApi({ fullName, email, password });
     const userData = data.user;
 
@@ -80,9 +84,10 @@ export function AuthProvider({ children }) {
     setHasSeenWelcome(userSeen === "true" || globalSeen === "true");
 
     return data;
-  }, []);
+  }, [queryClient]);
 
   const loginWithGoogle = useCallback(async (idToken) => {
+    queryClient.clear();
     const data = await loginWithGoogleApi(idToken);
     const userData = data.user;
 
@@ -100,7 +105,7 @@ export function AuthProvider({ children }) {
     setHasSeenWelcome(userSeen === "true" || globalSeen === "true");
 
     return data;
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(async () => {
     try {
@@ -110,12 +115,19 @@ export function AuthProvider({ children }) {
     const storedRefreshToken = await AsyncStorage.getItem("refreshToken");
     await logoutApi(storedRefreshToken);
 
-    await AsyncStorage.multiRemove(["accessToken", "refreshToken", "currentUser"]);
+    await AsyncStorage.multiRemove([
+      "accessToken",
+      "refreshToken",
+      "currentUser",
+      "@profile_gallery_count",
+    ]);
+
+    queryClient.clear();
 
     setUser(null);
     setSession(null);
     setHasSeenWelcome(false);
-  }, []);
+  }, [queryClient]);
 
   const updateUser = useCallback(async (newUserData) => {
     setUser((prev) => {
