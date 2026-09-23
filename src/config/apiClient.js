@@ -10,18 +10,28 @@ async function request(endpoint, options = {}, isRetry = false) {
 
   const token = await AsyncStorage.getItem("accessToken");
 
+  const isFormData =
+    options.body instanceof FormData ||
+    Boolean(options.body && typeof options.body.append === "function") ||
+    Boolean(options.body && options.body._parts !== undefined);
+
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
+
+  if (isFormData) {
+    delete headers["Content-Type"];
+    delete headers["content-type"];
+  }
 
   const config = {
     ...options,
     headers,
   };
 
-  if (config.body && typeof config.body === "object" && !(config.body instanceof FormData)) {
+  if (config.body && typeof config.body === "object" && !isFormData) {
     config.body = JSON.stringify(config.body);
   }
 
@@ -81,10 +91,7 @@ async function request(endpoint, options = {}, isRetry = false) {
 
     return data;
   } catch (err) {
-    if (err.status) {
-      throw err;
-    }
-    throw new Error("Falha na conexão com o servidor. Verifique sua conexão ou tente novamente.");
+    throw err;
   }
 }
 
