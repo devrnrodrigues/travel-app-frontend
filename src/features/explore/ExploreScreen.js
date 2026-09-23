@@ -246,7 +246,15 @@ export default function Explore({ navigation }) {
   }, [isSearchFocused, showSearchBar, scheduleAutoHide]);
 
   useEffect(() => {
+    const handleKeyboardHide = () => {
+      searchInputRef.current?.blur();
+      setIsSearchFocused(false);
+    };
+    const didHideSub = Keyboard.addListener("keyboardDidHide", handleKeyboardHide);
+    const willHideSub = Keyboard.addListener("keyboardWillHide", handleKeyboardHide);
     return () => {
+      didHideSub.remove();
+      willHideSub.remove();
       if (autoHideTimerRef.current) {
         clearTimeout(autoHideTimerRef.current);
         autoHideTimerRef.current = null;
@@ -305,12 +313,13 @@ export default function Explore({ navigation }) {
     useCallback(() => {
       showSearchBar();
       return () => {
+        dismissSearchFocus();
         if (autoHideTimerRef.current) {
           clearTimeout(autoHideTimerRef.current);
           autoHideTimerRef.current = null;
         }
       };
-    }, [showSearchBar])
+    }, [showSearchBar, dismissSearchFocus])
   );
 
   const handleRefresh = useCallback(() => {
@@ -331,12 +340,13 @@ export default function Explore({ navigation }) {
 
 
   const handleCardPress = useCallback((item) => {
+    dismissSearchFocus();
     const itemTheme = categoryThemes[item.category] || defaultTheme;
     navigation.navigate("Details", {
       item,
       currentTheme: itemTheme,
     });
-  }, [navigation]);
+  }, [navigation, dismissSearchFocus]);
 
   const renderItem = useCallback(
     ({ item }) => (
