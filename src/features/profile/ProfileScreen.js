@@ -417,6 +417,22 @@ export default function ProfileScreen({ navigation }) {
     outputRange: ["0deg", "360deg"],
   });
 
+  const [isThemeLoading, setIsThemeLoading] = useState(false);
+
+  const handleToggleTheme = async () => {
+    if (isThemeLoading) return;
+    setIsThemeLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await toggleThemeMode();
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    } catch (e) {
+      console.error("Erro ao alternar tema:", e);
+    } finally {
+      setIsThemeLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (modalVisible) {
       isClosingModal.current = false;
@@ -1070,7 +1086,8 @@ export default function ProfileScreen({ navigation }) {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          onPress={toggleThemeMode}
+                          onPress={handleToggleTheme}
+                          disabled={isThemeLoading}
                           activeOpacity={0.7}
                           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                           style={[
@@ -1080,19 +1097,27 @@ export default function ProfileScreen({ navigation }) {
                               : styles.themeToggleDark,
                           ]}
                         >
-                          <Animated.View
-                            style={{ transform: [{ rotate: iconRotation }] }}
-                          >
-                            <Ionicons
-                              name={isDarkMode ? "moon" : "sunny"}
-                              size={14}
-                              color={
-                                !isDarkMode
-                                  ? "#000000"
-                                  : currentTheme.accent
-                              }
+                          {isThemeLoading ? (
+                            <ActivityIndicator
+                              size="small"
+                              color={currentTheme.accent}
+                              style={{ transform: [{ scale: 0.75 }] }}
                             />
-                          </Animated.View>
+                          ) : (
+                            <Animated.View
+                              style={{ transform: [{ rotate: iconRotation }] }}
+                            >
+                              <Ionicons
+                                name={isDarkMode ? "moon" : "sunny"}
+                                size={14}
+                                color={
+                                  !isDarkMode
+                                    ? "#000000"
+                                    : currentTheme.accent
+                                }
+                              />
+                            </Animated.View>
+                          )}
                         </TouchableOpacity>
                       </View>
                     </Animated.View>
