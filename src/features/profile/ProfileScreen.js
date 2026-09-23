@@ -32,6 +32,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "../../theme/ThemeContext";
 import { ProfileSkeleton } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
@@ -71,31 +72,8 @@ export default function ProfileScreen({ navigation }) {
     }
   }, [loading]);
 
-  const cardOpacity = transitionAnim.interpolate({
-    inputRange: [0, 0.15, 1],
-    outputRange: [0, 0.2, 1],
-  });
-  const cardTranslateY = transitionAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [14, 0],
-  });
-  const cardScale = transitionAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.97, 1],
-  });
-
-  const galleryOpacity = transitionAnim.interpolate({
-    inputRange: [0, 0.35, 1],
-    outputRange: [0, 0.1, 1],
-  });
-  const galleryTranslateY = transitionAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [18, 0],
-  });
-  const galleryScale = transitionAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.96, 1],
-  });
+  const cardOpacity = transitionAnim;
+  const galleryOpacity = transitionAnim;
 
   const skeletonOpacity = transitionAnim.interpolate({
     inputRange: [0, 0.75, 1],
@@ -111,6 +89,8 @@ export default function ProfileScreen({ navigation }) {
   const [nationality, setNationality] = useState("Brasileiro");
   const [bio, setBio] = useState("");
   const [galleryCount, setGalleryCount] = useState(4);
+  const [hideFavorites, setHideFavorites] = useState(false);
+  const queryClient = useQueryClient();
   const [focusedInput, setFocusedInput] = useState(null);
   const [hasTypedNationality, setHasTypedNationality] = useState(false);
 
@@ -214,9 +194,9 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     AsyncStorage.getItem("@profile_gallery_count").then((val) => {
-      if (val) {
+      if (val !== null && val !== undefined) {
         const parsed = parseInt(val, 10);
-        if (parsed >= 1 && parsed <= 8) {
+        if (parsed >= 0 && parsed <= 8) {
           setGalleryCount(parsed);
         }
       }
@@ -507,13 +487,13 @@ export default function ProfileScreen({ navigation }) {
             setNationality("Brasileiro");
           }
           if (parsed.bio) setBio(parsed.bio);
-          if (parsed.galleryCount && parsed.galleryCount >= 1 && parsed.galleryCount <= 8) {
+          if (parsed.galleryCount !== undefined && parsed.galleryCount >= 0 && parsed.galleryCount <= 8) {
             setGalleryCount(parsed.galleryCount);
           } else {
             const savedCount = await AsyncStorage.getItem("@profile_gallery_count");
-            if (savedCount) {
+            if (savedCount !== null && savedCount !== undefined) {
               const num = parseInt(savedCount, 10);
-              if (num >= 1 && num <= 8) setGalleryCount(num);
+              if (num >= 0 && num <= 8) setGalleryCount(num);
             }
           }
         }
@@ -577,6 +557,22 @@ export default function ProfileScreen({ navigation }) {
     setLogoutModalVisible(false);
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem("@debug_hide_favorites").then((val) => {
+        setHideFavorites(val === "true");
+      });
+    }, [])
+  );
+
+  const handleToggleHideFavorites = async () => {
+    const nextVal = !hideFavorites;
+    setHideFavorites(nextVal);
+    await AsyncStorage.setItem("@debug_hide_favorites", String(nextVal));
+    queryClient.setQueryData(["hideFavorites"], nextVal);
+    queryClient.invalidateQueries({ queryKey: ["favorites"] });
+  };
+
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -619,13 +615,7 @@ export default function ProfileScreen({ navigation }) {
                   style={[
                     styles.profileCard,
                     !isDarkMode && styles.profileCardLight,
-                    {
-                      opacity: cardOpacity,
-                      transform: [
-                        { translateY: cardTranslateY },
-                        { scale: cardScale },
-                      ],
-                    },
+                    { opacity: cardOpacity },
                   ]}
                 >
                   <TouchableOpacity
@@ -691,17 +681,42 @@ export default function ProfileScreen({ navigation }) {
                   style={[
                     styles.galleryContainer,
                     galleryCount > 4 && styles.galleryContainerScrollable,
-                    {
-                      opacity: galleryOpacity,
-                      transform: [
-                        { translateY: galleryTranslateY },
-                        { scale: galleryScale },
-                      ],
-                    },
+                    { opacity: galleryOpacity },
                   ]}
                   onLayout={handleGalleryLayout}
                 >
-                  {galleryCount <= 4 ? (
+                  {galleryCount === 0 ? (
+                    <View
+                      style={[
+                        styles.emptyGalleryContainer,
+                        isDarkMode && styles.emptyGalleryContainerDark,
+                      ]}
+                    >
+                      <Ionicons
+                        name="images-outline"
+                        size={40}
+                        color="rgba(255, 255, 255, 0.92)"
+                      />
+                      <Text style={styles.emptyGallerySubtitle}>
+                        Adicione coleções e salve as fotos das suas viagens.
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.emptyGalleryBtn}
+                        onPress={() => setModalVisible(true)}
+                        activeOpacity={0.75}
+                      >
+                        <Ionicons
+                          name="add"
+                          size={16}
+                          color="rgba(255, 255, 255, 0.95)"
+                          style={{ marginRight: 4 }}
+                        />
+                        <Text style={styles.emptyGalleryBtnText}>
+                          Adicionar coleção
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : galleryCount <= 4 ? (
                     <>
                       <View style={styles.galleryRow}>
                         {galleryCount >= 1 ? (
@@ -1008,7 +1023,7 @@ export default function ProfileScreen({ navigation }) {
                         </Text>
                         <View style={styles.collectionCountGrid}>
                           <View style={styles.collectionCountRow}>
-                            {[1, 2, 3, 4].map((num) => {
+                            {[0, 1, 2, 3, 4].map((num) => {
                               const isSelected = galleryCount === num;
                               return (
                                 <TouchableOpacity
@@ -1064,7 +1079,75 @@ export default function ProfileScreen({ navigation }) {
                                 </TouchableOpacity>
                               );
                             })}
+                            <View style={{ flex: 1 }} />
                           </View>
+                        </View>
+
+                        <View style={styles.hideFavoritesSection}>
+                          <Text
+                            style={[
+                              styles.label,
+                              !isDarkMode && styles.labelLight,
+                            ]}
+                          >
+                            Visualização dos Favoritos
+                          </Text>
+                          <TouchableOpacity
+                            style={[
+                              styles.hideFavoritesBtn,
+                              !isDarkMode && styles.hideFavoritesBtnLight,
+                              hideFavorites && {
+                                borderColor: currentTheme.accent,
+                                backgroundColor: isDarkMode
+                                  ? "rgba(255, 255, 255, 0.08)"
+                                  : "rgba(0, 0, 0, 0.06)",
+                              },
+                            ]}
+                            activeOpacity={0.75}
+                            onPress={handleToggleHideFavorites}
+                          >
+                            <View style={styles.hideFavoritesLeft}>
+                              <Ionicons
+                                name={hideFavorites ? "eye-off-outline" : "eye-outline"}
+                                size={20}
+                                color={
+                                  hideFavorites
+                                    ? currentTheme.accent
+                                    : !isDarkMode
+                                    ? "rgba(0,0,0,0.6)"
+                                    : "rgba(255,255,255,0.7)"
+                                }
+                                style={{ marginRight: 10 }}
+                              />
+                              <Text
+                                style={[
+                                  styles.hideFavoritesText,
+                                  !isDarkMode && styles.hideFavoritesTextLight,
+                                ]}
+                              >
+                                {hideFavorites
+                                  ? "Favoritos ocultos (ver vazio)"
+                                  : "Favoritos visíveis"}
+                              </Text>
+                            </View>
+                            <View
+                              style={[
+                                styles.hideFavoritesBadge,
+                                hideFavorites && {
+                                  backgroundColor: currentTheme.accent,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.hideFavoritesBadgeText,
+                                  hideFavorites && { color: "#000000" },
+                                ]}
+                              >
+                                {hideFavorites ? "Oculto" : "Visível"}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity

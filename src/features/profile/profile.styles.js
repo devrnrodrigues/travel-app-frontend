@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 8,
     marginBottom: 14,
-    backgroundColor: "rgba(10, 10, 10, 0.85)",
+    backgroundColor: "rgba(10, 10, 10, 0.90)",
     borderWidth: 0,
     borderColor: "transparent",
     borderRadius: 20,
@@ -503,6 +503,46 @@ export const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "800",
   },
+  emptyGalleryContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "rgba(255, 255, 255, 0.14)",
+  },
+  emptyGalleryContainerDark: {
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+    borderColor: "rgba(255, 255, 255, 0.10)",
+  },
+  emptyGallerySubtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.94)",
+    marginTop: 10,
+    marginBottom: 16,
+    textAlign: "center",
+    lineHeight: 18,
+    maxWidth: 260,
+  },
+  emptyGalleryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 0,
+  },
+  emptyGalleryBtnText: {
+    color: "rgba(255, 255, 255, 0.95)",
+    fontSize: 13,
+    fontWeight: "600",
+  },
 });
 
 export const dialogStyles = StyleSheet.create({
@@ -585,5 +625,48 @@ export const dialogStyles = StyleSheet.create({
   },
   cancelTextLight: {
     color: "#000000",
+  },
+  hideFavoritesSection: {
+    marginTop: 18,
+    marginBottom: 6,
+  },
+  hideFavoritesBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+  },
+  hideFavoritesBtnLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+    borderColor: "rgba(0, 0, 0, 0.10)",
+  },
+  hideFavoritesLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  hideFavoritesText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "500",
+  },
+  hideFavoritesTextLight: {
+    color: "#000000",
+  },
+  hideFavoritesBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  hideFavoritesBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });
