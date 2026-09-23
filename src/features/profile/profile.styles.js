@@ -181,6 +181,7 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 13,
     marginLeft: 5,
+    fontWeight: "700",
   },
   labelLight: {
     color: "#222222",
@@ -191,11 +192,12 @@ export const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 15,
     marginBottom: 20,
-    borderWidth: 0,
+    borderWidth: 1.5,
+    borderColor: "transparent",
     outlineStyle: "none",
   },
   inputContainer: {
-    borderWidth: 0,
+    borderWidth: 1.5,
     borderColor: "transparent",
     padding: 0,
   },

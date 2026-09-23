@@ -32,6 +32,7 @@ export default function AnimatedProfileInput({
         !isDarkMode && styles.inputContainerLight,
         styles.inputContainer,
         {
+          borderWidth: 1.5,
           borderColor,
         },
         style,

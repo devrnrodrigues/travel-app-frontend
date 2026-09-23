@@ -1055,7 +1055,7 @@ export default function ProfileScreen({ navigation }) {
                           isFocused={focusedInput === "bio"}
                           currentTheme={currentTheme}
                           isDarkMode={isDarkMode}
-                          style={styles.bioInput}
+                          style={[styles.bioInput, { marginBottom: 8 }]}
                           placeholder="Conte um pouco sobre você..."
                           placeholderTextColor={
                             !isDarkMode
@@ -1074,6 +1074,45 @@ export default function ProfileScreen({ navigation }) {
                           style={[
                             styles.addCollectionTriggerBtn,
                             !isDarkMode && styles.addCollectionTriggerBtnLight,
+                            { marginTop: 4, marginBottom: 8 },
+                          ]}
+                          activeOpacity={0.75}
+                          onPress={() => setAvatarModalVisible(true)}
+                        >
+                          <View style={styles.addCollectionTriggerLeft}>
+                            <View
+                              style={[
+                                styles.addCollectionTriggerIconBox,
+                                !isDarkMode && styles.addCollectionTriggerIconBoxLight,
+                              ]}
+                            >
+                              <Ionicons
+                                name="camera"
+                                size={17}
+                                color={!isDarkMode ? "#000000" : "#FFFFFF"}
+                              />
+                            </View>
+                            <Text
+                              style={[
+                                styles.addCollectionTriggerText,
+                                !isDarkMode && styles.addCollectionTriggerTextLight,
+                              ]}
+                            >
+                              Alterar foto
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={18}
+                            color={!isDarkMode ? "rgba(0, 0, 0, 0.4)" : "rgba(255, 255, 255, 0.4)"}
+                          />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.addCollectionTriggerBtn,
+                            !isDarkMode && styles.addCollectionTriggerBtnLight,
+                            { marginTop: 0 },
                           ]}
                           activeOpacity={0.75}
                           onPress={() => setAddCollectionModalVisible(true)}
@@ -1479,6 +1518,7 @@ export default function ProfileScreen({ navigation }) {
                         isFocused={isCollectionNameFocused}
                         currentTheme={currentTheme}
                         isDarkMode={isDarkMode}
+                        style={{ marginBottom: 4 }}
                         placeholder="Ex: viagem para europa, praias..."
                         placeholderTextColor={
                           !isDarkMode
@@ -1495,7 +1535,7 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           styles.addCollectionSectionTitle,
                           !isDarkMode && styles.addCollectionSectionTitleLight,
-                          { marginTop: 8, marginBottom: 6 },
+                          { marginTop: 4, marginBottom: 6 },
                         ]}
                       >
                         Fotos
