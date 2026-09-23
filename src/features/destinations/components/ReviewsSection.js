@@ -20,7 +20,7 @@ import {
   deleteCommentApi,
   toggleCommentHelpfulApi,
 } from "../api/commentService";
-import { DetailsReviewsSkeleton } from "../../../shared/components/Skeleton";
+import { DetailsReviewsSkeleton, SkeletonBox } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
 import { ReviewFormModal, DeleteReviewModal } from "./ReviewModals";
 
@@ -357,32 +357,41 @@ export default function ReviewsSection({
             </Text>
           </View>
 
-          {!userReview && (
-            <TouchableOpacity
-              style={[
-                reviewStyles.inlineActionBtn,
-                {
-                  borderColor: currentTheme.accent,
-                  borderWidth: 1,
-                  borderRadius: 20,
-                },
-                !isDarkMode && {
-                  backgroundColor: "#FFFFFF",
-                  shadowOpacity: 0,
-                  elevation: 0,
-                  shadowColor: "transparent",
-                  shadowRadius: 0,
-                  shadowOffset: { width: 0, height: 0 },
-                },
-              ]}
-              onPress={handleOpenReviewModal}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="star" size={12} color={currentTheme.accent} style={styles.marginRight4} />
-              <Text style={[reviewStyles.inlineActionText, { color: currentTheme.accent, fontWeight: "700" }]}>
-                Avaliar
-              </Text>
-            </TouchableOpacity>
+          {loadingReviews ? (
+            <SkeletonBox
+              width={76}
+              height={28}
+              borderRadius={20}
+              isDarkMode={isDarkMode}
+            />
+          ) : (
+            !userReview && (
+              <TouchableOpacity
+                style={[
+                  reviewStyles.inlineActionBtn,
+                  {
+                    borderColor: currentTheme.accent,
+                    borderWidth: 1,
+                    borderRadius: 20,
+                  },
+                  !isDarkMode && {
+                    backgroundColor: "#FFFFFF",
+                    shadowOpacity: 0,
+                    elevation: 0,
+                    shadowColor: "transparent",
+                    shadowRadius: 0,
+                    shadowOffset: { width: 0, height: 0 },
+                  },
+                ]}
+                onPress={handleOpenReviewModal}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="star" size={12} color={currentTheme.accent} style={styles.marginRight4} />
+                <Text style={[reviewStyles.inlineActionText, { color: currentTheme.accent, fontWeight: "700" }]}>
+                  Avaliar
+                </Text>
+              </TouchableOpacity>
+            )
           )}
         </View>
 
