@@ -113,30 +113,23 @@ export default function Details({ route, navigation }) {
   const { item, currentTheme } = route.params;
   const [description, setDescription] = useState("");
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const descExpandAnim = useRef(new Animated.Value(0)).current;
 
   const toggleDescription = () => {
-    if (!isDescriptionExpanded) {
-      setIsDescriptionExpanded(true);
-      descExpandAnim.setValue(0);
-      Animated.timing(descExpandAnim, {
-        toValue: 1,
-        duration: 320,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(descExpandAnim, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.in(Easing.ease),
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) {
-          setIsDescriptionExpanded(false);
-        }
-      });
-    }
+    LayoutAnimation.configureNext({
+      duration: 220,
+      create: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+      update: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+      },
+      delete: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+    });
+    setIsDescriptionExpanded((prev) => !prev);
   };
   const [weather, setWeather] = useState(null);
   const [loadingWeather, setLoadingWeather] = useState(true);
@@ -514,35 +507,21 @@ export default function Details({ route, navigation }) {
                     {getFirstParagraph(description)}
                   </Text>
                   {getRemainingParagraphs(description) ? (
-                    <Animated.View
-                      style={{
-                        opacity: descExpandAnim,
-                        transform: [
-                          {
-                            translateY: descExpandAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [-12, 0],
-                            }),
-                          },
-                        ],
-                      }}
+                    <Text
+                      style={[
+                        styles.descriptionBody,
+                        { marginTop: 12 },
+                        !isDarkMode && { color: "#374151" },
+                      ]}
                     >
+                      {getRemainingParagraphs(description)}{" "}
                       <Text
-                        style={[
-                          styles.descriptionBody,
-                          { marginTop: 12 },
-                          !isDarkMode && { color: "#374151" },
-                        ]}
+                        onPress={toggleDescription}
+                        style={{ color: currentTheme.accent, fontWeight: "700" }}
                       >
-                        {getRemainingParagraphs(description)}{" "}
-                        <Text
-                          onPress={toggleDescription}
-                          style={{ color: currentTheme.accent, fontWeight: "700" }}
-                        >
-                          ver menos
-                        </Text>
+                        ver menos
                       </Text>
-                    </Animated.View>
+                    </Text>
                   ) : (
                     <Text
                       onPress={toggleDescription}
