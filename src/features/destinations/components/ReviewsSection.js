@@ -23,6 +23,8 @@ import {
 import { DetailsReviewsSkeleton, SkeletonBox } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
 import { ReviewFormModal, DeleteReviewModal } from "./ReviewModals";
+import CommentPolaroid from "./CommentPolaroid";
+import CommentPhotoViewerModal from "./CommentPhotoViewerModal";
 
 const ReviewDropdownMenu = React.memo(function ReviewDropdownMenu({
   visible,
@@ -147,6 +149,23 @@ export default function ReviewsSection({
   const [activeDropdownId, setActiveDropdownId] = useState(null);
   const [elevatedDropdownId, setElevatedDropdownId] = useState(null);
   const [reportedReviews, setReportedReviews] = useState({});
+  const [viewerConfig, setViewerConfig] = useState({
+    visible: false,
+    photos: [],
+    initialIndex: 0,
+  });
+
+  const handleOpenPolaroidViewer = useCallback((photos, index) => {
+    setViewerConfig({
+      visible: true,
+      photos,
+      initialIndex: index,
+    });
+  }, []);
+
+  const handleClosePolaroidViewer = useCallback(() => {
+    setViewerConfig((prev) => ({ ...prev, visible: false }));
+  }, []);
 
   const handleToggleDropdown = useCallback((id) => {
     setActiveDropdownId((prev) => {
@@ -464,64 +483,70 @@ export default function ReviewsSection({
                       </View>
 
                       <View style={reviewStyles.reviewContentColumn}>
-                        <View style={styles.rowWrap}>
-                          <Text
-                            style={[
-                              reviewStyles.reviewerName,
-                              !isDarkMode && reviewStyles.reviewerNameLight,
-                            ]}
-                            numberOfLines={1}
-                          >
-                            {reviewerName}
-                          </Text>
-                          {isOwner && (
+                        <View style={reviewStyles.reviewMainBodyRow}>
+                          <View style={reviewStyles.reviewTextDetails}>
+                            <View style={styles.rowWrap}>
+                              <Text
+                                style={[
+                                  reviewStyles.reviewerName,
+                                  !isDarkMode && reviewStyles.reviewerNameLight,
+                                ]}
+                                numberOfLines={1}
+                              >
+                                {reviewerName}
+                              </Text>
+                              {isOwner && (
+                                <Text
+                                  style={[
+                                    reviewStyles.reviewerName,
+                                    {
+                                      fontSize: 11.5,
+                                      color: !isDarkMode ? "#6B7280" : "#9CA3AF",
+                                      fontWeight: "500",
+                                      marginLeft: 4,
+                                    },
+                                  ]}
+                                >
+                                  (Eu)
+                                </Text>
+                              )}
+                            </View>
+
+                            <View style={reviewStyles.starsShopeeRow}>
+                              {[1, 2, 3, 4, 5].map((starNum) => (
+                                <Ionicons
+                                  key={starNum}
+                                  name={starNum <= Math.round(Number(rev.rating) || 5) ? "star" : "star-outline"}
+                                  size={12}
+                                  color={currentTheme.accent}
+                                  style={styles.marginRight2}
+                                />
+                              ))}
+                            </View>
+
                             <Text
                               style={[
-                                reviewStyles.reviewerName,
-                                {
-                                  fontSize: 11.5,
-                                  color: !isDarkMode ? "#6B7280" : "#9CA3AF",
-                                  fontWeight: "500",
-                                  marginLeft: 4,
-                                },
+                                reviewStyles.reviewDate,
+                                !isDarkMode && reviewStyles.reviewDateLight,
                               ]}
                             >
-                              (Eu)
+                              {formatReviewDate(rev.created_at || rev.createdAt)}
                             </Text>
-                          )}
+
+                            {rev.content || rev.comment ? (
+                              <Text
+                                style={[
+                                  reviewStyles.reviewComment,
+                                  !isDarkMode && reviewStyles.reviewCommentLight,
+                                ]}
+                              >
+                                {rev.content || rev.comment}
+                              </Text>
+                            ) : null}
+                          </View>
+
+                          <CommentPolaroid onOpenViewer={handleOpenPolaroidViewer} />
                         </View>
-
-                        <View style={reviewStyles.starsShopeeRow}>
-                          {[1, 2, 3, 4, 5].map((starNum) => (
-                            <Ionicons
-                              key={starNum}
-                              name={starNum <= Math.round(Number(rev.rating) || 5) ? "star" : "star-outline"}
-                              size={12}
-                              color={currentTheme.accent}
-                              style={styles.marginRight2}
-                            />
-                          ))}
-                        </View>
-
-                        <Text
-                          style={[
-                            reviewStyles.reviewDate,
-                            !isDarkMode && reviewStyles.reviewDateLight,
-                          ]}
-                        >
-                          {formatReviewDate(rev.created_at || rev.createdAt)}
-                        </Text>
-
-                        {rev.content || rev.comment ? (
-                          <Text
-                            style={[
-                              reviewStyles.reviewComment,
-                              !isDarkMode && reviewStyles.reviewCommentLight,
-                            ]}
-                          >
-                            {rev.content || rev.comment}
-                          </Text>
-                        ) : null}
 
                         <View style={reviewStyles.commentFooterRow}>
                           <TouchableOpacity
@@ -634,6 +659,13 @@ export default function ReviewsSection({
         onConfirm={confirmDeleteReview}
         isDeleting={isDeletingReview}
         isDarkMode={isDarkMode}
+      />
+
+      <CommentPhotoViewerModal
+        visible={viewerConfig.visible}
+        photos={viewerConfig.photos}
+        initialIndex={viewerConfig.initialIndex}
+        onClose={handleClosePolaroidViewer}
       />
     </>
   );

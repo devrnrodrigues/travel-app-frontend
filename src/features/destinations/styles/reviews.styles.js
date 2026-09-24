@@ -97,6 +97,17 @@ const reviewStyles = StyleSheet.create({
     flex: 1,
   },
 
+  reviewMainBodyRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+
+  reviewTextDetails: {
+    flex: 1,
+    paddingRight: 4,
+  },
+
   reviewerName: {
     fontSize: 13.5,
     fontWeight: "600",
