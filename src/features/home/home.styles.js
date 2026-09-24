@@ -40,7 +40,7 @@ export default StyleSheet.create({
     backgroundColor: "rgba(100, 100, 100, 0.40)",
   },
   categoriesSection: { height: 80, justifyContent: "center" },
-  categoriesContainer: { paddingLeft: 25, alignItems: "center" },
+  categoriesContainer: { paddingHorizontal: 25, alignItems: "center" },
   categoryItem: { marginRight: 30 },
   categoryText: { fontSize: 17, fontWeight: "600", textShadowColor: 'rgba(0, 0, 0, 0.4)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
   categoryTextActive: { fontWeight: "bold" },

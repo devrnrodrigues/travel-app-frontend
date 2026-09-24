@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing, ActivityIndicator, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing, ActivityIndicator, Platform, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -13,18 +13,7 @@ import HomeCardItem from "./components/HomeCardItem";
 import SearchModal from "./components/SearchModal";
 import { getDestinations } from "../destinations/api/destinationService";
 
-const CATEGORIES = [
-  "Florestas",
-  "Praias",
-  "Montanhas",
-  "Cachoeiras",
-  "Deserto",
-  "Neve",
-  "Histórico",
-  "Urbano",
-  "Ilhas",
-  "Interior",
-];
+
 
 const CategoryTabItem = React.memo(function CategoryTabItem({
   cat,
@@ -32,6 +21,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
   isActive,
   accentColor,
   onPress,
+  onLayout,
 }) {
   const lineAnim = useRef(new Animated.Value(isActive ? 1 : 0.01)).current;
 
@@ -57,6 +47,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
     <TouchableOpacity
       style={styles.categoryItem}
       onPress={onPress}
+      onLayout={onLayout}
       activeOpacity={0.75}
     >
       <View style={styles.centerAligned}>
@@ -89,7 +80,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
 
 export default function Home({ navigation }) {
   const { user } = useAuth();
-  const { activeCat, setActiveCat, currentTheme, themesByCat, isDarkMode } = useTheme();
+  const { categories = [], activeCategory, activeCat, setActiveCat, currentTheme, themesByCat, isDarkMode } = useTheme();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   const userName = useMemo(() => {
@@ -98,8 +89,33 @@ export default function Home({ navigation }) {
     return first || "visitante";
   }, [user?.fullName, user?.name, user?.username]);
 
-  const selectedCategory = CATEGORIES[activeCat] || CATEGORIES[0];
+  const selectedCategoryObj = activeCategory || categories[activeCat] || categories[0];
+  const selectedCategory = selectedCategoryObj?.slug || selectedCategoryObj?.name || "florestas";
   const selectedTheme = themesByCat[activeCat] || currentTheme;
+
+  const categoryScrollRef = useRef(null);
+  const itemLayouts = useRef({});
+  const [scrollWidth, setScrollWidth] = useState(Dimensions.get("window").width);
+  const [contentWidth, setContentWidth] = useState(0);
+
+  const centerCategory = useCallback((index) => {
+    const layout = itemLayouts.current[index];
+    if (layout && categoryScrollRef.current && scrollWidth > 0) {
+      const targetX = layout.x - (scrollWidth / 2) + (layout.width / 2);
+      const maxScroll = Math.max(0, contentWidth - scrollWidth);
+      const clampedX = Math.max(0, Math.min(targetX, maxScroll));
+      categoryScrollRef.current.scrollTo({ x: clampedX, animated: true });
+    }
+  }, [scrollWidth, contentWidth]);
+
+  const handleCategoryPress = useCallback((index) => {
+    setActiveCat(index);
+    centerCategory(index);
+  }, [setActiveCat, centerCategory]);
+
+  useEffect(() => {
+    centerCategory(activeCat);
+  }, [activeCat, centerCategory]);
 
   const PAGE_SIZE = 6;
 
@@ -265,17 +281,27 @@ export default function Home({ navigation }) {
             </View>
 
             <View style={styles.categoriesSection}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesContainer}>
-                {CATEGORIES.map((cat, index) => {
+              <ScrollView
+                ref={categoryScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                onLayout={(e) => setScrollWidth(e.nativeEvent.layout.width)}
+                onContentSizeChange={(w) => setContentWidth(w)}
+                contentContainerStyle={styles.categoriesContainer}
+              >
+                {categories.map((catItem, index) => {
                   const theme = themesByCat[index] || currentTheme;
                   return (
                     <CategoryTabItem
-                      key={cat}
-                      cat={cat}
+                      key={catItem.id || catItem.slug || catItem.name || String(index)}
+                      cat={catItem.name}
                       index={index}
                       isActive={activeCat === index}
                       accentColor={theme.accent}
-                      onPress={() => setActiveCat(index)}
+                      onLayout={(e) => {
+                        itemLayouts.current[index] = e.nativeEvent.layout;
+                      }}
+                      onPress={() => handleCategoryPress(index)}
                     />
                   );
                 })}
