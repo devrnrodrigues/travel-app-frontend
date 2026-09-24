@@ -72,6 +72,8 @@ export const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
+    width: "100%",
+    height: "100%",
     backgroundColor: "#000000",
   },
   modalOverlayLight: {
@@ -87,10 +89,45 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 20,
+    zIndex: 30,
   },
   modalCloseButtonLight: {
     backgroundColor: "rgba(0, 0, 0, 0.08)",
+  },
+  webViewerContainer: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  webModalImage: {
+    width: "90%",
+    height: "82%",
+    maxWidth: 1200,
+    maxHeight: 850,
+  },
+  webNavButton: {
+    position: "absolute",
+    top: "50%",
+    marginTop: -25,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 25,
+  },
+  webNavButtonLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+  },
+  webNavButtonLeft: {
+    left: 24,
+  },
+  webNavButtonRight: {
+    right: 24,
   },
   modalSlide: {
     width: SCREEN_WIDTH,

@@ -17,6 +17,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,10 +25,12 @@ import { PinchGestureHandler, State } from "react-native-gesture-handler";
 import { useTheme } from "../../../theme/ThemeContext";
 import { styles } from "../styles/collectionGallery.styles";
 import { updatePhotoCaption } from "../data/mockGallery";
+import { updatePhotoCaptionApi } from "../api/collectionService";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function CollectionGalleryScreen({ route, navigation }) {
+  const queryClient = useQueryClient();
   const { collection, highlightPhotoIndex } = route.params || {};
   const { isDarkMode, currentTheme } = useTheme();
 
@@ -160,14 +163,41 @@ export default function CollectionGalleryScreen({ route, navigation }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (Platform.OS !== "web" || selectedPhotoIndex === null) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowLeft") {
+        setActiveViewerIndex((prev) => (prev - 1 + photos.length) % photos.length);
+      } else if (e.key === "ArrowRight") {
+        setActiveViewerIndex((prev) => (prev + 1) % photos.length);
+      } else if (e.key === "Escape") {
+        setSelectedPhotoIndex(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPhotoIndex, photos.length]);
+
   const currentViewerPhoto =
     photos[activeViewerIndex] ||
     (selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : null);
 
-  const handleSaveCaption = () => {
+  const handleSaveCaption = async () => {
     if (!currentViewerPhoto) return;
     const trimmed = editingText.trim();
-    updatePhotoCaption(collection?.id, currentViewerPhoto.id, trimmed);
+    if (trimmed.length > 30) return;
+
+    if (collection?.id && currentViewerPhoto.id) {
+      try {
+        await updatePhotoCaptionApi(collection.id, currentViewerPhoto.id, trimmed);
+        queryClient.invalidateQueries({ queryKey: ["collections"] });
+      } catch {
+        updatePhotoCaption(collection?.id, currentViewerPhoto.id, trimmed);
+      }
+    } else {
+      updatePhotoCaption(collection?.id, currentViewerPhoto.id, trimmed);
+    }
+
     setPhotos((prev) =>
       prev.map((p) =>
         p.id === currentViewerPhoto.id ? { ...p, caption: trimmed } : p
@@ -469,36 +499,92 @@ export default function CollectionGalleryScreen({ route, navigation }) {
             />
           </TouchableOpacity>
 
-          <FlatList
-            data={photos}
-            horizontal
-            pagingEnabled
-            initialScrollIndex={selectedPhotoIndex || 0}
-            getItemLayout={(_, index) => ({
-              length: SCREEN_WIDTH,
-              offset: SCREEN_WIDTH * index,
-              index,
-            })}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(e) => {
-              const nextIdx = Math.round(
-                e.nativeEvent.contentOffset.x / SCREEN_WIDTH
-              );
-              if (nextIdx >= 0 && nextIdx < photos.length) {
-                setActiveViewerIndex(nextIdx);
-              }
-            }}
-            renderItem={({ item }) => (
-              <View style={styles.modalSlide}>
+          {Platform.OS === "web" ? (
+            <View style={styles.webViewerContainer}>
+              {photos.length > 1 && (
+                <TouchableOpacity
+                  style={[
+                    styles.webNavButton,
+                    styles.webNavButtonLeft,
+                    !isDarkMode && styles.webNavButtonLight,
+                  ]}
+                  onPress={() => {
+                    const prevIdx =
+                      (activeViewerIndex - 1 + photos.length) % photos.length;
+                    setActiveViewerIndex(prevIdx);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={28}
+                    color={isDarkMode ? "#FFFFFF" : "#000000"}
+                  />
+                </TouchableOpacity>
+              )}
+
+              {currentViewerPhoto?.url ? (
                 <Image
-                  source={{ uri: item.url }}
-                  style={styles.modalImage}
+                  source={{ uri: currentViewerPhoto.url }}
+                  style={styles.webModalImage}
                   resizeMode="contain"
                 />
-              </View>
-            )}
-          />
+              ) : null}
+
+              {photos.length > 1 && (
+                <TouchableOpacity
+                  style={[
+                    styles.webNavButton,
+                    styles.webNavButtonRight,
+                    !isDarkMode && styles.webNavButtonLight,
+                  ]}
+                  onPress={() => {
+                    const nextIdx = (activeViewerIndex + 1) % photos.length;
+                    setActiveViewerIndex(nextIdx);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="chevron-forward"
+                    size={28}
+                    color={isDarkMode ? "#FFFFFF" : "#000000"}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <FlatList
+              style={{ flex: 1 }}
+              data={photos}
+              horizontal
+              pagingEnabled
+              initialScrollIndex={selectedPhotoIndex || 0}
+              getItemLayout={(_, index) => ({
+                length: SCREEN_WIDTH,
+                offset: SCREEN_WIDTH * index,
+                index,
+              })}
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(e) => {
+                const nextIdx = Math.round(
+                  e.nativeEvent.contentOffset.x / SCREEN_WIDTH
+                );
+                if (nextIdx >= 0 && nextIdx < photos.length) {
+                  setActiveViewerIndex(nextIdx);
+                }
+              }}
+              renderItem={({ item }) => (
+                <View style={styles.modalSlide}>
+                  <Image
+                    source={{ uri: item.url }}
+                    style={styles.modalImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              )}
+            />
+          )}
 
           <TouchableOpacity
             style={[
@@ -597,7 +683,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
                     : styles.editDialogInputFocusedLight
                 ),
               ]}
-              maxLength={28}
+              maxLength={30}
               returnKeyType="done"
               onSubmitEditing={handleSaveCaption}
             />
@@ -609,7 +695,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
                   !isDarkMode && styles.charCountTextLight,
                 ]}
               >
-                {editingText.length}/28
+                {editingText.length}/30
               </Text>
             </View>
 
