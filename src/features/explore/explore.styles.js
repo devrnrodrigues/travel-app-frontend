@@ -200,15 +200,25 @@ export default StyleSheet.create({
 });
 export const categoryThemes = {
   "Florestas": { colors: ["rgba(15, 23, 21, 0.45)", "rgba(20, 33, 29, 0.55)", "rgba(27, 46, 41, 0.68)"], accent: "#4CAF50" },
+  "florestas": { colors: ["rgba(15, 23, 21, 0.45)", "rgba(20, 33, 29, 0.55)", "rgba(27, 46, 41, 0.68)"], accent: "#4CAF50" },
   "Praias": { colors: ["rgba(11, 29, 38, 0.60)", "rgba(18, 46, 59, 0.70)", "rgba(26, 66, 82, 0.80)"], accent: "#00B4D8" },
+  "praias": { colors: ["rgba(11, 29, 38, 0.60)", "rgba(18, 46, 59, 0.70)", "rgba(26, 66, 82, 0.80)"], accent: "#00B4D8" },
   "Montanhas": { colors: ["rgba(26, 26, 26, 0.60)", "rgba(45, 45, 45, 0.70)", "rgba(61, 61, 61, 0.80)"], accent: "#FFA726" },
+  "montanhas": { colors: ["rgba(26, 26, 26, 0.60)", "rgba(45, 45, 45, 0.70)", "rgba(61, 61, 61, 0.80)"], accent: "#FFA726" },
   "Cachoeiras": { colors: ["rgba(13, 27, 42, 0.60)", "rgba(27, 38, 59, 0.70)", "rgba(65, 90, 119, 0.80)"], accent: "#80DEEA" },
+  "cachoeiras": { colors: ["rgba(13, 27, 42, 0.60)", "rgba(27, 38, 59, 0.70)", "rgba(65, 90, 119, 0.80)"], accent: "#80DEEA" },
   "Deserto": { colors: ["rgba(43, 24, 16, 0.60)", "rgba(64, 37, 24, 0.70)", "rgba(87, 50, 32, 0.80)"], accent: "#FF7043" },
+  "deserto": { colors: ["rgba(43, 24, 16, 0.60)", "rgba(64, 37, 24, 0.70)", "rgba(87, 50, 32, 0.80)"], accent: "#FF7043" },
   "Neve": { colors: ["rgba(26, 36, 43, 0.60)", "rgba(44, 58, 69, 0.70)", "rgba(61, 80, 94, 0.80)"], accent: "#E0F7FA" },
+  "neve": { colors: ["rgba(26, 36, 43, 0.60)", "rgba(44, 58, 69, 0.70)", "rgba(61, 80, 94, 0.80)"], accent: "#E0F7FA" },
   "Histórico": { colors: ["rgba(28, 22, 17, 0.60)", "rgba(46, 37, 29, 0.70)", "rgba(64, 51, 41, 0.80)"], accent: "#D4AF37" },
+  "historico": { colors: ["rgba(28, 22, 17, 0.60)", "rgba(46, 37, 29, 0.70)", "rgba(64, 51, 41, 0.80)"], accent: "#D4AF37" },
   "Urbano": { colors: ["rgba(20, 20, 25, 0.60)", "rgba(35, 35, 45, 0.70)", "rgba(48, 48, 61, 0.80)"], accent: "#90CAF9" },
+  "urbano": { colors: ["rgba(20, 20, 25, 0.60)", "rgba(35, 35, 45, 0.70)", "rgba(48, 48, 61, 0.80)"], accent: "#90CAF9" },
   "Ilhas": { colors: ["rgba(10, 25, 30, 0.60)", "rgba(19, 43, 51, 0.70)", "rgba(28, 61, 71, 0.80)"], accent: "#26A69A" },
+  "ilhas": { colors: ["rgba(10, 25, 30, 0.60)", "rgba(19, 43, 51, 0.70)", "rgba(28, 61, 71, 0.80)"], accent: "#26A69A" },
   "Interior": { colors: ["rgba(10, 10, 10, 0.70)", "rgba(18, 18, 18, 0.80)", "rgba(25, 25, 25, 0.90)"], accent: "#AED581" },
+  "interior": { colors: ["rgba(10, 10, 10, 0.70)", "rgba(18, 18, 18, 0.80)", "rgba(25, 25, 25, 0.90)"], accent: "#AED581" },
 };
 
 export const defaultTheme = {

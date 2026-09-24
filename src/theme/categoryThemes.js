@@ -60,3 +60,15 @@ export const THEMES_BY_CAT = {
     bg: "https://images.pexels.com/photos/16725824/pexels-photo-16725824.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
 };
+
+export function resolveCategoryTheme(category, index = 0) {
+  const fallback = THEMES_BY_CAT[index % 10] || THEMES_BY_CAT[0];
+  if (!category) return fallback;
+
+  return {
+    colors: fallback.colors,
+    accent: category.accentColor || fallback.accent,
+    icon: category.icon || fallback.icon,
+    bg: category.bgImageUrl || fallback.bg,
+  };
+}

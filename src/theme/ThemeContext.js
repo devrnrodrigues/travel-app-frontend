@@ -1,12 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { THEMES_BY_CAT } from "./categoryThemes";
+import { THEMES_BY_CAT, resolveCategoryTheme } from "./categoryThemes";
+import { useCategories } from "../features/categories/hooks/useCategories";
 
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [activeCat, setActiveCat] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const { data: categories = [] } = useCategories();
 
   useEffect(() => {
     async function loadThemeMode() {
@@ -32,15 +34,29 @@ export function ThemeProvider({ children }) {
     }
   };
 
-  const currentTheme = THEMES_BY_CAT[activeCat] || THEMES_BY_CAT[0];
+  const activeCategory = categories[activeCat] || categories[0] || null;
+
+  const currentTheme = useMemo(() => {
+    return resolveCategoryTheme(activeCategory, activeCat);
+  }, [activeCategory, activeCat]);
+
+  const themesByCat = useMemo(() => {
+    const map = { ...THEMES_BY_CAT };
+    categories.forEach((cat, index) => {
+      map[index] = resolveCategoryTheme(cat, index);
+    });
+    return map;
+  }, [categories]);
 
   return (
     <ThemeContext.Provider
       value={{
+        categories,
+        activeCategory,
         activeCat,
         setActiveCat,
         currentTheme,
-        themesByCat: THEMES_BY_CAT,
+        themesByCat,
         isDarkMode,
         setIsDarkMode,
         toggleThemeMode,
@@ -55,6 +71,8 @@ export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
     return {
+      categories: [],
+      activeCategory: null,
       activeCat: 0,
       setActiveCat: () => {},
       currentTheme: THEMES_BY_CAT[0],
@@ -67,4 +85,4 @@ export function useTheme() {
   return context;
 }
 
-export { THEMES_BY_CAT };
+export { THEMES_BY_CAT, resolveCategoryTheme };
