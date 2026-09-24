@@ -651,4 +651,16 @@ export const styles = StyleSheet.create({
   confirmCancelTextLight: {
     color: "#000000",
   },
+  bottomTranslucentBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 96,
+    backgroundColor: "rgba(0, 0, 0, 0.52)",
+    zIndex: 15,
+  },
+  bottomTranslucentBarLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.70)",
+  },
 });

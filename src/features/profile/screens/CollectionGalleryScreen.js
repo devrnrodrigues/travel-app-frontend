@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Image,
   FlatList,
   Modal,
@@ -22,9 +23,13 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { PinchGestureHandler, State } from "react-native-gesture-handler";
+import {
+  PinchGestureHandler,
+  State,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "../../../theme/ThemeContext";
 import { styles } from "../styles/collectionGallery.styles";
@@ -39,8 +44,119 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+function ViewerSlide({
+  item,
+  onToggleControls,
+  onPinchActiveChange,
+}) {
+  const baseScale = useRef(1);
+  const currentScale = useRef(1);
+  const scale = useRef(new Animated.Value(1)).current;
+  const lastTap = useRef(0);
+
+  useEffect(() => {
+    baseScale.current = 1;
+    currentScale.current = 1;
+    scale.setValue(1);
+  }, [item?.id]);
+
+  const handlePinchGesture = (event) => {
+    const s = event?.nativeEvent?.scale;
+    if (typeof s === "number" && !isNaN(s) && s > 0) {
+      const nextScale = Math.max(1, Math.min(baseScale.current * s, 4.5));
+      scale.setValue(nextScale);
+      currentScale.current = nextScale;
+    }
+  };
+
+  const handlePinchStateChange = (event) => {
+    const { state } = event.nativeEvent;
+    if (state === State.ACTIVE) {
+      onPinchActiveChange?.(true);
+    } else if (
+      state === State.END ||
+      state === State.CANCELLED ||
+      state === State.FAILED
+    ) {
+      baseScale.current = currentScale.current;
+      if (baseScale.current <= 1.05) {
+        baseScale.current = 1;
+        currentScale.current = 1;
+        scale.setValue(1);
+        onPinchActiveChange?.(false);
+      } else {
+        onPinchActiveChange?.(true);
+      }
+    }
+  };
+
+  const handleTap = () => {
+    const now = Date.now();
+    if (now - lastTap.current < 280) {
+      lastTap.current = 0;
+      if (baseScale.current > 1.05) {
+        baseScale.current = 1;
+        currentScale.current = 1;
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          onPinchActiveChange?.(false);
+        });
+      } else {
+        baseScale.current = 2.5;
+        currentScale.current = 2.5;
+        Animated.timing(scale, {
+          toValue: 2.5,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          onPinchActiveChange?.(true);
+        });
+      }
+    } else {
+      lastTap.current = now;
+      setTimeout(() => {
+        if (lastTap.current !== 0 && Date.now() - lastTap.current >= 260) {
+          lastTap.current = 0;
+          onToggleControls();
+        }
+      }, 280);
+    }
+  };
+
+  return (
+    <View style={styles.modalSlide}>
+      <PinchGestureHandler
+        onGestureEvent={handlePinchGesture}
+        onHandlerStateChange={handlePinchStateChange}
+      >
+        <Animated.View
+          style={{
+            width: SCREEN_WIDTH,
+            height: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            transform: [{ scale }],
+          }}
+        >
+          <TouchableWithoutFeedback onPress={handleTap}>
+            <Image
+              source={{ uri: item.url }}
+              style={styles.modalImage}
+              resizeMode="contain"
+            />
+          </TouchableWithoutFeedback>
+        </Animated.View>
+      </PinchGestureHandler>
+    </View>
+  );
+}
+
 export default function CollectionGalleryScreen({ route, navigation }) {
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
   const { collection, highlightPhotoIndex } = route.params || {};
   const { isDarkMode, currentTheme } = useTheme();
 
@@ -103,6 +219,31 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   const [isDeletePhotoModalOpen, setIsDeletePhotoModalOpen] = useState(false);
   const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
   const deletePhotoModalScale = useRef(new Animated.Value(0.92)).current;
+
+  const [areViewerControlsVisible, setAreViewerControlsVisible] = useState(true);
+  const [isPinchingViewer, setIsPinchingViewer] = useState(false);
+  const controlsOpacity = useRef(new Animated.Value(1)).current;
+  const viewerFlatListRef = useRef(null);
+
+  const toggleViewerControls = useCallback(() => {
+    setAreViewerControlsVisible((prev) => {
+      const next = !prev;
+      Animated.timing(controlsOpacity, {
+        toValue: next ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+      return next;
+    });
+  }, [controlsOpacity]);
+
+  useEffect(() => {
+    if (selectedPhotoIndex !== null) {
+      setAreViewerControlsVisible(true);
+      controlsOpacity.setValue(1);
+      setIsPinchingViewer(false);
+    }
+  }, [selectedPhotoIndex, controlsOpacity]);
 
   const handleOpenMenu = () => {
     if (isMenuOpen) {
@@ -967,188 +1108,252 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         statusBarTranslucent={true}
         onRequestClose={() => setSelectedPhotoIndex(null)}
       >
-        <View
-          style={[
-            styles.modalOverlay,
-            !isDarkMode && styles.modalOverlayLight,
-          ]}
-        >
-          <StatusBar
-            barStyle={isDarkMode ? "light-content" : "dark-content"}
-            backgroundColor="transparent"
-            translucent={true}
-          />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View
+            style={[
+              styles.modalOverlay,
+              !isDarkMode && styles.modalOverlayLight,
+            ]}
+          >
+            <StatusBar
+              barStyle={isDarkMode ? "light-content" : "dark-content"}
+              backgroundColor="transparent"
+              translucent={true}
+            />
 
-          {Platform.OS === "web" ? (
-            <TouchableOpacity
-              style={styles.webViewerContainer}
-              activeOpacity={1}
-              onPress={() => setSelectedPhotoIndex(null)}
-            >
-              {photos.length > 1 && (
-                <TouchableOpacity
-                  style={[
-                    styles.webNavButton,
-                    styles.webNavButtonLeft,
-                    !isDarkMode && styles.webNavButtonLight,
-                  ]}
-                  onPress={(e) => {
-                    e?.stopPropagation?.();
-                    const prevIdx =
-                      (activeViewerIndex - 1 + photos.length) % photos.length;
-                    setActiveViewerIndex(prevIdx);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="chevron-back"
-                    size={28}
-                    color={isDarkMode ? "#FFFFFF" : "#000000"}
-                  />
-                </TouchableOpacity>
-              )}
+            {Platform.OS === "web" ? (
+              <TouchableOpacity
+                style={styles.webViewerContainer}
+                activeOpacity={1}
+                onPress={toggleViewerControls}
+              >
+                {photos.length > 1 && (
+                  <Animated.View
+                    pointerEvents={areViewerControlsVisible ? "auto" : "none"}
+                    style={[
+                      styles.webNavButton,
+                      styles.webNavButtonLeft,
+                      !isDarkMode && styles.webNavButtonLight,
+                      { opacity: controlsOpacity },
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        const prevIdx =
+                          (activeViewerIndex - 1 + photos.length) % photos.length;
+                        setActiveViewerIndex(prevIdx);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="chevron-back"
+                        size={28}
+                        color={isDarkMode ? "#FFFFFF" : "#000000"}
+                      />
+                    </TouchableOpacity>
+                  </Animated.View>
+                )}
 
-              {currentViewerPhoto?.url ? (
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={(e) => e?.stopPropagation?.()}
-                  style={{
-                    maxWidth: 1200,
-                    maxHeight: 850,
-                    width: "90%",
-                    height: "82%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Image
-                    source={{ uri: currentViewerPhoto.url }}
-                    style={styles.webModalImage}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              ) : null}
+                {currentViewerPhoto?.url ? (
+                  <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={toggleViewerControls}
+                    style={{
+                      maxWidth: 1200,
+                      maxHeight: 850,
+                      width: "90%",
+                      height: "82%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      source={{ uri: currentViewerPhoto.url }}
+                      style={styles.webModalImage}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                ) : null}
 
-              {photos.length > 1 && (
-                <TouchableOpacity
-                  style={[
-                    styles.webNavButton,
-                    styles.webNavButtonRight,
-                    !isDarkMode && styles.webNavButtonLight,
-                  ]}
-                  onPress={(e) => {
-                    e?.stopPropagation?.();
-                    const nextIdx = (activeViewerIndex + 1) % photos.length;
+                {photos.length > 1 && (
+                  <Animated.View
+                    pointerEvents={areViewerControlsVisible ? "auto" : "none"}
+                    style={[
+                      styles.webNavButton,
+                      styles.webNavButtonRight,
+                      !isDarkMode && styles.webNavButtonLight,
+                      { opacity: controlsOpacity },
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        const nextIdx = (activeViewerIndex + 1) % photos.length;
+                        setActiveViewerIndex(nextIdx);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="chevron-forward"
+                        size={28}
+                        color={isDarkMode ? "#FFFFFF" : "#000000"}
+                      />
+                    </TouchableOpacity>
+                  </Animated.View>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <FlatList
+                ref={viewerFlatListRef}
+                scrollEnabled={!isPinchingViewer}
+                style={{ flex: 1 }}
+                data={photos}
+                horizontal
+                pagingEnabled
+                initialScrollIndex={selectedPhotoIndex || 0}
+                getItemLayout={(_, index) => ({
+                  length: SCREEN_WIDTH,
+                  offset: SCREEN_WIDTH * index,
+                  index,
+                })}
+                keyExtractor={(item) => item.id}
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(e) => {
+                  const nextIdx = Math.round(
+                    e.nativeEvent.contentOffset.x / SCREEN_WIDTH
+                  );
+                  if (nextIdx >= 0 && nextIdx < photos.length) {
                     setActiveViewerIndex(nextIdx);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="chevron-forward"
-                    size={28}
-                    color={isDarkMode ? "#FFFFFF" : "#000000"}
+                  }
+                }}
+                renderItem={({ item }) => (
+                  <ViewerSlide
+                    item={item}
+                    onToggleControls={toggleViewerControls}
+                    onPinchActiveChange={setIsPinchingViewer}
                   />
-                </TouchableOpacity>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <FlatList
-              style={{ flex: 1 }}
-              data={photos}
-              horizontal
-              pagingEnabled
-              initialScrollIndex={selectedPhotoIndex || 0}
-              getItemLayout={(_, index) => ({
-                length: SCREEN_WIDTH,
-                offset: SCREEN_WIDTH * index,
-                index,
-              })}
-              keyExtractor={(item) => item.id}
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(e) => {
-                const nextIdx = Math.round(
-                  e.nativeEvent.contentOffset.x / SCREEN_WIDTH
-                );
-                if (nextIdx >= 0 && nextIdx < photos.length) {
-                  setActiveViewerIndex(nextIdx);
-                }
-              }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalSlide}
-                  activeOpacity={1}
-                  onPress={() => setSelectedPhotoIndex(null)}
-                >
-                  <Image
-                    source={{ uri: item.url }}
-                    style={styles.modalImage}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              )}
-            />
-          )}
+                )}
+              />
+            )}
 
-          <TouchableOpacity
-            style={[
-              styles.captionPill,
-              !isDarkMode && styles.captionPillLight,
-            ]}
-            activeOpacity={0.8}
-            onPress={() => {
-              setEditingText(currentViewerPhoto?.caption || "");
-              setIsEditingCaption(true);
-            }}
-          >
-            <Ionicons
-              name="pencil"
-              size={13}
-              color={isDarkMode ? "#FFFFFF" : "#000000"}
-              style={{ marginRight: 6 }}
-            />
-            <Text
+            <Animated.View
+              pointerEvents="none"
               style={[
-                styles.captionPillText,
-                !isDarkMode && styles.captionPillTextLight,
+                styles.bottomTranslucentBar,
+                !isDarkMode && styles.bottomTranslucentBarLight,
+                {
+                  opacity: controlsOpacity,
+                },
               ]}
-              numberOfLines={1}
-            >
-              {currentViewerPhoto?.caption || "Adicionar nome"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.modalDeleteButton,
-              !isDarkMode && styles.modalDeleteButtonLight,
-            ]}
-            activeOpacity={0.7}
-            onPress={() => setIsDeletePhotoModalOpen(true)}
-          >
-            <Ionicons
-              name="trash-outline"
-              size={20}
-              color="#FF453A"
             />
-          </TouchableOpacity>
 
-          {Platform.OS === "web" && (
-            <TouchableOpacity
+            <Animated.View
+              pointerEvents={areViewerControlsVisible ? "auto" : "none"}
+              style={[
+                styles.captionPill,
+                !isDarkMode && styles.captionPillLight,
+                {
+                  opacity: controlsOpacity,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={{ flexDirection: "row", alignItems: "center" }}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setEditingText(currentViewerPhoto?.caption || "");
+                  setIsEditingCaption(true);
+                }}
+              >
+                <Ionicons
+                  name="pencil"
+                  size={13}
+                  color={isDarkMode ? "#FFFFFF" : "#000000"}
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={[
+                    styles.captionPillText,
+                    !isDarkMode && styles.captionPillTextLight,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {currentViewerPhoto?.caption || "Adicionar nome"}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.View
+              pointerEvents={areViewerControlsVisible ? "auto" : "none"}
+              style={[
+                styles.modalDeleteButton,
+                !isDarkMode && styles.modalDeleteButtonLight,
+                {
+                  opacity: controlsOpacity,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                activeOpacity={0.7}
+                onPress={() => setIsDeletePhotoModalOpen(true)}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={20}
+                  color="#FF453A"
+                />
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.View
+              pointerEvents={areViewerControlsVisible ? "auto" : "none"}
               style={[
                 styles.modalCloseButton,
                 !isDarkMode && styles.modalCloseButtonLight,
+                {
+                  top: Math.max(insets.top + 10, 24),
+                  opacity: controlsOpacity,
+                },
               ]}
-              onPress={() => setSelectedPhotoIndex(null)}
-              activeOpacity={0.7}
             >
-              <Ionicons
-                name="close"
-                size={22}
-                color={isDarkMode ? "#FFFFFF" : "#000000"}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+              <TouchableOpacity
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={() => setSelectedPhotoIndex(null)}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="close"
+                  size={22}
+                  color={isDarkMode ? "#FFFFFF" : "#000000"}
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </GestureHandlerRootView>
       </Modal>
 
       <Modal
