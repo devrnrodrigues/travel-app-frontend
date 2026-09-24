@@ -23,6 +23,7 @@ export function ReviewFormModal({
   visible,
   onClose,
   editingReviewId,
+  initialPhotos = [],
   openedFromAvaliarBtn,
   selectedRating,
   setSelectedRating,
@@ -33,7 +34,7 @@ export function ReviewFormModal({
   currentTheme,
   isDarkMode,
 }) {
-  const [selectedImages, setSelectedImages] = useState([]);
+  const [photosList, setPhotosList] = useState([]);
   const [isCommentFocused, setIsCommentFocused] = useState(false);
   const commentFocusAnim = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.92)).current;
@@ -41,7 +42,17 @@ export function ReviewFormModal({
 
   useEffect(() => {
     if (visible) {
-      setSelectedImages([]);
+      if (editingReviewId && Array.isArray(initialPhotos)) {
+        setPhotosList(
+          initialPhotos.map((p) => ({
+            id: p.id,
+            uri: p.url,
+            isExisting: true,
+          }))
+        );
+      } else {
+        setPhotosList([]);
+      }
       modalScale.setValue(0.92);
       modalTranslateY.setValue(0);
       Animated.spring(modalScale, {
@@ -107,7 +118,7 @@ export function ReviewFormModal({
   }, [commentFocusAnim]);
 
   const handlePickImages = async () => {
-    if (selectedImages.length >= 5) {
+    if (photosList.length >= 5) {
       Alert.alert("Limite atingido", "Você pode anexar no máximo 5 fotos.");
       return;
     }
@@ -122,7 +133,7 @@ export function ReviewFormModal({
         return;
       }
 
-      const remaining = 5 - selectedImages.length;
+      const remaining = 5 - photosList.length;
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsMultipleSelection: true,
@@ -131,8 +142,11 @@ export function ReviewFormModal({
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const newUris = result.assets.map((a) => a.uri);
-        setSelectedImages((prev) => [...prev, ...newUris].slice(0, 5));
+        const newItems = result.assets.map((a) => ({
+          uri: a.uri,
+          isExisting: false,
+        }));
+        setPhotosList((prev) => [...prev, ...newItems].slice(0, 5));
       }
     } catch {
       Alert.alert("Erro", "Não foi possível selecionar as fotos.");
@@ -140,7 +154,7 @@ export function ReviewFormModal({
   };
 
   const handleRemoveImage = (indexToRemove) => {
-    setSelectedImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    setPhotosList((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   return (
@@ -243,43 +257,41 @@ export function ReviewFormModal({
             />
           </Animated.View>
 
-          {!editingReviewId && (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={handlePickImages}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handlePickImages}
+            style={[
+              reviewStyles.addImageButton,
+              !isDarkMode && reviewStyles.addImageButtonLight,
+            ]}
+          >
+            <Ionicons
+              name="images-outline"
+              size={18}
+              color={currentTheme.accent}
+            />
+            <Text
               style={[
-                reviewStyles.addImageButton,
-                !isDarkMode && reviewStyles.addImageButtonLight,
+                reviewStyles.addImageButtonText,
+                !isDarkMode && reviewStyles.addImageButtonTextLight,
               ]}
             >
-              <Ionicons
-                name="images-outline"
-                size={18}
-                color={currentTheme.accent}
-              />
-              <Text
-                style={[
-                  reviewStyles.addImageButtonText,
-                  !isDarkMode && reviewStyles.addImageButtonTextLight,
-                ]}
-              >
-                {selectedImages.length > 0
-                  ? `Fotos (${selectedImages.length}/5)`
-                  : "Adicionar fotos"}
-              </Text>
-            </TouchableOpacity>
-          )}
+              {photosList.length > 0
+                ? `Fotos (${photosList.length}/5)`
+                : "Adicionar fotos"}
+            </Text>
+          </TouchableOpacity>
 
-          {selectedImages.length > 0 && (
+          {photosList.length > 0 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               style={reviewStyles.selectedImagesScroll}
               contentContainerStyle={reviewStyles.selectedImagesContent}
             >
-              {selectedImages.map((uri, index) => (
-                <View key={uri + index} style={reviewStyles.selectedImageWrapper}>
-                  <Image source={{ uri }} style={reviewStyles.selectedImageThumbnail} />
+              {photosList.map((item, index) => (
+                <View key={(item.id || item.uri) + index} style={reviewStyles.selectedImageWrapper}>
+                  <Image source={{ uri: item.uri }} style={reviewStyles.selectedImageThumbnail} />
                   <TouchableOpacity
                     style={reviewStyles.removeImageBadge}
                     onPress={() => handleRemoveImage(index)}
@@ -296,7 +308,9 @@ export function ReviewFormModal({
           <TouchableOpacity
             onPress={() => {
               Keyboard.dismiss();
-              onSubmit(selectedImages);
+              const keptPhotoIds = photosList.filter((p) => p.isExisting).map((p) => p.id);
+              const newImages = photosList.filter((p) => !p.isExisting).map((p) => p.uri);
+              onSubmit({ keptPhotoIds, newImages, allPhotos: photosList });
             }}
             disabled={isSubmitting}
             style={[reviewStyles.submitBtn, { backgroundColor: currentTheme.accent }]}

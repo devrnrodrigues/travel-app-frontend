@@ -89,7 +89,60 @@ export async function createCommentApi(destinationId, { rating, content, images 
   });
 }
 
-export async function updateCommentApi(commentId, { rating, content }) {
+export async function updateCommentApi(commentId, { rating, content, keptPhotoIds, newImages = [] }) {
+  if (keptPhotoIds !== undefined || (Array.isArray(newImages) && newImages.length > 0)) {
+    const formData = new FormData();
+    formData.append("rating", String(Math.round(Number(rating))));
+    formData.append("content", content.trim());
+
+    if (Array.isArray(keptPhotoIds)) {
+      keptPhotoIds.forEach((id) => {
+        formData.append("keepPhotoIds", id);
+      });
+    }
+
+    if (Array.isArray(newImages) && newImages.length > 0) {
+      for (let i = 0; i < newImages.length; i++) {
+        const uri = newImages[i];
+        let manipulatedUri = uri;
+        try {
+          const manipulated = await manipulateAsync(
+            uri,
+            [],
+            { format: SaveFormat.WEBP, compress: 0.85 }
+          );
+          manipulatedUri = manipulated.uri;
+        } catch {
+          manipulatedUri = uri;
+        }
+
+        const filename = `comment_${Date.now()}_${i}.webp`;
+
+        if (Platform.OS === "web") {
+          try {
+            const res = await fetch(manipulatedUri);
+            const blob = await res.blob();
+            formData.append("files", blob, filename);
+          } catch {
+            formData.append("files", {
+              uri: manipulatedUri,
+              name: filename,
+              type: "image/webp",
+            });
+          }
+        } else {
+          formData.append("files", {
+            uri: manipulatedUri,
+            name: filename,
+            type: "image/webp",
+          });
+        }
+      }
+    }
+
+    return apiClient.put(`/comments/${commentId}`, formData);
+  }
+
   return apiClient.put(`/comments/${commentId}`, {
     rating: Math.round(Number(rating)),
     content: content.trim(),

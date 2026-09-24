@@ -143,6 +143,7 @@ export default function ReviewsSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingReviewId, setEditingReviewId] = useState(null);
+  const [reviewToEdit, setReviewToEdit] = useState(null);
   const [openedFromAvaliarBtn, setOpenedFromAvaliarBtn] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [isDeletingReview, setIsDeletingReview] = useState(false);
@@ -304,10 +305,12 @@ export default function ReviewsSection({
       setSelectedRating(Number(userReview.rating) || 5);
       setInputComment(userReview.content || userReview.comment || "");
       setEditingReviewId(userReview.id);
+      setReviewToEdit(userReview);
     } else {
       setSelectedRating(5);
       setInputComment("");
       setEditingReviewId(null);
+      setReviewToEdit(null);
     }
     setShowForm(true);
   };
@@ -317,6 +320,7 @@ export default function ReviewsSection({
     setSelectedRating(Number(rev.rating) || 5);
     setInputComment(rev.content || rev.comment || "");
     setEditingReviewId(rev.id);
+    setReviewToEdit(rev);
     setShowForm(true);
   };
 
@@ -334,29 +338,35 @@ export default function ReviewsSection({
     }
   };
 
-  const handleSendReview = async (attachedImages = []) => {
+  const handleSendReview = async (photoData = {}) => {
     const trimmed = inputComment.trim();
     if (!trimmed) {
       alert("Por favor, escreva um comentário antes de enviar.");
       return;
     }
+    const keptPhotoIds = Array.isArray(photoData) ? [] : (photoData?.keptPhotoIds || []);
+    const newImages = Array.isArray(photoData) ? photoData : (photoData?.newImages || []);
+
     try {
       setIsSubmitting(true);
       if (editingReviewId) {
         await updateCommentApi(editingReviewId, {
           rating: selectedRating,
           content: trimmed,
+          keptPhotoIds,
+          newImages,
         });
       } else {
         await createCommentApi(item.id, {
           rating: selectedRating,
           content: trimmed,
-          images: attachedImages,
+          images: newImages,
         });
       }
       setInputComment("");
       setSelectedRating(5);
       setEditingReviewId(null);
+      setReviewToEdit(null);
       setShowForm(false);
       fetchReviews();
     } catch (err) {
@@ -646,8 +656,12 @@ export default function ReviewsSection({
 
       <ReviewFormModal
         visible={showForm}
-        onClose={() => setShowForm(false)}
+        onClose={() => {
+          setShowForm(false);
+          setReviewToEdit(null);
+        }}
         editingReviewId={editingReviewId}
+        initialPhotos={reviewToEdit?.photos || []}
         openedFromAvaliarBtn={openedFromAvaliarBtn}
         selectedRating={selectedRating}
         setSelectedRating={setSelectedRating}
