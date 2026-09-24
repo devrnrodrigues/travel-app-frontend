@@ -15,6 +15,9 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,10 +25,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { PinchGestureHandler, State } from "react-native-gesture-handler";
+import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "../../../theme/ThemeContext";
 import { styles } from "../styles/collectionGallery.styles";
 import { updatePhotoCaption } from "../data/mockGallery";
-import { updatePhotoCaptionApi } from "../api/collectionService";
+import {
+  updatePhotoCaptionApi,
+  updateCollectionApi,
+  deleteCollectionApi,
+  addPhotosToCollectionApi,
+  deletePhotoApi,
+} from "../api/collectionService";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -55,7 +65,9 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [editingText, setEditingText] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const [collectionTitle, setCollectionTitle] = useState(collection?.title || "Galeria");
   const [photos, setPhotos] = useState(() => collection?.photos || []);
   const lastChangeTime = useRef(0);
   const pinchRef = useRef(null);
@@ -66,6 +78,91 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   const modalTranslateY = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.92)).current;
   const borderBlinkAnim = useRef(new Animated.Value(0)).current;
+  const menuAnim = useRef(new Animated.Value(0)).current;
+  const menuButtonRef = useRef(null);
+  const [menuCoords, setMenuCoords] = useState({ top: 68, left: 16 });
+
+  const [isEditCollectionModalOpen, setIsEditCollectionModalOpen] = useState(false);
+  const [editCollectionTitle, setEditCollectionTitle] = useState(collection?.title || "");
+  const [isEditTitleFocused, setIsEditTitleFocused] = useState(false);
+  const [deletedPhotoIds, setDeletedPhotoIds] = useState([]);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const editModalScale = useRef(new Animated.Value(0.92)).current;
+  const editModalTranslateY = useRef(new Animated.Value(0)).current;
+
+  const [isAddPhotosModalOpen, setIsAddPhotosModalOpen] = useState(false);
+  const [selectedNewPhotos, setSelectedNewPhotos] = useState([]);
+  const [isAddingPhotos, setIsAddingPhotos] = useState(false);
+  const addPhotosModalScale = useRef(new Animated.Value(0.92)).current;
+
+  const [editablePhotos, setEditablePhotos] = useState(() => collection?.photos || []);
+  const [isDeleteCollectionModalOpen, setIsDeleteCollectionModalOpen] = useState(false);
+  const [isDeletingCollection, setIsDeletingCollection] = useState(false);
+  const deleteModalScale = useRef(new Animated.Value(0.92)).current;
+
+  const [isDeletePhotoModalOpen, setIsDeletePhotoModalOpen] = useState(false);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
+  const deletePhotoModalScale = useRef(new Animated.Value(0.92)).current;
+
+  const handleOpenMenu = () => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+      return;
+    }
+    const node = menuButtonRef.current;
+    if (node) {
+      if (typeof node.measureInWindow === "function") {
+        node.measureInWindow((x, y, width, height) => {
+          if (typeof x === "number" && !isNaN(x) && x > 0) {
+            const menuWidth = 175;
+            const targetLeft = Math.max(16, x + width - menuWidth + 4);
+            setMenuCoords({
+              top: y + height + 6,
+              left: targetLeft,
+            });
+          }
+          setIsMenuOpen(true);
+        });
+        return;
+      } else if (typeof node.getBoundingClientRect === "function") {
+        const rect = node.getBoundingClientRect();
+        const menuWidth = 175;
+        const targetLeft = Math.max(16, rect.left + rect.width - menuWidth + 4);
+        setMenuCoords({
+          top: rect.bottom + 6,
+          left: targetLeft,
+        });
+        setIsMenuOpen(true);
+        return;
+      }
+    }
+    setIsMenuOpen(true);
+  };
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      menuAnim.setValue(0);
+      Animated.spring(menuAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isMenuOpen]);
+
+  const menuTranslateY = menuAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-18, 0],
+  });
+  const menuOpacity = menuAnim.interpolate({
+    inputRange: [0, 0.4, 1],
+    outputRange: [0, 0.5, 1],
+  });
+  const menuScaleY = menuAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.85, 1],
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -133,6 +230,61 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   }, [isEditingCaption]);
 
   useEffect(() => {
+    if (isEditCollectionModalOpen) {
+      setEditablePhotos(photos || []);
+      setDeletedPhotoIds([]);
+      editModalScale.setValue(0.92);
+      editModalTranslateY.setValue(0);
+      Animated.spring(editModalScale, {
+        toValue: 1,
+        friction: 7,
+        tension: 75,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      editModalTranslateY.setValue(0);
+      setIsEditTitleFocused(false);
+    }
+  }, [isEditCollectionModalOpen, photos]);
+
+  useEffect(() => {
+    if (isAddPhotosModalOpen) {
+      setSelectedNewPhotos([]);
+      addPhotosModalScale.setValue(0.92);
+      Animated.spring(addPhotosModalScale, {
+        toValue: 1,
+        friction: 7,
+        tension: 75,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isAddPhotosModalOpen]);
+
+  useEffect(() => {
+    if (isDeleteCollectionModalOpen) {
+      deleteModalScale.setValue(0.92);
+      Animated.spring(deleteModalScale, {
+        toValue: 1,
+        friction: 7,
+        tension: 75,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isDeleteCollectionModalOpen]);
+
+  useEffect(() => {
+    if (isDeletePhotoModalOpen) {
+      deletePhotoModalScale.setValue(0.92);
+      Animated.spring(deletePhotoModalScale, {
+        toValue: 1,
+        friction: 7,
+        tension: 75,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isDeletePhotoModalOpen]);
+
+  useEffect(() => {
     const showEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
     const hideEvent =
@@ -146,10 +298,22 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         tension: 65,
         useNativeDriver: true,
       }).start();
+      Animated.spring(editModalTranslateY, {
+        toValue: -Math.max(keyboardHeight * 0.52, 140),
+        friction: 8,
+        tension: 65,
+        useNativeDriver: true,
+      }).start();
     });
 
     const hideSub = Keyboard.addListener(hideEvent, () => {
       Animated.spring(modalTranslateY, {
+        toValue: 0,
+        friction: 8,
+        tension: 65,
+        useNativeDriver: true,
+      }).start();
+      Animated.spring(editModalTranslateY, {
         toValue: 0,
         friction: 8,
         tension: 65,
@@ -205,6 +369,162 @@ export default function CollectionGalleryScreen({ route, navigation }) {
     );
     setIsInputFocused(false);
     setIsEditingCaption(false);
+  };
+
+  const handlePickNewPhotos = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "É necessário permitir o acesso à galeria para selecionar fotos."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const uris = result.assets.map((asset) => asset.uri);
+      setSelectedNewPhotos((prev) => [...prev, ...uris]);
+    } catch {
+      Alert.alert("Erro", "Não foi possível selecionar as fotos.");
+    }
+  };
+
+  const handleAddPhotosSubmit = async () => {
+    if (selectedNewPhotos.length === 0) {
+      Alert.alert("Atenção", "Por favor, selecione ao menos uma foto.");
+      return;
+    }
+    if (!collection?.id) {
+      Alert.alert("Erro", "Coleção não encontrada.");
+      return;
+    }
+
+    setIsAddingPhotos(true);
+    try {
+      const updated = await addPhotosToCollectionApi(collection.id, selectedNewPhotos);
+      if (updated?.photos) {
+        setPhotos(updated.photos);
+      }
+      await queryClient.invalidateQueries({ queryKey: ["collections"] });
+      setSelectedNewPhotos([]);
+      setIsAddPhotosModalOpen(false);
+    } catch (err) {
+      const detail =
+        (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+        err?.message ||
+        "Não foi possível adicionar as fotos.";
+      Alert.alert("Erro", detail);
+    } finally {
+      setIsAddingPhotos(false);
+    }
+  };
+
+  const handleSaveEditCollection = async () => {
+    const trimmedTitle = editCollectionTitle.trim();
+    if (!trimmedTitle) {
+      Alert.alert("Atenção", "Por favor, informe um título para a coleção.");
+      return;
+    }
+    if (trimmedTitle.length > 30) {
+      Alert.alert("Atenção", "O título da coleção deve ter no máximo 30 caracteres.");
+      return;
+    }
+
+    if (collection?.id) {
+      setIsSavingEdit(true);
+      try {
+        const updated = await updateCollectionApi(collection.id, {
+          title: trimmedTitle,
+          deletePhotoIds: deletedPhotoIds,
+        });
+        setCollectionTitle(trimmedTitle);
+        if (updated?.photos) {
+          setPhotos(updated.photos);
+        } else {
+          setPhotos(editablePhotos);
+        }
+        await queryClient.invalidateQueries({ queryKey: ["collections"] });
+        Keyboard.dismiss();
+        setIsEditTitleFocused(false);
+        setIsEditCollectionModalOpen(false);
+      } catch (err) {
+        const detail =
+          (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+          err?.message ||
+          "Não foi possível salvar as alterações.";
+        Alert.alert("Erro", detail);
+      } finally {
+        setIsSavingEdit(false);
+      }
+    } else {
+      setCollectionTitle(trimmedTitle);
+      setPhotos(editablePhotos);
+      Keyboard.dismiss();
+      setIsEditTitleFocused(false);
+      setIsEditCollectionModalOpen(false);
+    }
+  };
+
+  const handleConfirmDeleteCollection = async () => {
+    if (!collection?.id) {
+      setIsDeleteCollectionModalOpen(false);
+      navigation.goBack();
+      return;
+    }
+
+    setIsDeletingCollection(true);
+    try {
+      await deleteCollectionApi(collection.id);
+      await queryClient.invalidateQueries({ queryKey: ["collections"] });
+      setIsDeleteCollectionModalOpen(false);
+      navigation.goBack();
+    } catch (err) {
+      const detail =
+        (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+        err?.message ||
+        "Não foi possível excluir a coleção.";
+      Alert.alert("Erro", detail);
+    } finally {
+      setIsDeletingCollection(false);
+    }
+  };
+
+  const handleConfirmDeletePhoto = async () => {
+    if (!currentViewerPhoto) return;
+    setIsDeletingPhoto(true);
+    try {
+      if (collection?.id && currentViewerPhoto.id) {
+        await deletePhotoApi(collection.id, currentViewerPhoto.id);
+        await queryClient.invalidateQueries({ queryKey: ["collections"] });
+      }
+      const updatedPhotos = photos.filter((p) => p.id !== currentViewerPhoto.id);
+      setPhotos(updatedPhotos);
+      setIsDeletePhotoModalOpen(false);
+      if (updatedPhotos.length === 0) {
+        setSelectedPhotoIndex(null);
+      } else {
+        const nextIdx = Math.min(activeViewerIndex, updatedPhotos.length - 1);
+        setActiveViewerIndex(nextIdx);
+      }
+    } catch (err) {
+      const detail =
+        (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+        err?.message ||
+        "Não foi possível excluir a foto.";
+      Alert.alert("Erro", detail);
+    } finally {
+      setIsDeletingPhoto(false);
+    }
   };
 
   const triggerTransitionAnimation = () => {
@@ -398,12 +718,29 @@ export default function CollectionGalleryScreen({ route, navigation }) {
 
       <View style={styles.header}>
         <View style={styles.headerInfo}>
-          <Text
-            style={[styles.headerTitle, !isDarkMode && styles.headerTitleLight]}
-            numberOfLines={1}
-          >
-            {collection?.title || "Galeria"}
-          </Text>
+          <View style={styles.titleRow}>
+            <Text
+              style={[styles.headerTitle, !isDarkMode && styles.headerTitleLight]}
+              numberOfLines={1}
+            >
+              {collectionTitle}
+            </Text>
+            <TouchableOpacity
+              ref={menuButtonRef}
+              style={[
+                styles.titleMenuButton,
+                !isDarkMode && styles.titleMenuButtonLight,
+              ]}
+              activeOpacity={0.7}
+              onPress={handleOpenMenu}
+            >
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={18}
+                color={isDarkMode ? "#FFFFFF" : "#000000"}
+              />
+            </TouchableOpacity>
+          </View>
           <Text
             style={[
               styles.headerSubtitle,
@@ -427,6 +764,125 @@ export default function CollectionGalleryScreen({ route, navigation }) {
           />
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={isMenuOpen}
+        transparent={true}
+        animationType="none"
+        onRequestClose={() => setIsMenuOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.menuBackdrop}
+          activeOpacity={1}
+          onPress={() => setIsMenuOpen(false)}
+        >
+          <Animated.View
+            style={[
+              styles.menuDropdown,
+              !isDarkMode && styles.menuDropdownLight,
+              {
+                top: menuCoords.top,
+                left: menuCoords.left,
+                opacity: menuOpacity,
+                transform: [
+                  { translateY: menuTranslateY },
+                  { scaleY: menuScaleY },
+                ],
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.menuItem}
+              activeOpacity={0.7}
+              onPress={() => {
+                setIsMenuOpen(false);
+                setSelectedNewPhotos([]);
+                setIsAddPhotosModalOpen(true);
+              }}
+            >
+              <Ionicons
+                name="images-outline"
+                size={16}
+                color={isDarkMode ? "#FFFFFF" : "#000000"}
+                style={styles.menuItemIcon}
+              />
+              <Text
+                style={[
+                  styles.menuItemText,
+                  !isDarkMode && styles.menuItemTextLight,
+                ]}
+              >
+                Adicionar fotos
+              </Text>
+            </TouchableOpacity>
+
+            <View
+              style={[
+                styles.menuDivider,
+                !isDarkMode && styles.menuDividerLight,
+              ]}
+            />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              activeOpacity={0.7}
+              onPress={() => {
+                setIsMenuOpen(false);
+                setEditCollectionTitle(collectionTitle);
+                setEditablePhotos(photos || []);
+                setDeletedPhotoIds([]);
+                setIsEditCollectionModalOpen(true);
+              }}
+            >
+              <Ionicons
+                name="pencil-outline"
+                size={16}
+                color={isDarkMode ? "#FFFFFF" : "#000000"}
+                style={styles.menuItemIcon}
+              />
+              <Text
+                style={[
+                  styles.menuItemText,
+                  !isDarkMode && styles.menuItemTextLight,
+                ]}
+              >
+                Editar coleção
+              </Text>
+            </TouchableOpacity>
+
+            <View
+              style={[
+                styles.menuDivider,
+                !isDarkMode && styles.menuDividerLight,
+              ]}
+            />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              activeOpacity={0.7}
+              onPress={() => {
+                setIsMenuOpen(false);
+                setIsDeleteCollectionModalOpen(true);
+              }}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={16}
+                color="#FF453A"
+                style={styles.menuItemIcon}
+              />
+              <Text
+                style={[
+                  styles.menuItemText,
+                  styles.menuItemTextDanger,
+                ]}
+              >
+                Excluir coleção
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
 
       <PinchGestureHandler
         ref={pinchRef}
@@ -463,14 +919,52 @@ export default function CollectionGalleryScreen({ route, navigation }) {
             scrollEventThrottle={16}
             bounces={true}
             onScrollToIndexFailed={() => {}}
+            ListEmptyComponent={
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingTop: 100,
+                  paddingHorizontal: 32,
+                }}
+              >
+                <Ionicons
+                  name="images-outline"
+                  size={52}
+                  color={isDarkMode ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.25)"}
+                  style={{ marginBottom: 14 }}
+                />
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    color: isDarkMode ? "#8E8E93" : "#666666",
+                    textAlign: "center",
+                    marginBottom: 6,
+                  }}
+                >
+                  Nenhuma foto na coleção
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: isDarkMode ? "#636366" : "#8E8E93",
+                    textAlign: "center",
+                  }}
+                >
+                  Toque nos três pontos acima para adicionar fotos.
+                </Text>
+              </View>
+            }
           />
         </Animated.View>
       </PinchGestureHandler>
 
       <Modal
         visible={selectedPhotoIndex !== null}
-        transparent={false}
+        transparent={true}
         animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setSelectedPhotoIndex(null)}
       >
         <View
@@ -481,26 +975,16 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         >
           <StatusBar
             barStyle={isDarkMode ? "light-content" : "dark-content"}
-            backgroundColor={isDarkMode ? "#000000" : "#FFFFFF"}
+            backgroundColor="transparent"
+            translucent={true}
           />
 
-          <TouchableOpacity
-            style={[
-              styles.modalCloseButton,
-              !isDarkMode && styles.modalCloseButtonLight,
-            ]}
-            onPress={() => setSelectedPhotoIndex(null)}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="close"
-              size={24}
-              color={isDarkMode ? "#FFFFFF" : "#000000"}
-            />
-          </TouchableOpacity>
-
           {Platform.OS === "web" ? (
-            <View style={styles.webViewerContainer}>
+            <TouchableOpacity
+              style={styles.webViewerContainer}
+              activeOpacity={1}
+              onPress={() => setSelectedPhotoIndex(null)}
+            >
               {photos.length > 1 && (
                 <TouchableOpacity
                   style={[
@@ -508,7 +992,8 @@ export default function CollectionGalleryScreen({ route, navigation }) {
                     styles.webNavButtonLeft,
                     !isDarkMode && styles.webNavButtonLight,
                   ]}
-                  onPress={() => {
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
                     const prevIdx =
                       (activeViewerIndex - 1 + photos.length) % photos.length;
                     setActiveViewerIndex(prevIdx);
@@ -524,11 +1009,24 @@ export default function CollectionGalleryScreen({ route, navigation }) {
               )}
 
               {currentViewerPhoto?.url ? (
-                <Image
-                  source={{ uri: currentViewerPhoto.url }}
-                  style={styles.webModalImage}
-                  resizeMode="contain"
-                />
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={(e) => e?.stopPropagation?.()}
+                  style={{
+                    maxWidth: 1200,
+                    maxHeight: 850,
+                    width: "90%",
+                    height: "82%",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Image
+                    source={{ uri: currentViewerPhoto.url }}
+                    style={styles.webModalImage}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
               ) : null}
 
               {photos.length > 1 && (
@@ -538,7 +1036,8 @@ export default function CollectionGalleryScreen({ route, navigation }) {
                     styles.webNavButtonRight,
                     !isDarkMode && styles.webNavButtonLight,
                   ]}
-                  onPress={() => {
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
                     const nextIdx = (activeViewerIndex + 1) % photos.length;
                     setActiveViewerIndex(nextIdx);
                   }}
@@ -551,7 +1050,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
                   />
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
           ) : (
             <FlatList
               style={{ flex: 1 }}
@@ -575,13 +1074,17 @@ export default function CollectionGalleryScreen({ route, navigation }) {
                 }
               }}
               renderItem={({ item }) => (
-                <View style={styles.modalSlide}>
+                <TouchableOpacity
+                  style={styles.modalSlide}
+                  activeOpacity={1}
+                  onPress={() => setSelectedPhotoIndex(null)}
+                >
                   <Image
                     source={{ uri: item.url }}
                     style={styles.modalImage}
                     resizeMode="contain"
                   />
-                </View>
+                </TouchableOpacity>
               )}
             />
           )}
@@ -613,6 +1116,38 @@ export default function CollectionGalleryScreen({ route, navigation }) {
               {currentViewerPhoto?.caption || "Adicionar nome"}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.modalDeleteButton,
+              !isDarkMode && styles.modalDeleteButtonLight,
+            ]}
+            activeOpacity={0.7}
+            onPress={() => setIsDeletePhotoModalOpen(true)}
+          >
+            <Ionicons
+              name="trash-outline"
+              size={20}
+              color="#FF453A"
+            />
+          </TouchableOpacity>
+
+          {Platform.OS === "web" && (
+            <TouchableOpacity
+              style={[
+                styles.modalCloseButton,
+                !isDarkMode && styles.modalCloseButtonLight,
+              ]}
+              onPress={() => setSelectedPhotoIndex(null)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="close"
+                size={22}
+                color={isDarkMode ? "#FFFFFF" : "#000000"}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       </Modal>
 
@@ -732,6 +1267,514 @@ export default function CollectionGalleryScreen({ route, navigation }) {
             </View>
           </Animated.View>
         </View>
+      </Modal>
+
+      <Modal
+        visible={isEditCollectionModalOpen}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+        onRequestClose={() => {
+          Keyboard.dismiss();
+          setIsEditTitleFocused(false);
+          setIsEditCollectionModalOpen(false);
+        }}
+      >
+        <View style={styles.editDialogOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => {
+              Keyboard.dismiss();
+              setIsEditTitleFocused(false);
+              setIsEditCollectionModalOpen(false);
+            }}
+          />
+          <Animated.View
+            style={[
+              styles.collectionModalCard,
+              !isDarkMode && styles.collectionModalCardLight,
+              {
+                transform: [
+                  { translateY: editModalTranslateY },
+                  { scale: editModalScale },
+                ],
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.collectionModalTitle,
+                !isDarkMode && styles.collectionModalTitleLight,
+              ]}
+            >
+              Editar coleção
+            </Text>
+            <Text
+              style={[
+                styles.collectionModalSubtitle,
+                !isDarkMode && styles.collectionModalSubtitleLight,
+              ]}
+            >
+              Altere o título da sua coleção
+            </Text>
+
+            <Text
+              style={[
+                styles.collectionModalSectionLabel,
+                !isDarkMode && styles.collectionModalSectionLabelLight,
+              ]}
+            >
+              Nome
+            </Text>
+
+            <TextInput
+              value={editCollectionTitle}
+              onChangeText={setEditCollectionTitle}
+              placeholder="Ex: viagem para europa, praias..."
+              placeholderTextColor="#8E8E93"
+              onFocus={() => setIsEditTitleFocused(true)}
+              onBlur={() => setIsEditTitleFocused(false)}
+              style={[
+                styles.editDialogInput,
+                !isDarkMode && styles.editDialogInputLight,
+                isEditTitleFocused && (
+                  isDarkMode
+                    ? styles.editDialogInputFocused
+                    : styles.editDialogInputFocusedLight
+                ),
+              ]}
+              maxLength={30}
+              returnKeyType="done"
+            />
+
+            <View style={styles.charCountRow}>
+              <Text
+                style={[
+                  styles.charCountText,
+                  !isDarkMode && styles.charCountTextLight,
+                ]}
+              >
+                {editCollectionTitle.length}/30
+              </Text>
+            </View>
+
+            <View style={styles.editPhotosHeader}>
+              <Text
+                style={[
+                  styles.collectionModalSectionLabel,
+                  !isDarkMode && styles.collectionModalSectionLabelLight,
+                  { marginBottom: 0 },
+                ]}
+              >
+                Fotos da coleção
+              </Text>
+              <Text style={styles.editPhotosCountText}>
+                {editablePhotos.length} foto{editablePhotos.length !== 1 ? "s" : ""}
+              </Text>
+            </View>
+
+            {editablePhotos.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.editPhotosScrollContent}
+              >
+                {editablePhotos.map((photo, pIdx) => (
+                  <View key={photo.id || pIdx} style={styles.editPhotoThumbnailWrapper}>
+                    <Image
+                      source={{ uri: photo.url }}
+                      style={[
+                        styles.editPhotoThumbnail,
+                        !isDarkMode && styles.editPhotoThumbnailLight,
+                      ]}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      style={styles.editPhotoDeleteBadge}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        const photoToDelete = editablePhotos[pIdx];
+                        if (photoToDelete?.id) {
+                          setDeletedPhotoIds((prev) => [...prev, photoToDelete.id]);
+                        }
+                        setEditablePhotos((prev) => prev.filter((_, i) => i !== pIdx));
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={12} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View
+                style={[
+                  styles.emptyPhotosBox,
+                  !isDarkMode && styles.emptyPhotosBoxLight,
+                ]}
+              >
+                <Text style={styles.emptyPhotosText}>
+                  Nenhuma foto restante nesta coleção
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.modalActionRow}>
+              <TouchableOpacity
+                style={[
+                  styles.modalCancelButton,
+                  !isDarkMode && styles.modalCancelButtonLight,
+                ]}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setIsEditTitleFocused(false);
+                  setDeletedPhotoIds([]);
+                  setEditablePhotos(photos || []);
+                  setIsEditCollectionModalOpen(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.modalCancelButtonText,
+                    !isDarkMode && styles.modalCancelButtonTextLight,
+                  ]}
+                >
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalSubmitButton,
+                  !isDarkMode && styles.modalSubmitButtonLight,
+                ]}
+                activeOpacity={0.8}
+                disabled={isSavingEdit}
+                onPress={handleSaveEditCollection}
+              >
+                {isSavingEdit ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={!isDarkMode ? "#FFFFFF" : "#000000"}
+                  />
+                ) : (
+                  <Text
+                    style={[
+                      styles.modalSubmitButtonText,
+                      !isDarkMode && styles.modalSubmitButtonTextLight,
+                    ]}
+                  >
+                    Salvar
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isAddPhotosModalOpen}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+        onRequestClose={() => {
+          setIsAddPhotosModalOpen(false);
+        }}
+      >
+        <View style={styles.editDialogOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setIsAddPhotosModalOpen(false)}
+          />
+          <Animated.View
+            style={[
+              styles.collectionModalCard,
+              !isDarkMode && styles.collectionModalCardLight,
+              {
+                transform: [{ scale: addPhotosModalScale }],
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.collectionModalTitle,
+                !isDarkMode && styles.collectionModalTitleLight,
+              ]}
+            >
+              Adicionar fotos
+            </Text>
+            <Text
+              style={[
+                styles.collectionModalSubtitle,
+                !isDarkMode && styles.collectionModalSubtitleLight,
+              ]}
+            >
+              Selecione fotos para incluir nesta coleção
+            </Text>
+
+            <Text
+              style={[
+                styles.collectionModalSectionLabel,
+                !isDarkMode && styles.collectionModalSectionLabelLight,
+              ]}
+            >
+              Fotos
+            </Text>
+
+            <TouchableOpacity
+              style={[
+                styles.uploadPhotoBox,
+                !isDarkMode && styles.uploadPhotoBoxLight,
+              ]}
+              activeOpacity={0.75}
+              onPress={handlePickNewPhotos}
+            >
+              <View
+                style={[
+                  styles.uploadPhotoIconCircle,
+                  !isDarkMode && styles.uploadPhotoIconCircleLight,
+                ]}
+              >
+                <Ionicons
+                  name="cloud-upload-outline"
+                  size={26}
+                  color={isDarkMode ? "#FFFFFF" : "#000000"}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.uploadPhotoTitle,
+                  !isDarkMode && styles.uploadPhotoTitleLight,
+                ]}
+              >
+                {selectedNewPhotos.length > 0
+                  ? "Adicionar mais fotos"
+                  : "Inserir fotos"}
+              </Text>
+              <Text
+                style={[
+                  styles.uploadPhotoSubtitle,
+                  !isDarkMode && styles.uploadPhotoSubtitleLight,
+                ]}
+              >
+                {selectedNewPhotos.length > 0
+                  ? `${selectedNewPhotos.length} foto${selectedNewPhotos.length !== 1 ? "s" : ""} selecionada${selectedNewPhotos.length !== 1 ? "s" : ""}`
+                  : "Toque para escolher fotos do dispositivo"}
+              </Text>
+            </TouchableOpacity>
+
+            {selectedNewPhotos.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={[styles.editPhotosScrollContent, { marginTop: 10 }]}
+              >
+                {selectedNewPhotos.map((uri, idx) => (
+                  <View key={`${uri}_${idx}`} style={styles.editPhotoThumbnailWrapper}>
+                    <Image
+                      source={{ uri }}
+                      style={[
+                        styles.editPhotoThumbnail,
+                        !isDarkMode && styles.editPhotoThumbnailLight,
+                      ]}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      style={styles.editPhotoDeleteBadge}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedNewPhotos((prev) => prev.filter((_, i) => i !== idx));
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={12} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            <View style={styles.modalActionRow}>
+              <TouchableOpacity
+                style={[
+                  styles.modalCancelButton,
+                  !isDarkMode && styles.modalCancelButtonLight,
+                ]}
+                onPress={() => {
+                  setSelectedNewPhotos([]);
+                  setIsAddPhotosModalOpen(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.modalCancelButtonText,
+                    !isDarkMode && styles.modalCancelButtonTextLight,
+                  ]}
+                >
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalSubmitButton,
+                  !isDarkMode && styles.modalSubmitButtonLight,
+                ]}
+                activeOpacity={0.8}
+                disabled={isAddingPhotos}
+                onPress={handleAddPhotosSubmit}
+              >
+                {isAddingPhotos ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={!isDarkMode ? "#FFFFFF" : "#000000"}
+                  />
+                ) : (
+                  <Text
+                    style={[
+                      styles.modalSubmitButtonText,
+                      !isDarkMode && styles.modalSubmitButtonTextLight,
+                    ]}
+                  >
+                    Adicionar
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
+      <Modal
+        visible={isDeleteCollectionModalOpen}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+        onRequestClose={() => setIsDeleteCollectionModalOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.confirmOverlay}
+          activeOpacity={1}
+          onPress={() => setIsDeleteCollectionModalOpen(false)}
+        >
+          <Animated.View
+            style={[
+              styles.confirmCard,
+              !isDarkMode && styles.confirmCardLight,
+              {
+                transform: [{ scale: deleteModalScale }],
+              },
+            ]}
+          >
+            <View style={styles.confirmContentSection}>
+              <Text style={[styles.confirmTitle, !isDarkMode && styles.confirmTitleLight]}>
+                Excluir coleção?
+              </Text>
+              <Text style={[styles.confirmMessage, !isDarkMode && styles.confirmMessageLight]}>
+                Deseja excluir a coleção{" "}
+                <Text style={[styles.confirmBoldText, !isDarkMode && styles.confirmBoldTextLight]}>
+                  "{collectionTitle}"
+                </Text>
+                ? Esta ação não pode ser desfeita.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.confirmActionButton,
+                !isDarkMode && styles.confirmActionButtonLight,
+              ]}
+              onPress={handleConfirmDeleteCollection}
+              activeOpacity={0.65}
+              disabled={isDeletingCollection}
+            >
+              {isDeletingCollection ? (
+                <ActivityIndicator size="small" color="#FF3B30" />
+              ) : (
+                <Text style={styles.confirmDeleteText}>Excluir</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.confirmActionButton,
+                styles.confirmLastButton,
+                !isDarkMode && styles.confirmActionButtonLight,
+              ]}
+              onPress={() => setIsDeleteCollectionModalOpen(false)}
+              activeOpacity={0.65}
+            >
+              <Text style={[styles.confirmCancelText, !isDarkMode && styles.confirmCancelTextLight]}>
+                Cancelar
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        visible={isDeletePhotoModalOpen}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+        onRequestClose={() => setIsDeletePhotoModalOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.confirmOverlay}
+          activeOpacity={1}
+          onPress={() => setIsDeletePhotoModalOpen(false)}
+        >
+          <Animated.View
+            style={[
+              styles.confirmCard,
+              !isDarkMode && styles.confirmCardLight,
+              {
+                transform: [{ scale: deletePhotoModalScale }],
+              },
+            ]}
+          >
+            <View style={styles.confirmContentSection}>
+              <Text style={[styles.confirmTitle, !isDarkMode && styles.confirmTitleLight]}>
+                Excluir foto?
+              </Text>
+              <Text style={[styles.confirmMessage, !isDarkMode && styles.confirmMessageLight]}>
+                Deseja excluir esta foto da coleção? Esta ação não pode ser desfeita.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.confirmActionButton,
+                !isDarkMode && styles.confirmActionButtonLight,
+              ]}
+              onPress={handleConfirmDeletePhoto}
+              activeOpacity={0.65}
+              disabled={isDeletingPhoto}
+            >
+              {isDeletingPhoto ? (
+                <ActivityIndicator size="small" color="#FF3B30" />
+              ) : (
+                <Text style={styles.confirmDeleteText}>Excluir</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.confirmActionButton,
+                styles.confirmLastButton,
+                !isDarkMode && styles.confirmActionButtonLight,
+              ]}
+              onPress={() => setIsDeletePhotoModalOpen(false)}
+              activeOpacity={0.65}
+            >
+              <Text style={[styles.confirmCancelText, !isDarkMode && styles.confirmCancelTextLight]}>
+                Cancelar
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
