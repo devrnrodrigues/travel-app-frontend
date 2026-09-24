@@ -310,7 +310,12 @@ export function ReviewFormModal({
               Keyboard.dismiss();
               const keptPhotoIds = photosList.filter((p) => p.isExisting).map((p) => p.id);
               const newImages = photosList.filter((p) => !p.isExisting).map((p) => p.uri);
-              onSubmit({ keptPhotoIds, newImages, allPhotos: photosList });
+              onSubmit({
+                keptPhotoIds,
+                newImages,
+                allPhotos: photosList,
+                clearPhotos: keptPhotoIds.length === 0,
+              });
             }}
             disabled={isSubmitting}
             style={[reviewStyles.submitBtn, { backgroundColor: currentTheme.accent }]}

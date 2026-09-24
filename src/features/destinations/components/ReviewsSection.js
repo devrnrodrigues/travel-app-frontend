@@ -346,6 +346,7 @@ export default function ReviewsSection({
     }
     const keptPhotoIds = Array.isArray(photoData) ? [] : (photoData?.keptPhotoIds || []);
     const newImages = Array.isArray(photoData) ? photoData : (photoData?.newImages || []);
+    const clearPhotos = Boolean(photoData?.clearPhotos);
 
     try {
       setIsSubmitting(true);
@@ -355,6 +356,7 @@ export default function ReviewsSection({
           content: trimmed,
           keptPhotoIds,
           newImages,
+          clearPhotos,
         });
       } else {
         await createCommentApi(item.id, {

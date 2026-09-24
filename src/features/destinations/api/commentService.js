@@ -89,11 +89,17 @@ export async function createCommentApi(destinationId, { rating, content, images 
   });
 }
 
-export async function updateCommentApi(commentId, { rating, content, keptPhotoIds, newImages = [] }) {
-  if (keptPhotoIds !== undefined || (Array.isArray(newImages) && newImages.length > 0)) {
+export async function updateCommentApi(commentId, { rating, content, keptPhotoIds, newImages = [], clearPhotos }) {
+  const shouldClear = Boolean(clearPhotos) || (Array.isArray(keptPhotoIds) && keptPhotoIds.length === 0);
+
+  if (keptPhotoIds !== undefined || (Array.isArray(newImages) && newImages.length > 0) || shouldClear) {
     const formData = new FormData();
     formData.append("rating", String(Math.round(Number(rating))));
     formData.append("content", content.trim());
+
+    if (shouldClear) {
+      formData.append("clearPhotos", "true");
+    }
 
     if (Array.isArray(keptPhotoIds)) {
       keptPhotoIds.forEach((id) => {
