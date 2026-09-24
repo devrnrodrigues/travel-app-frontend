@@ -23,19 +23,11 @@ export async function createCollectionApi({ title, imageUris }) {
 
       const filename = `photo_${Date.now()}_${i}.webp`;
 
-      if (Platform.OS === "web") {
-        try {
-          const res = await fetch(manipulatedUri);
-          const blob = await res.blob();
-          formData.append("files", blob, filename);
-        } catch {
-          formData.append("files", {
-            uri: manipulatedUri,
-            name: filename,
-            type: "image/webp",
-          });
-        }
-      } else {
+      try {
+        const res = await fetch(manipulatedUri);
+        const blob = await res.blob();
+        formData.append("files", blob, filename);
+      } catch {
         formData.append("files", {
           uri: manipulatedUri,
           name: filename,
@@ -89,19 +81,11 @@ export async function addPhotosToCollectionApi(collectionId, imageUris) {
 
       const filename = `photo_${Date.now()}_${i}.webp`;
 
-      if (Platform.OS === "web") {
-        try {
-          const res = await fetch(manipulatedUri);
-          const blob = await res.blob();
-          formData.append("files", blob, filename);
-        } catch {
-          formData.append("files", {
-            uri: manipulatedUri,
-            name: filename,
-            type: "image/webp",
-          });
-        }
-      } else {
+      try {
+        const res = await fetch(manipulatedUri);
+        const blob = await res.blob();
+        formData.append("files", blob, filename);
+      } catch {
         formData.append("files", {
           uri: manipulatedUri,
           name: filename,

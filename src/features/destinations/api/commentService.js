@@ -59,19 +59,11 @@ export async function createCommentApi(destinationId, { rating, content, images 
 
       const filename = `comment_${Date.now()}_${i}.webp`;
 
-      if (Platform.OS === "web") {
-        try {
-          const res = await fetch(manipulatedUri);
-          const blob = await res.blob();
-          formData.append("files", blob, filename);
-        } catch {
-          formData.append("files", {
-            uri: manipulatedUri,
-            name: filename,
-            type: "image/webp",
-          });
-        }
-      } else {
+      try {
+        const res = await fetch(manipulatedUri);
+        const blob = await res.blob();
+        formData.append("files", blob, filename);
+      } catch {
         formData.append("files", {
           uri: manipulatedUri,
           name: filename,
@@ -124,19 +116,11 @@ export async function updateCommentApi(commentId, { rating, content, keptPhotoId
 
         const filename = `comment_${Date.now()}_${i}.webp`;
 
-        if (Platform.OS === "web") {
-          try {
-            const res = await fetch(manipulatedUri);
-            const blob = await res.blob();
-            formData.append("files", blob, filename);
-          } catch {
-            formData.append("files", {
-              uri: manipulatedUri,
-              name: filename,
-              type: "image/webp",
-            });
-          }
-        } else {
+        try {
+          const res = await fetch(manipulatedUri);
+          const blob = await res.blob();
+          formData.append("files", blob, filename);
+        } catch {
           formData.append("files", {
             uri: manipulatedUri,
             name: filename,

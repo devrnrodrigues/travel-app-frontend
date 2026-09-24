@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import reviewStyles from "../styles/reviews.styles";
 
 export function ReviewFormModal({
@@ -35,6 +36,7 @@ export function ReviewFormModal({
   isDarkMode,
 }) {
   const [photosList, setPhotosList] = useState([]);
+  const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
   const [isCommentFocused, setIsCommentFocused] = useState(false);
   const commentFocusAnim = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.92)).current;
@@ -53,6 +55,7 @@ export function ReviewFormModal({
       } else {
         setPhotosList([]);
       }
+      setIsProcessingPhotos(false);
       modalScale.setValue(0.92);
       modalTranslateY.setValue(0);
       Animated.spring(modalScale, {
@@ -118,8 +121,10 @@ export function ReviewFormModal({
   }, [commentFocusAnim]);
 
   const handlePickImages = async () => {
-    if (photosList.length >= 5) {
-      Alert.alert("Limite atingido", "Você pode anexar no máximo 5 fotos.");
+    if (photosList.length >= 5 || isProcessingPhotos) {
+      if (photosList.length >= 5) {
+        Alert.alert("Limite atingido", "Você pode anexar no máximo 5 fotos.");
+      }
       return;
     }
 
@@ -133,6 +138,8 @@ export function ReviewFormModal({
         return;
       }
 
+      setIsProcessingPhotos(true);
+
       const remaining = 5 - photosList.length;
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
@@ -141,15 +148,35 @@ export function ReviewFormModal({
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const newItems = result.assets.map((a) => ({
-          uri: a.uri,
-          isExisting: false,
-        }));
-        setPhotosList((prev) => [...prev, ...newItems].slice(0, 5));
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        setIsProcessingPhotos(false);
+        return;
       }
+
+      const newItems = [];
+      for (let i = 0; i < result.assets.length; i++) {
+        const a = result.assets[i];
+        let finalUri = a.uri;
+        try {
+          const manipulated = await manipulateAsync(
+            a.uri,
+            [],
+            { format: SaveFormat.WEBP, compress: 0.85 }
+          );
+          finalUri = manipulated.uri;
+        } catch {
+          finalUri = a.uri;
+        }
+        newItems.push({
+          uri: finalUri,
+          isExisting: false,
+        });
+      }
+      setPhotosList((prev) => [...prev, ...newItems].slice(0, 5));
     } catch {
       Alert.alert("Erro", "Não foi possível selecionar as fotos.");
+    } finally {
+      setIsProcessingPhotos(false);
     }
   };
 
@@ -260,26 +287,47 @@ export function ReviewFormModal({
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handlePickImages}
+            disabled={isProcessingPhotos || isSubmitting}
             style={[
               reviewStyles.addImageButton,
               !isDarkMode && reviewStyles.addImageButtonLight,
             ]}
           >
-            <Ionicons
-              name="images-outline"
-              size={18}
-              color={currentTheme.accent}
-            />
-            <Text
-              style={[
-                reviewStyles.addImageButtonText,
-                !isDarkMode && reviewStyles.addImageButtonTextLight,
-              ]}
-            >
-              {photosList.length > 0
-                ? `Fotos (${photosList.length}/5)`
-                : "Adicionar fotos"}
-            </Text>
+            {isProcessingPhotos ? (
+              <>
+                <ActivityIndicator
+                  size="small"
+                  color={currentTheme.accent}
+                  style={reviewStyles.marginRight8}
+                />
+                <Text
+                  style={[
+                    reviewStyles.addImageButtonText,
+                    !isDarkMode && reviewStyles.addImageButtonTextLight,
+                  ]}
+                >
+                  Carregando fotos...
+                </Text>
+              </>
+            ) : (
+              <>
+                <Ionicons
+                  name="images-outline"
+                  size={18}
+                  color={currentTheme.accent}
+                />
+                <Text
+                  style={[
+                    reviewStyles.addImageButtonText,
+                    !isDarkMode && reviewStyles.addImageButtonTextLight,
+                  ]}
+                >
+                  {photosList.length > 0
+                    ? `Fotos (${photosList.length}/5)`
+                    : "Adicionar fotos"}
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {photosList.length > 0 && (
@@ -317,7 +365,7 @@ export function ReviewFormModal({
                 clearPhotos: keptPhotoIds.length === 0,
               });
             }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isProcessingPhotos}
             style={[reviewStyles.submitBtn, { backgroundColor: currentTheme.accent }]}
           >
             {isSubmitting ? (
