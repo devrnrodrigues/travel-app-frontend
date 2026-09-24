@@ -140,26 +140,35 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
           delayLongPress={300}
         >
           {photos.map((photo, i) => {
-            const rotDeg = anims[i].rot.interpolate({
+            const curAnim = anims[i] || {
+              transX: new Animated.Value(0),
+              transY: new Animated.Value(0),
+              rot: new Animated.Value(0),
+              scale: new Animated.Value(1),
+              dim: new Animated.Value(0),
+              opacity: new Animated.Value(1),
+            };
+
+            const rotDeg = curAnim.rot.interpolate({
               inputRange: [-15, 0, 15],
               outputRange: ["-15deg", "0deg", "15deg"],
             });
 
             return (
               <Animated.View
-                key={photo.id}
+                key={photo.id || String(i)}
                 pointerEvents="none"
                 style={[
                   styles.stackPhoto,
                   {
                     zIndex: zIndices[i] || 1,
                     elevation: (zIndices[i] || 1) * 2,
-                    opacity: anims[i].opacity,
+                    opacity: curAnim.opacity,
                     transform: [
-                      { translateX: anims[i].transX },
-                      { translateY: anims[i].transY },
+                      { translateX: curAnim.transX },
+                      { translateY: curAnim.transY },
                       { rotate: rotDeg },
-                      { scale: anims[i].scale },
+                      { scale: curAnim.scale },
                     ],
                   },
                 ]}

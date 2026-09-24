@@ -33,7 +33,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTheme } from "../../theme/ThemeContext";
 import { ProfileSkeleton } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
@@ -47,6 +47,7 @@ import { GALLERY_COLLECTIONS } from "./data/mockGallery";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { uploadAvatarApi, getProfileApi, updateProfileApi } from "./api/profileService";
+import { createCollectionApi, getCollectionsApi } from "./api/collectionService";
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser } = useAuth();
@@ -91,8 +92,15 @@ export default function ProfileScreen({ navigation }) {
   const [addCollectionModalVisible, setAddCollectionModalVisible] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [isCollectionNameFocused, setIsCollectionNameFocused] = useState(false);
+  const [selectedCollectionPhotos, setSelectedCollectionPhotos] = useState([]);
+  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const { data: userCollections = [], refetch: refetchCollections } = useQuery({
+    queryKey: ["collections"],
+    queryFn: getCollectionsApi,
+  });
 
   const [name, setName] = useState("");
   const [nationality, setNationality] = useState("Brasileiro");
@@ -204,6 +212,81 @@ export default function ProfileScreen({ navigation }) {
       Alert.alert("Erro ao enviar", String(detail));
     } finally {
       setIsUploadingAvatar(false);
+    }
+  };
+
+  const handlePickCollectionPhotos = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "É necessário permitir o acesso à galeria para selecionar fotos da coleção."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const uris = result.assets.map((asset) => asset.uri);
+      setSelectedCollectionPhotos(uris);
+    } catch {
+      Alert.alert("Erro", "Não foi possível selecionar as fotos.");
+    }
+  };
+
+  const handleSaveCollection = async () => {
+    const trimmedTitle = newCollectionName.trim();
+    if (!trimmedTitle) {
+      Alert.alert("Atenção", "Por favor, informe um nome para a coleção.");
+      return;
+    }
+    if (trimmedTitle.length > 30) {
+      Alert.alert("Atenção", "O nome da coleção deve ter no máximo 30 caracteres.");
+      return;
+    }
+    if (!selectedCollectionPhotos || selectedCollectionPhotos.length === 0) {
+      Alert.alert("Atenção", "Por favor, selecione ao menos uma foto.");
+      return;
+    }
+
+    setIsCreatingCollection(true);
+    try {
+      await createCollectionApi({
+        title: trimmedTitle,
+        imageUris: selectedCollectionPhotos,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["collections"] });
+      setGalleryCount("*");
+      await AsyncStorage.setItem("@profile_gallery_count", "*");
+      if (user?.id) {
+        const storedProfileJson = await AsyncStorage.getItem(`profile_${user.id}`);
+        const parsed = storedProfileJson ? JSON.parse(storedProfileJson) : {};
+        parsed.galleryCount = "*";
+        await AsyncStorage.setItem(`profile_${user.id}`, JSON.stringify(parsed));
+      }
+
+      setNewCollectionName("");
+      setSelectedCollectionPhotos([]);
+      setAddCollectionModalVisible(false);
+      Alert.alert("Sucesso", "Coleção criada com sucesso!");
+    } catch (err) {
+      const detail =
+        (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+        err?.message ||
+        "Não foi possível criar a coleção.";
+      Alert.alert("Erro ao criar coleção", String(detail));
+    } finally {
+      setIsCreatingCollection(false);
     }
   };
 
@@ -596,11 +679,13 @@ export default function ProfileScreen({ navigation }) {
             setNationality("Brasileiro");
           }
           if (parsed.bio) setBio(parsed.bio);
-          if (parsed.galleryCount !== undefined && parsed.galleryCount >= 0 && parsed.galleryCount <= 8) {
+          if (parsed.galleryCount === "*" || (parsed.galleryCount !== undefined && parsed.galleryCount >= 0 && parsed.galleryCount <= 8)) {
             setGalleryCount(parsed.galleryCount);
           } else {
             const savedCount = await AsyncStorage.getItem("@profile_gallery_count");
-            if (savedCount !== null && savedCount !== undefined) {
+            if (savedCount === "*") {
+              setGalleryCount("*");
+            } else if (savedCount !== null && savedCount !== undefined) {
               const num = parseInt(savedCount, 10);
               if (num >= 0 && num <= 8) setGalleryCount(num);
             }
@@ -620,13 +705,14 @@ export default function ProfileScreen({ navigation }) {
       await Promise.all([
         syncProfileWithBackend(),
         loadProfile(),
+        refetchCollections(),
       ]);
     } catch (err) {
       console.error("Erro no refresh:", err);
     } finally {
       setRefreshing(false);
     }
-  }, [syncProfileWithBackend, loadProfile]);
+  }, [syncProfileWithBackend, loadProfile, refetchCollections]);
 
   const handleGalleryCountChange = useCallback(async (count) => {
     setGalleryCount(count);
@@ -720,8 +806,21 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  const MainContentContainer = galleryCount <= 4 ? ScrollView : View;
-  const mainContainerProps = galleryCount <= 4
+  const displayedCollections = useMemo(() => {
+    if (galleryCount === "*") {
+      return userCollections || [];
+    }
+    const count = Number(galleryCount) || 0;
+    if (count === 0) return [];
+    return Array.from({ length: count }).map(
+      (_, i) => GALLERY_COLLECTIONS[i % GALLERY_COLLECTIONS.length]
+    );
+  }, [galleryCount, userCollections]);
+
+  const effectiveGalleryCount = displayedCollections.length;
+
+  const MainContentContainer = effectiveGalleryCount <= 4 ? ScrollView : View;
+  const mainContainerProps = effectiveGalleryCount <= 4
     ? {
         style: styles.flex1,
         contentContainerStyle: { flexGrow: 1 },
@@ -840,12 +939,12 @@ export default function ProfileScreen({ navigation }) {
                 <Animated.View
                   style={[
                     styles.galleryContainer,
-                    galleryCount > 4 && styles.galleryContainerScrollable,
+                    effectiveGalleryCount > 4 && styles.galleryContainerScrollable,
                     { opacity: galleryOpacity },
                   ]}
                   onLayout={handleGalleryLayout}
                 >
-                  {galleryCount === 0 ? (
+                  {effectiveGalleryCount === 0 ? (
                     <View
                       style={[
                         styles.emptyGalleryContainer,
@@ -862,7 +961,7 @@ export default function ProfileScreen({ navigation }) {
                       </Text>
                       <TouchableOpacity
                         style={styles.emptyGalleryBtn}
-                        onPress={() => setModalVisible(true)}
+                        onPress={() => setAddCollectionModalVisible(true)}
                         activeOpacity={0.75}
                       >
                         <Ionicons
@@ -876,21 +975,23 @@ export default function ProfileScreen({ navigation }) {
                         </Text>
                       </TouchableOpacity>
                     </View>
-                  ) : galleryCount <= 4 ? (
+                  ) : effectiveGalleryCount <= 4 ? (
                     <>
                       <View style={styles.galleryRow}>
-                        {galleryCount >= 1 ? (
+                        {displayedCollections[0] ? (
                           <PolaroidStackCard
-                            item={GALLERY_COLLECTIONS[0]}
+                            key={displayedCollections[0].id || "card_0"}
+                            item={displayedCollections[0]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
                           />
                         ) : (
                           <View style={styles.gallerySpacer} />
                         )}
-                        {galleryCount >= 2 ? (
+                        {displayedCollections[1] ? (
                           <PolaroidStackCard
-                            item={GALLERY_COLLECTIONS[1]}
+                            key={displayedCollections[1].id || "card_1"}
+                            item={displayedCollections[1]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
                           />
@@ -899,18 +1000,20 @@ export default function ProfileScreen({ navigation }) {
                         )}
                       </View>
                       <View style={styles.galleryRow}>
-                        {galleryCount >= 3 ? (
+                        {displayedCollections[2] ? (
                           <PolaroidStackCard
-                            item={GALLERY_COLLECTIONS[2]}
+                            key={displayedCollections[2].id || "card_2"}
+                            item={displayedCollections[2]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
                           />
                         ) : (
                           <View style={styles.gallerySpacer} />
                         )}
-                        {galleryCount >= 4 ? (
+                        {displayedCollections[3] ? (
                           <PolaroidStackCard
-                            item={GALLERY_COLLECTIONS[3]}
+                            key={displayedCollections[3].id || "card_3"}
+                            item={displayedCollections[3]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
                           />
@@ -940,21 +1043,17 @@ export default function ProfileScreen({ navigation }) {
                         />
                       }
                     >
-                      {Array.from({ length: Math.ceil(galleryCount / 2) }).map(
+                      {Array.from({ length: Math.ceil(effectiveGalleryCount / 2) }).map(
                         (_, rowIndex) => {
                           const leftIdx = rowIndex * 2;
                           const rightIdx = rowIndex * 2 + 1;
                           const leftItem =
-                            leftIdx < galleryCount
-                              ? GALLERY_COLLECTIONS[
-                                  leftIdx % GALLERY_COLLECTIONS.length
-                                ]
+                            leftIdx < effectiveGalleryCount
+                              ? displayedCollections[leftIdx]
                               : null;
                           const rightItem =
-                            rightIdx < galleryCount
-                              ? GALLERY_COLLECTIONS[
-                                  rightIdx % GALLERY_COLLECTIONS.length
-                                ]
+                            rightIdx < effectiveGalleryCount
+                              ? displayedCollections[rightIdx]
                               : null;
                           const animStyle = getRowAnimProps(rowIndex);
 
@@ -977,7 +1076,7 @@ export default function ProfileScreen({ navigation }) {
                             >
                               {leftItem ? (
                                 <PolaroidStackCard
-                                  key={`card_${leftIdx}`}
+                                  key={leftItem.id || `card_${leftIdx}`}
                                   item={leftItem}
                                   isDarkMode={isDarkMode}
                                   currentTheme={currentTheme}
@@ -988,7 +1087,7 @@ export default function ProfileScreen({ navigation }) {
 
                               {rightItem ? (
                                 <PolaroidStackCard
-                                  key={`card_${rightIdx}`}
+                                  key={rightItem.id || `card_${rightIdx}`}
                                   item={rightItem}
                                   isDarkMode={isDarkMode}
                                   currentTheme={currentTheme}
@@ -1287,11 +1386,11 @@ export default function ProfileScreen({ navigation }) {
                             })}
                           </View>
                           <View style={styles.collectionCountRow}>
-                            {[5, 6, 7, 8].map((num) => {
+                            {[5, 6, 7, 8, "*"].map((num) => {
                               const isSelected = galleryCount === num;
                               return (
                                 <TouchableOpacity
-                                  key={num}
+                                  key={String(num)}
                                   style={[
                                     styles.collectionCountBtn,
                                     !isDarkMode && styles.collectionCountBtnLight,
@@ -1314,7 +1413,6 @@ export default function ProfileScreen({ navigation }) {
                                 </TouchableOpacity>
                               );
                             })}
-                            <View style={{ flex: 1 }} />
                           </View>
                         </View>
 
@@ -1619,6 +1717,7 @@ export default function ProfileScreen({ navigation }) {
                         isFocused={isCollectionNameFocused}
                         currentTheme={currentTheme}
                         isDarkMode={isDarkMode}
+                        maxLength={30}
                         style={{ marginBottom: 4 }}
                         placeholder="Ex: viagem para europa, praias..."
                         placeholderTextColor={
@@ -1647,7 +1746,8 @@ export default function ProfileScreen({ navigation }) {
                           !isDarkMode && styles.addCollectionPhotoBoxLight,
                         ]}
                         activeOpacity={0.75}
-                        onPress={() => {}}
+                        disabled={isCreatingCollection}
+                        onPress={handlePickCollectionPhotos}
                       >
                         <View
                           style={[
@@ -1656,7 +1756,11 @@ export default function ProfileScreen({ navigation }) {
                           ]}
                         >
                           <Ionicons
-                            name="cloud-upload-outline"
+                            name={
+                              selectedCollectionPhotos.length > 0
+                                ? "checkmark-circle"
+                                : "cloud-upload-outline"
+                            }
                             size={26}
                             color={currentTheme.accent}
                           />
@@ -1667,7 +1771,9 @@ export default function ProfileScreen({ navigation }) {
                             !isDarkMode && styles.addCollectionPhotoTitleLight,
                           ]}
                         >
-                          Inserir fotos
+                          {selectedCollectionPhotos.length > 0
+                            ? `${selectedCollectionPhotos.length} foto${selectedCollectionPhotos.length > 1 ? "s" : ""} selecionada${selectedCollectionPhotos.length > 1 ? "s" : ""}`
+                            : "Inserir fotos"}
                         </Text>
                         <Text
                           style={[
@@ -1675,7 +1781,9 @@ export default function ProfileScreen({ navigation }) {
                             !isDarkMode && styles.addCollectionPhotoSubtitleLight,
                           ]}
                         >
-                          Toque para escolher fotos do dispositivo
+                          {selectedCollectionPhotos.length > 0
+                            ? "Toque para alterar as fotos"
+                            : "Toque para escolher fotos do dispositivo"}
                         </Text>
                       </TouchableOpacity>
 
@@ -1686,8 +1794,11 @@ export default function ProfileScreen({ navigation }) {
                             !isDarkMode && styles.addCollectionCancelBtnLight,
                           ]}
                           activeOpacity={0.7}
+                          disabled={isCreatingCollection}
                           onPress={() => {
+                            if (isCreatingCollection) return;
                             setNewCollectionName("");
+                            setSelectedCollectionPhotos([]);
                             setAddCollectionModalVisible(false);
                           }}
                         >
@@ -1705,16 +1816,19 @@ export default function ProfileScreen({ navigation }) {
                           style={[
                             styles.addCollectionSaveBtn,
                             { backgroundColor: currentTheme.accent },
+                            isCreatingCollection && { opacity: 0.7 },
                           ]}
                           activeOpacity={0.8}
-                          onPress={() => {
-                            setNewCollectionName("");
-                            setAddCollectionModalVisible(false);
-                          }}
+                          disabled={isCreatingCollection}
+                          onPress={handleSaveCollection}
                         >
-                          <Text style={styles.addCollectionSaveText}>
-                            Salvar
-                          </Text>
+                          {isCreatingCollection ? (
+                            <ActivityIndicator size="small" color="#000000" />
+                          ) : (
+                            <Text style={styles.addCollectionSaveText}>
+                              Salvar
+                            </Text>
+                          )}
                         </TouchableOpacity>
                       </View>
                     </View>
