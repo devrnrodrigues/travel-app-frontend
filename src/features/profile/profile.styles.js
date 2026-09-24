@@ -157,7 +157,7 @@ export const styles = StyleSheet.create({
   },
   modalHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     marginBottom: 25,
     width: "100%",
@@ -169,12 +169,6 @@ export const styles = StyleSheet.create({
   },
   modalTitleLight: {
     color: "#000000",
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerSpacer: {
-    width: 28,
   },
   label: {
     color: "#FFF",

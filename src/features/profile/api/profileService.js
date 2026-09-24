@@ -16,3 +16,11 @@ export async function uploadAvatarApi(imageUri) {
 
   return apiClient.post("/users/avatar", formData);
 }
+
+export async function getProfileApi() {
+  return apiClient.get("/users/me");
+}
+
+export async function updateProfileApi(data) {
+  return apiClient.put("/users/profile", data);
+}

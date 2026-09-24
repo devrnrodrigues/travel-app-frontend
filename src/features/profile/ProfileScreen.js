@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
+  RefreshControl,
   ImageBackground,
   TouchableWithoutFeedback,
   Animated,
@@ -45,7 +46,7 @@ import PolaroidStackCard from "./components/PolaroidStackCard";
 import { GALLERY_COLLECTIONS } from "./data/mockGallery";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
-import { uploadAvatarApi } from "./api/profileService";
+import { uploadAvatarApi, getProfileApi, updateProfileApi } from "./api/profileService";
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser } = useAuth();
@@ -98,6 +99,59 @@ export default function ProfileScreen({ navigation }) {
   const [bio, setBio] = useState("");
   const [galleryCount, setGalleryCount] = useState(4);
   const [hideFavorites, setHideFavorites] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasSyncedInitialProfile = useRef(false);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const syncProfileWithBackend = useCallback(async () => {
+    try {
+      const remoteUser = await getProfileApi();
+      if (remoteUser) {
+        const currentUser = userRef.current;
+        const updates = {};
+        if (remoteUser.avatarUrl !== undefined && remoteUser.avatarUrl !== currentUser?.avatarUrl) {
+          updates.avatarUrl = remoteUser.avatarUrl;
+        }
+        if (remoteUser.fullName && remoteUser.fullName !== currentUser?.fullName) {
+          updates.fullName = remoteUser.fullName;
+          setName(remoteUser.fullName);
+        }
+        if (remoteUser.bio !== undefined && remoteUser.bio !== null) {
+          updates.bio = remoteUser.bio;
+          setBio(remoteUser.bio);
+        }
+        if (remoteUser.nationality) {
+          updates.nationality = remoteUser.nationality;
+          setNationality(remoteUser.nationality);
+        }
+        const userId = currentUser?.id || remoteUser.id;
+        if (userId) {
+          const storedProfileJson = await AsyncStorage.getItem(`profile_${userId}`);
+          const parsed = storedProfileJson ? JSON.parse(storedProfileJson) : {};
+          if (remoteUser.bio !== undefined && remoteUser.bio !== null) parsed.bio = remoteUser.bio;
+          if (remoteUser.nationality) parsed.nationality = remoteUser.nationality;
+          await AsyncStorage.setItem(`profile_${userId}`, JSON.stringify(parsed));
+        }
+        if (Object.keys(updates).length > 0) {
+          await updateUser(updates);
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao sincronizar perfil:", err);
+    }
+  }, [updateUser]);
+
+  useEffect(() => {
+    if (!hasSyncedInitialProfile.current) {
+      hasSyncedInitialProfile.current = true;
+      syncProfileWithBackend();
+    }
+  }, [syncProfileWithBackend]);
+
   const queryClient = useQueryClient();
   const [focusedInput, setFocusedInput] = useState(null);
   const [hasTypedNationality, setHasTypedNationality] = useState(false);
@@ -527,7 +581,7 @@ export default function ProfileScreen({ navigation }) {
 
 
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       if (user) {
         setName(user.fullName || "");
@@ -558,7 +612,21 @@ export default function ProfileScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        syncProfileWithBackend(),
+        loadProfile(),
+      ]);
+    } catch (err) {
+      console.error("Erro no refresh:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [syncProfileWithBackend, loadProfile]);
 
   const handleGalleryCountChange = useCallback(async (count) => {
     setGalleryCount(count);
@@ -580,7 +648,18 @@ export default function ProfileScreen({ navigation }) {
     try {
       if (!user) throw new Error("Usuário não autenticado");
 
-      await updateUser({ fullName: name });
+      const updatedUser = await updateProfileApi({
+        fullName: name,
+        bio,
+        nationality,
+      });
+
+      await updateUser({
+        fullName: updatedUser?.fullName || name,
+        bio: updatedUser?.bio !== undefined ? updatedUser.bio : bio,
+        nationality: updatedUser?.nationality || nationality,
+      });
+
       await AsyncStorage.setItem(
         `profile_${user.id}`,
         JSON.stringify({ nationality, bio, galleryCount })
@@ -641,6 +720,29 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
+  const MainContentContainer = galleryCount <= 4 ? ScrollView : View;
+  const mainContainerProps = galleryCount <= 4
+    ? {
+        style: styles.flex1,
+        contentContainerStyle: { flexGrow: 1 },
+        showsVerticalScrollIndicator: false,
+        bounces: true,
+        alwaysBounceVertical: true,
+        pointerEvents: loading ? "none" : "auto",
+        refreshControl: (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={currentTheme?.accent || "#4CAF50"}
+            colors={[currentTheme?.accent || "#4CAF50"]}
+          />
+        ),
+      }
+    : {
+        style: styles.flex1,
+        pointerEvents: loading ? "none" : "auto",
+      };
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -665,7 +767,7 @@ export default function ProfileScreen({ navigation }) {
         >
           <SafeAreaView style={styles.flex1}>
             <View style={styles.flex1}>
-              <View style={styles.flex1} pointerEvents={loading ? "none" : "auto"}>
+              <MainContentContainer {...mainContainerProps}>
                 <Animated.View
                   style={[
                     styles.profileCard,
@@ -829,6 +931,14 @@ export default function ProfileScreen({ navigation }) {
                         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                         { useNativeDriver: Platform.OS !== "web" }
                       )}
+                      refreshControl={
+                        <RefreshControl
+                          refreshing={refreshing}
+                          onRefresh={handleRefresh}
+                          tintColor={currentTheme?.accent || "#4CAF50"}
+                          colors={[currentTheme?.accent || "#4CAF50"]}
+                        />
+                      }
                     >
                       {Array.from({ length: Math.ceil(galleryCount / 2) }).map(
                         (_, rowIndex) => {
@@ -893,7 +1003,7 @@ export default function ProfileScreen({ navigation }) {
                     </Animated.ScrollView>
                   )}
                 </Animated.View>
-              </View>
+              </MainContentContainer>
 
               {showSkeleton && (
                 <Animated.View
@@ -936,16 +1046,6 @@ export default function ProfileScreen({ navigation }) {
                           ]}
                         />
                         <View style={styles.modalHeader}>
-                          <TouchableOpacity
-                            onPress={handleCloseModal}
-                            style={styles.backButton}
-                          >
-                            <Ionicons
-                              name="chevron-back"
-                              size={28}
-                              color={!isDarkMode ? "#000000" : "#FFFFFF"}
-                            />
-                          </TouchableOpacity>
                           <Text
                             style={[
                               styles.modalTitle,
@@ -954,7 +1054,6 @@ export default function ProfileScreen({ navigation }) {
                           >
                             Editar Perfil
                           </Text>
-                          <View style={styles.headerSpacer} />
                         </View>
                       </View>
 
@@ -995,6 +1094,7 @@ export default function ProfileScreen({ navigation }) {
                           isFocused={isNationalityFocused}
                           currentTheme={currentTheme}
                           isDarkMode={isDarkMode}
+                          maxLength={20}
                           style={isNationalityFocused ? { marginBottom: 10 } : null}
                           value={nationality}
                           onChangeText={(text) => {
@@ -1064,6 +1164,7 @@ export default function ProfileScreen({ navigation }) {
                           }
                           multiline={true}
                           numberOfLines={4}
+                          maxLength={150}
                           value={bio}
                           onChangeText={setBio}
                           onFocus={() => setFocusedInput("bio")}
