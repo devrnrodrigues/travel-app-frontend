@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import {
   View,
   Text,
@@ -129,13 +129,13 @@ const ReviewDropdownMenu = React.memo(function ReviewDropdownMenu({
   );
 });
 
-export default function ReviewsSection({
+const ReviewsSection = forwardRef(function ReviewsSection({
   item,
   currentUser,
   currentTheme,
   isDarkMode,
   onRatingCalculated,
-}) {
+}, ref) {
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [inputComment, setInputComment] = useState("");
@@ -182,10 +182,12 @@ export default function ReviewsSection({
     setElevatedDropdownId((prev) => (prev === id ? null : prev));
   }, []);
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (isPull = false) => {
     try {
-      setLoadingReviews(true);
-      if (onRatingCalculated) onRatingCalculated("...", true);
+      if (!isPull) {
+        setLoadingReviews(true);
+        if (onRatingCalculated) onRatingCalculated("...", true);
+      }
       const data = await getCommentsApi(item.id);
       const list = data.comments || [];
       setReviews(list);
@@ -203,6 +205,10 @@ export default function ReviewsSection({
       setLoadingReviews(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    fetchReviews,
+  }), [item?.id]);
 
   useEffect(() => {
     if (item?.id) {
@@ -372,6 +378,7 @@ export default function ReviewsSection({
       setShowForm(false);
       fetchReviews();
     } catch (err) {
+      console.error(err);
       alert(err.message || "Não foi possível enviar sua avaliação.");
     } finally {
       setIsSubmitting(false);
@@ -691,4 +698,6 @@ export default function ReviewsSection({
       />
     </>
   );
-}
+});
+
+export default ReviewsSection;

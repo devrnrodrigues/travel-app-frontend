@@ -14,6 +14,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  RefreshControl,
 } from "react-native";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -144,6 +145,8 @@ export default function Details({ route, navigation }) {
     null,
   ]);
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const reviewsSectionRef = useRef(null);
 
   const [isFavorited, setIsFavorited] = useState(!!item.item_id);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
@@ -264,20 +267,20 @@ export default function Details({ route, navigation }) {
     return () => backHandler.remove();
   }, [isImageModalVisible]);
 
+  const loadFavoriteStatus = useCallback(async () => {
+    if (!user || !item?.id) return;
+    try {
+      const isFav = await checkFavoriteApi(item.id);
+      setIsFavorited(isFav);
+    } catch (error) {
+      console.error("Erro ao verificar favorito:", error);
+    }
+  }, [item?.id, user]);
+
   useFocusEffect(
     useCallback(() => {
-      const loadFavoriteStatus = async () => {
-        if (!user || !item?.id) return;
-        try {
-          const isFav = await checkFavoriteApi(item.id);
-          setIsFavorited(isFav);
-        } catch (error) {
-          console.error("Erro ao verificar favorito:", error);
-        }
-      };
-
       loadFavoriteStatus();
-    }, [item?.id, user])
+    }, [loadFavoriteStatus])
   );
 
   const toggleFavorite = async () => {
@@ -306,21 +309,21 @@ export default function Details({ route, navigation }) {
     }
   };
 
-  const fetchWeatherData = async () => {
+  const fetchWeatherData = useCallback(async (isPull = false) => {
     try {
-      setLoadingWeather(true);
+      if (!isPull) setLoadingWeather(true);
       const weatherData = await getWeather(item.id || item.item_id);
       setWeather(weatherData);
     } catch {
-      setWeather(null);
+      if (!isPull) setWeather(null);
     } finally {
       setLoadingWeather(false);
     }
-  };
+  }, [item?.id, item?.item_id]);
 
-  const fetchAiDescription = async () => {
+  const fetchAiDescription = useCallback(async (isPull = false) => {
     try {
-      setLoadingAi(true);
+      if (!isPull) setLoadingAi(true);
       const geminiText = await getAiDescription(item);
       const loremParagraphs =
         "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\nSed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.";
@@ -328,15 +331,15 @@ export default function Details({ route, navigation }) {
       setDescription(fullText);
     } catch (error) {
       console.error(error);
-      setDescription("Não foi possível carregar a descrição gerada por IA.");
+      if (!isPull) setDescription("Não foi possível carregar a descrição gerada por IA.");
     } finally {
       setLoadingAi(false);
     }
-  };
+  }, [item]);
 
-  const fetchPrice = async () => {
+  const fetchPrice = useCallback(async (isPull = false) => {
     try {
-      setLoadingPrice(true);
+      if (!isPull) setLoadingPrice(true);
       const price = await getAiPrice(item);
       setEstimatedPrice(price);
     } catch (error) {
@@ -344,11 +347,11 @@ export default function Details({ route, navigation }) {
     } finally {
       setLoadingPrice(false);
     }
-  };
+  }, [item]);
 
-  const fetchPexelsImages = async () => {
+  const fetchPexelsImages = useCallback(async (isPull = false) => {
     try {
-      setLoadingPexels(true);
+      if (!isPull) setLoadingPexels(true);
       const images = await getPexelsImages(item);
       if (images?.length) {
         const filtered = images.filter((img) => img !== item.image_url);
@@ -359,11 +362,27 @@ export default function Details({ route, navigation }) {
       }
     } catch (error) {
       console.error(error);
-      setThumbnails([item.image_url]);
+      if (!isPull) setThumbnails([item.image_url]);
     } finally {
       setLoadingPexels(false);
     }
-  };
+  }, [item]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchWeatherData(true),
+        fetchAiDescription(true),
+        fetchPexelsImages(true),
+        fetchPrice(true),
+        loadFavoriteStatus(),
+        reviewsSectionRef.current?.fetchReviews ? reviewsSectionRef.current.fetchReviews(true) : Promise.resolve(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchWeatherData, fetchAiDescription, fetchPexelsImages, fetchPrice, loadFavoriteStatus]);
 
   useEffect(() => {
     setShowWeatherInfo(false);
@@ -383,7 +402,7 @@ export default function Details({ route, navigation }) {
       fetchPexelsImages(),
       fetchPrice(),
     ]);
-  }, [item?.id]);
+  }, [item?.id, fetchWeatherData, fetchAiDescription, fetchPexelsImages, fetchPrice]);
 
   return (
     <Animated.View
@@ -479,7 +498,17 @@ export default function Details({ route, navigation }) {
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
           contentContainerStyle={[styles.scrollContent, { paddingTop: 16, paddingBottom: 24 }]}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={currentTheme.accent}
+              colors={[currentTheme.accent]}
+              progressBackgroundColor={isDarkMode ? "#161616" : "#FFFFFF"}
+            />
+          }
         >
           <View style={styles.rowCenterMarginBottom8}>
             <Text style={[styles.descriptionHeader, { marginBottom: 0, flex: 1 }, !isDarkMode && { color: "#111827" }]}>
@@ -701,6 +730,7 @@ export default function Details({ route, navigation }) {
           )}
 
           <ReviewsSection
+            ref={reviewsSectionRef}
             item={item}
             currentUser={user}
             currentTheme={currentTheme}
