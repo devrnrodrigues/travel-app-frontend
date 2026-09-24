@@ -11,8 +11,12 @@ import {
   Keyboard,
   Platform,
   StyleSheet,
+  Image,
+  ScrollView,
+  Alert,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import * as ImagePicker from "expo-image-picker";
 import reviewStyles from "../styles/reviews.styles";
 
 export function ReviewFormModal({
@@ -29,6 +33,7 @@ export function ReviewFormModal({
   currentTheme,
   isDarkMode,
 }) {
+  const [selectedImages, setSelectedImages] = useState([]);
   const [isCommentFocused, setIsCommentFocused] = useState(false);
   const commentFocusAnim = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.92)).current;
@@ -36,6 +41,7 @@ export function ReviewFormModal({
 
   useEffect(() => {
     if (visible) {
+      setSelectedImages([]);
       modalScale.setValue(0.92);
       modalTranslateY.setValue(0);
       Animated.spring(modalScale, {
@@ -99,6 +105,43 @@ export function ReviewFormModal({
       useNativeDriver: false,
     }).start();
   }, [commentFocusAnim]);
+
+  const handlePickImages = async () => {
+    if (selectedImages.length >= 5) {
+      Alert.alert("Limite atingido", "Você pode anexar no máximo 5 fotos.");
+      return;
+    }
+
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "É necessário permitir o acesso à galeria para anexar fotos."
+        );
+        return;
+      }
+
+      const remaining = 5 - selectedImages.length;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsMultipleSelection: true,
+        selectionLimit: remaining,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newUris = result.assets.map((a) => a.uri);
+        setSelectedImages((prev) => [...prev, ...newUris].slice(0, 5));
+      }
+    } catch {
+      Alert.alert("Erro", "Não foi possível selecionar as fotos.");
+    }
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setSelectedImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
 
   return (
     <Modal
@@ -200,32 +243,60 @@ export function ReviewFormModal({
             />
           </Animated.View>
 
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={[
-              reviewStyles.addImageButton,
-              !isDarkMode && reviewStyles.addImageButtonLight,
-            ]}
-          >
-            <Ionicons
-              name="images-outline"
-              size={18}
-              color={currentTheme.accent}
-            />
-            <Text
+          {!editingReviewId && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handlePickImages}
               style={[
-                reviewStyles.addImageButtonText,
-                !isDarkMode && reviewStyles.addImageButtonTextLight,
+                reviewStyles.addImageButton,
+                !isDarkMode && reviewStyles.addImageButtonLight,
               ]}
             >
-              Adicionar fotos
-            </Text>
-          </TouchableOpacity>
+              <Ionicons
+                name="images-outline"
+                size={18}
+                color={currentTheme.accent}
+              />
+              <Text
+                style={[
+                  reviewStyles.addImageButtonText,
+                  !isDarkMode && reviewStyles.addImageButtonTextLight,
+                ]}
+              >
+                {selectedImages.length > 0
+                  ? `Fotos (${selectedImages.length}/5)`
+                  : "Adicionar fotos"}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {selectedImages.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={reviewStyles.selectedImagesScroll}
+              contentContainerStyle={reviewStyles.selectedImagesContent}
+            >
+              {selectedImages.map((uri, index) => (
+                <View key={uri + index} style={reviewStyles.selectedImageWrapper}>
+                  <Image source={{ uri }} style={reviewStyles.selectedImageThumbnail} />
+                  <TouchableOpacity
+                    style={reviewStyles.removeImageBadge}
+                    onPress={() => handleRemoveImage(index)}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  >
+                    <Ionicons name="close" size={12} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
 
           <TouchableOpacity
             onPress={() => {
               Keyboard.dismiss();
-              onSubmit();
+              onSubmit(selectedImages);
             }}
             disabled={isSubmitting}
             style={[reviewStyles.submitBtn, { backgroundColor: currentTheme.accent }]}

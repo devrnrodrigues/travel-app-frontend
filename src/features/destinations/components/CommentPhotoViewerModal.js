@@ -69,6 +69,16 @@ export default function CommentPhotoViewerModal({
     >
       <StatusBar barStyle="light-content" backgroundColor="#000000" translucent={true} />
       <View style={viewerStyles.container}>
+        {Platform.OS === "web" && (
+          <TouchableOpacity
+            style={viewerStyles.webCloseBtn}
+            onPress={onClose}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="close" size={26} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
         <SafeAreaView style={viewerStyles.safeArea} edges={["top", "bottom"]}>
           <View style={viewerStyles.contentArea}>
             {Platform.OS === "web" ? (
@@ -177,6 +187,18 @@ const viewerStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
+  },
+  webCloseBtn: {
+    position: "absolute",
+    top: 24,
+    right: 24,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 50,
   },
   webNavBtn: {
     position: "absolute",

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   TouchableOpacity,
@@ -10,46 +10,26 @@ import {
 
 const SLOT_CONFIGS = [
   { transX: 0, transY: 0, rot: 0, scale: 1, dim: 0, opacity: 1 },
-  { transX: 5, transY: -2.5, rot: 5, scale: 0.94, dim: 0.1, opacity: 1 },
-  { transX: -5, transY: -5, rot: -5, scale: 0.88, dim: 0.18, opacity: 1 },
-];
-
-export const MOCK_COMMENT_PHOTOS = [
-  {
-    id: "cp1",
-    url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1000&auto=format&fit=crop&q=80",
-  },
-  {
-    id: "cp2",
-    url: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=1000&auto=format&fit=crop&q=80",
-  },
-  {
-    id: "cp3",
-    url: "https://images.unsplash.com/photo-1434394354979-a235cd36269d?w=1000&auto=format&fit=crop&q=80",
-  },
+  { transX: 5, transY: -2.5, rot: 5.5, scale: 0.94, dim: 0.1, opacity: 1 },
+  { transX: -5, transY: -5, rot: -5.5, scale: 0.88, dim: 0.18, opacity: 1 },
+  { transX: 3, transY: -7, rot: 3, scale: 0.82, dim: 0.25, opacity: 0.9 },
+  { transX: -3, transY: -9, rot: -3, scale: 0.78, dim: 0.3, opacity: 0.85 },
 ];
 
 export default function CommentPolaroid({
-  photos = MOCK_COMMENT_PHOTOS,
+  photos = [],
   onOpenViewer,
 }) {
   const total = photos.length;
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [zIndices, setZIndices] = useState(() =>
-    photos.map((_, i) => {
-      const offset = (i + total) % total;
-      if (offset === 0) return 10;
-      if (offset === 1) return 9;
-      if (offset === 2) return 8;
-      return 1;
-    })
+    photos.map((_, i) => Math.max(1, 10 - i))
   );
 
   const anims = useRef(
     photos.map((_, i) => {
-      const offset = (i + total) % total;
-      const cfg = offset < 3 ? SLOT_CONFIGS[offset] : SLOT_CONFIGS[2];
+      const cfg = i < SLOT_CONFIGS.length ? SLOT_CONFIGS[i] : SLOT_CONFIGS[SLOT_CONFIGS.length - 1];
       return {
         transX: new Animated.Value(cfg.transX),
         transY: new Animated.Value(cfg.transY),
@@ -61,6 +41,11 @@ export default function CommentPolaroid({
     })
   ).current;
 
+  useEffect(() => {
+    setCurrentIndex(0);
+    setZIndices(photos.map((_, i) => Math.max(1, 10 - i)));
+  }, [total]);
+
   const handlePress = useCallback(() => {
     if (total <= 1) return;
 
@@ -69,48 +54,48 @@ export default function CommentPolaroid({
 
     const nextZ = photos.map((_, i) => {
       const offset = (i - nextIndex + total) % total;
-      if (offset === 0) return 10;
-      if (offset === 1) return 9;
-      if (offset === 2) return 8;
-      return 1;
+      return Math.max(1, 10 - offset);
     });
     setZIndices(nextZ);
 
     const useNative = Platform.OS !== "web";
     const parallelAnimations = photos.map((_, i) => {
       const offset = (i - nextIndex + total) % total;
-      const cfg = offset < 3 ? SLOT_CONFIGS[offset] : SLOT_CONFIGS[2];
+      const cfg = offset < SLOT_CONFIGS.length ? SLOT_CONFIGS[offset] : SLOT_CONFIGS[SLOT_CONFIGS.length - 1];
+      const curAnim = anims[i];
+      if (!curAnim) return Animated.delay(0);
+
       return Animated.parallel([
-        Animated.spring(anims[i].transX, {
+        Animated.spring(curAnim.transX, {
           toValue: cfg.transX,
           friction: 7,
           tension: 50,
           useNativeDriver: useNative,
         }),
-        Animated.spring(anims[i].transY, {
+        Animated.spring(curAnim.transY, {
           toValue: cfg.transY,
           friction: 7,
           tension: 50,
           useNativeDriver: useNative,
         }),
-        Animated.spring(anims[i].rot, {
+        Animated.spring(curAnim.rot, {
           toValue: cfg.rot,
           friction: 7,
           tension: 50,
           useNativeDriver: useNative,
         }),
-        Animated.spring(anims[i].scale, {
+        Animated.spring(curAnim.scale, {
           toValue: cfg.scale,
           friction: 7,
           tension: 50,
           useNativeDriver: useNative,
         }),
-        Animated.timing(anims[i].dim, {
+        Animated.timing(curAnim.dim, {
           toValue: cfg.dim,
           duration: 220,
           useNativeDriver: useNative,
         }),
-        Animated.timing(anims[i].opacity, {
+        Animated.timing(curAnim.opacity, {
           toValue: cfg.opacity,
           duration: 220,
           useNativeDriver: useNative,
@@ -126,6 +111,8 @@ export default function CommentPolaroid({
       onOpenViewer(photos, currentIndex);
     }
   }, [photos, currentIndex, onOpenViewer]);
+
+  if (!photos || total === 0) return null;
 
   return (
     <View style={polaroidStyles.wrapper}>
@@ -159,7 +146,7 @@ export default function CommentPolaroid({
                 polaroidStyles.card,
                 {
                   zIndex: zIndices[i] || 1,
-                  elevation: zIndices[i] === 10 ? 2 : 1,
+                  elevation: (zIndices[i] === 10 || total === 1) ? 2 : 1,
                   opacity: curAnim.opacity,
                   transform: [
                     { translateX: curAnim.transX },

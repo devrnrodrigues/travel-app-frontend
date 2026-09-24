@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { apiClient } from "../../../config/apiClient";
 
 export async function getCommentsApi(destinationId) {
@@ -26,11 +28,61 @@ export async function getCommentsApi(destinationId) {
       updated_at: item.updatedAt,
       helpfulCount: Number(item.helpfulCount ?? item.helpful_count ?? 0),
       isHelpful: Boolean(item.isHelpful ?? item.is_helpful ?? false),
+      photos: (item.photos || []).map((p) => ({
+        id: p.id,
+        url: p.url,
+        orderIndex: p.orderIndex,
+      })),
     })),
   };
 }
 
-export async function createCommentApi(destinationId, { rating, content }) {
+export async function createCommentApi(destinationId, { rating, content, images = [] }) {
+  if (Array.isArray(images) && images.length > 0) {
+    const formData = new FormData();
+    formData.append("rating", String(Math.round(Number(rating))));
+    formData.append("content", content.trim());
+
+    for (let i = 0; i < images.length; i++) {
+      const uri = images[i];
+      let manipulatedUri = uri;
+      try {
+        const manipulated = await manipulateAsync(
+          uri,
+          [],
+          { format: SaveFormat.WEBP, compress: 0.85 }
+        );
+        manipulatedUri = manipulated.uri;
+      } catch {
+        manipulatedUri = uri;
+      }
+
+      const filename = `comment_${Date.now()}_${i}.webp`;
+
+      if (Platform.OS === "web") {
+        try {
+          const res = await fetch(manipulatedUri);
+          const blob = await res.blob();
+          formData.append("files", blob, filename);
+        } catch {
+          formData.append("files", {
+            uri: manipulatedUri,
+            name: filename,
+            type: "image/webp",
+          });
+        }
+      } else {
+        formData.append("files", {
+          uri: manipulatedUri,
+          name: filename,
+          type: "image/webp",
+        });
+      }
+    }
+
+    return apiClient.post(`/destinations/${destinationId}/comments`, formData);
+  }
+
   return apiClient.post(`/destinations/${destinationId}/comments`, {
     rating: Math.round(Number(rating)),
     content: content.trim(),

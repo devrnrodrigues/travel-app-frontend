@@ -334,7 +334,7 @@ export default function ReviewsSection({
     }
   };
 
-  const handleSendReview = async () => {
+  const handleSendReview = async (attachedImages = []) => {
     const trimmed = inputComment.trim();
     if (!trimmed) {
       alert("Por favor, escreva um comentário antes de enviar.");
@@ -351,6 +351,7 @@ export default function ReviewsSection({
         await createCommentApi(item.id, {
           rating: selectedRating,
           content: trimmed,
+          images: attachedImages,
         });
       }
       setInputComment("");
@@ -545,7 +546,12 @@ export default function ReviewsSection({
                             ) : null}
                           </View>
 
-                          <CommentPolaroid onOpenViewer={handleOpenPolaroidViewer} />
+                          {rev.photos && rev.photos.length > 0 && (
+                            <CommentPolaroid
+                              photos={rev.photos}
+                              onOpenViewer={handleOpenPolaroidViewer}
+                            />
+                          )}
                         </View>
 
                         <View style={reviewStyles.commentFooterRow}>

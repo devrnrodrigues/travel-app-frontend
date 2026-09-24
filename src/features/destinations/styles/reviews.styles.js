@@ -450,6 +450,42 @@ const reviewStyles = StyleSheet.create({
     color: "#374151",
   },
 
+  selectedImagesScroll: {
+    marginBottom: 8,
+  },
+
+  selectedImagesContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  selectedImageWrapper: {
+    position: "relative",
+    width: 52,
+    height: 52,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+
+  selectedImageThumbnail: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
+  },
+
+  removeImageBadge: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   submitBtn: {
     paddingVertical: 14,
     borderRadius: 12,
