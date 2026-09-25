@@ -130,6 +130,7 @@ export default function Home({ navigation }) {
     isFetchingPreviousPage,
   } = useInfiniteQuery({
     queryKey: ["destinations", "home", selectedCategory],
+    enabled: Boolean(selectedCategory),
     queryFn: async ({ pageParam = 0 }) => {
       const result = await getDestinations({
         category: selectedCategory,
