@@ -192,19 +192,36 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
         <View
           style={[styles.imageWrapper, { width: imageSize, height: imageSize }]}
         >
-          <Animated.Image
-            source={{ uri: item.image_url }}
-            style={[{ width: imageSize, height: imageSize, borderRadius: 13, opacity: imgAnim }]}
-            onLoad={handleImageLoad}
-          />
-          {!imageLoaded && (
-            <SkeletonBox
-              width={imageSize}
-              height={imageSize}
-              borderRadius={13}
-              isDarkMode={isDarkMode}
-              style={isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight}
-            />
+          {item.image_url ? (
+            <>
+              <Animated.Image
+                source={{ uri: item.image_url }}
+                style={[{ width: imageSize, height: imageSize, borderRadius: 13, opacity: imgAnim }]}
+                onLoad={handleImageLoad}
+              />
+              {!imageLoaded && (
+                <SkeletonBox
+                  width={imageSize}
+                  height={imageSize}
+                  borderRadius={13}
+                  isDarkMode={isDarkMode}
+                  style={isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight}
+                />
+              )}
+            </>
+          ) : (
+            <View
+              style={{
+                width: imageSize,
+                height: imageSize,
+                borderRadius: 13,
+                backgroundColor: isDarkMode ? "#252525" : "#E2E2E2",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons name="image-outline" size={Math.round(imageSize * 0.45)} color={isDarkMode ? "#666" : "#999"} />
+            </View>
           )}
         </View>
 
