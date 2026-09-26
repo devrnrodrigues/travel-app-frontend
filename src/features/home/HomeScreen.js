@@ -137,19 +137,10 @@ export default function Home({ navigation }) {
         page: pageParam,
         size: PAGE_SIZE,
       });
-      return (result || []).map((destination) => {
-        if (!destination.image_url) {
-          return {
-            ...destination,
-            image_url: selectedTheme.bg,
-            isLocalSource: typeof selectedTheme.bg !== "string",
-          };
-        }
-        return {
-          ...destination,
-          isLocalSource: false,
-        };
-      });
+      return (result || []).map((destination) => ({
+        ...destination,
+        isLocalSource: false,
+      }));
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages, lastPageParam) => {

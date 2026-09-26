@@ -10,19 +10,18 @@ const HomeCardItem = React.memo(function HomeCardItem({
   isDarkMode,
   navigation,
 }) {
-  const isLocal = item.isLocalSource || typeof item.image_url !== "string";
-  const [imageLoaded, setImageLoaded] = useState(isLocal);
-  const imgAnim = useRef(new Animated.Value(isLocal ? 1 : 0)).current;
+  const hasImage = Boolean(item.image_url && typeof item.image_url === "string" && item.image_url.startsWith("http"));
+  const isLocal = !hasImage && Boolean(item.isLocalSource && item.image_url);
+  const cardImgSource = isLocal ? item.image_url : (hasImage ? { uri: item.image_url } : null);
+
+  const [imageLoaded, setImageLoaded] = useState(Boolean(cardImgSource && isLocal));
+  const imgAnim = useRef(new Animated.Value(cardImgSource && isLocal ? 1 : 0)).current;
 
   const hasRating =
     Number(item.rating) > 0 &&
     item.realRating !== "0.0" &&
     item.realRating !== "0" &&
     Boolean(item.realRating);
-
-  const cardImgSource = isLocal
-    ? (item.image_url || currentTheme.bg)
-    : { uri: item.image_url };
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -39,11 +38,36 @@ const HomeCardItem = React.memo(function HomeCardItem({
       style={styles.card}
       onPress={() => navigation.navigate("Details", { item, currentTheme })}
     >
-      <Animated.Image
-        source={cardImgSource}
-        style={[styles.cardImage, { opacity: imgAnim }]}
-        onLoad={handleImageLoad}
-      />
+      {cardImgSource ? (
+        <Animated.Image
+          source={cardImgSource}
+          style={[styles.cardImage, { opacity: imgAnim }]}
+          onLoad={handleImageLoad}
+        />
+      ) : (
+        <View
+          style={[
+            styles.cardImage,
+            {
+              backgroundColor: isDarkMode ? "#181818" : "#242424",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          ]}
+        >
+          <Ionicons name="image-outline" size={48} color="rgba(255, 255, 255, 0.35)" />
+          <Text
+            style={{
+              color: "rgba(255, 255, 255, 0.6)",
+              marginTop: 12,
+              fontSize: 14,
+              fontWeight: "500",
+            }}
+          >
+            Sem imagens disponível.
+          </Text>
+        </View>
+      )}
       <View
         style={[
           styles.cardInfo,
@@ -60,7 +84,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
           },
         ]}
       >
-        {Platform.OS === "android" && !isDarkMode && (
+        {Platform.OS === "android" && !isDarkMode && cardImgSource && (
           <Image
             source={cardImgSource}
             blurRadius={3}

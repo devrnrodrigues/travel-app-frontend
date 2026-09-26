@@ -39,19 +39,36 @@ const SearchCardItem = React.memo(function SearchCardItem({
         <View
           style={[styles.searchCardImageWrapper, { width: imageSize, height: imageSize }]}
         >
-          <Animated.Image
-            source={item.isLocalSource || typeof item.image_url !== "string" ? item.image_url : { uri: item.image_url }}
-            style={[{ width: imageSize, height: imageSize, borderRadius: 13, opacity: imgAnim }]}
-            onLoad={handleImageLoad}
-          />
-          {!imageLoaded && (
-            <SkeletonBox
-              width={imageSize}
-              height={imageSize}
-              borderRadius={13}
-              isDarkMode={isDarkMode}
-              style={isDarkMode ? styles.searchCardSkeletonDark : styles.searchCardSkeletonLight}
-            />
+          {item.image_url ? (
+            <>
+              <Animated.Image
+                source={item.isLocalSource || typeof item.image_url !== "string" ? item.image_url : { uri: item.image_url }}
+                style={[{ width: imageSize, height: imageSize, borderRadius: 13, opacity: imgAnim }]}
+                onLoad={handleImageLoad}
+              />
+              {!imageLoaded && (
+                <SkeletonBox
+                  width={imageSize}
+                  height={imageSize}
+                  borderRadius={13}
+                  isDarkMode={isDarkMode}
+                  style={isDarkMode ? styles.searchCardSkeletonDark : styles.searchCardSkeletonLight}
+                />
+              )}
+            </>
+          ) : (
+            <View
+              style={{
+                width: imageSize,
+                height: imageSize,
+                borderRadius: 13,
+                backgroundColor: isDarkMode ? "#252525" : "#E2E2E2",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons name="image-outline" size={Math.round(imageSize * 0.45)} color={isDarkMode ? "#666" : "#999"} />
+            </View>
           )}
         </View>
 
