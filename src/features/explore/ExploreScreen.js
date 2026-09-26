@@ -72,14 +72,43 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
       ]}
       onPress={handlePress}
     >
-      <Animated.Image
-        source={{ uri: item.image_url }}
-        style={[styles.gridImage, { opacity: imgAnim }]}
-        resizeMode="cover"
-        onLoad={handleImageLoad}
-      />
-      {!imageLoaded && (
-        <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight]} />
+      {item.image_url ? (
+        <>
+          <Animated.Image
+            source={{ uri: item.image_url }}
+            style={[styles.gridImage, { opacity: imgAnim }]}
+            resizeMode="cover"
+            onLoad={handleImageLoad}
+          />
+          {!imageLoaded && (
+            <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight]} />
+          )}
+        </>
+      ) : (
+        <View
+          style={[
+            styles.gridImage,
+            {
+              backgroundColor: isDarkMode ? "#1A1A1A" : "#262626",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 8,
+            },
+          ]}
+        >
+          <Ionicons name="image-outline" size={32} color="rgba(255, 255, 255, 0.35)" />
+          <Text
+            style={{
+              color: "rgba(255, 255, 255, 0.6)",
+              fontSize: 11,
+              textAlign: "center",
+              marginTop: 6,
+              fontWeight: "500",
+            }}
+          >
+            Sem imagens disponível.
+          </Text>
+        </View>
       )}
 
       {hasReviews && ratingValue ? (

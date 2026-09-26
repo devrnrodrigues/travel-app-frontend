@@ -219,6 +219,10 @@ export const categoryThemes = {
   "ilhas": { colors: ["rgba(10, 25, 30, 0.60)", "rgba(19, 43, 51, 0.70)", "rgba(28, 61, 71, 0.80)"], accent: "#26A69A" },
   "Interior": { colors: ["rgba(10, 10, 10, 0.70)", "rgba(18, 18, 18, 0.80)", "rgba(25, 25, 25, 0.90)"], accent: "#AED581" },
   "interior": { colors: ["rgba(10, 10, 10, 0.70)", "rgba(18, 18, 18, 0.80)", "rgba(25, 25, 25, 0.90)"], accent: "#AED581" },
+  "Cidades": { colors: ["rgba(16, 24, 40, 0.60)", "rgba(28, 41, 66, 0.70)", "rgba(42, 60, 92, 0.80)"], accent: "#3B82F6" },
+  "cidades": { colors: ["rgba(16, 24, 40, 0.60)", "rgba(28, 41, 66, 0.70)", "rgba(42, 60, 92, 0.80)"], accent: "#3B82F6" },
+  "Cidade": { colors: ["rgba(16, 24, 40, 0.60)", "rgba(28, 41, 66, 0.70)", "rgba(42, 60, 92, 0.80)"], accent: "#3B82F6" },
+  "cidade": { colors: ["rgba(16, 24, 40, 0.60)", "rgba(28, 41, 66, 0.70)", "rgba(42, 60, 92, 0.80)"], accent: "#3B82F6" },
 };
 
 export const defaultTheme = {
