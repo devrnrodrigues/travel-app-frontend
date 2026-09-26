@@ -9,7 +9,7 @@ export const THEMES_BY_CAT = {
     colors: ["rgba(11, 29, 38, 0.60)", "rgba(18, 46, 59, 0.70)", "rgba(26, 66, 82, 0.80)"],
     accent: "#00B4D8",
     icon: "waves",
-    bg: "https://images.pexels.com/photos/1007657/pexels-photo-1007657.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    bg: "https://images.pexels.com/photos/21832892/pexels-photo-21832892.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
   2: {
     colors: ["rgba(26, 26, 26, 0.60)", "rgba(45, 45, 45, 0.70)", "rgba(61, 61, 61, 0.80)"],
@@ -33,7 +33,7 @@ export const THEMES_BY_CAT = {
     colors: ["rgba(26, 36, 43, 0.60)", "rgba(44, 58, 69, 0.70)", "rgba(61, 80, 94, 0.80)"],
     accent: "#E0F7FA",
     icon: "snowflake",
-    bg: "https://images.pexels.com/photos/839462/pexels-photo-839462.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    bg: "https://images.pexels.com/photos/35636196/pexels-photo-35636196.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
   6: {
     colors: ["rgba(28, 22, 17, 0.60)", "rgba(46, 37, 29, 0.70)", "rgba(64, 51, 41, 0.80)"],
