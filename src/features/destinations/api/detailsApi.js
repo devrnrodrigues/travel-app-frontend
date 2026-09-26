@@ -3,7 +3,6 @@ import { apiClient } from "../../../config/apiClient";
 import { ENV } from "../../../config/env";
 
 const GEMINI_API_KEY = ENV.GEMINI_API_KEY;
-const PEXELS_API_KEY = ENV.PEXELS_API_KEY;
 
 export async function getWeather(destinationId) {
   if (!destinationId) return null;
@@ -113,20 +112,6 @@ export async function getAiPrice(item) {
   return isNaN(number) ? null : number;
 }
 
-export async function getPexelsImages(item) {
-  const cacheKey = `@pexels_thumbs_${item.id}`;
-  const cached = await AsyncStorage.getItem(cacheKey);
-  if (cached) return JSON.parse(cached);
-
-  const query = encodeURIComponent(`${item.title.trim()} ${item.location.trim()}`);
-
-  const response = await fetch(
-    `https://api.pexels.com/v1/search?query=${query}&per_page=6`,
-    { headers: { Authorization: PEXELS_API_KEY } }
-  );
-
-  const data = await response.json();
-  const images = data?.photos?.map((photo) => photo.src.large) || [item.image_url];
-  await AsyncStorage.setItem(cacheKey, JSON.stringify(images));
-  return images;
+export async function getPexelsImages() {
+  return [];
 }

@@ -30,7 +30,6 @@ import {
   getWeather,
   getAiDescription,
   getAiPrice,
-  getPexelsImages,
 } from "./api/detailsApi";
 import { getDestinationById } from "./api/destinationService";
 import { useAuth } from "../auth/context/AuthContext";
@@ -158,15 +157,10 @@ export default function Details({ route, navigation }) {
   const [weather, setWeather] = useState(null);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingAi, setLoadingAi] = useState(true);
-  const [loadingPexels, setLoadingPexels] = useState(true);
 
-  const [mainImage, setMainImage] = useState(item.image_url);
-  const [thumbnails, setThumbnails] = useState([
-    item.image_url,
-    null,
-    null,
-    null,
-  ]);
+  const initialImg = item.image_url || item.coverImageUrl || null;
+  const [mainImage, setMainImage] = useState(initialImg);
+  const [thumbnails, setThumbnails] = useState(initialImg ? [initialImg] : []);
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const reviewsSectionRef = useRef(null);
@@ -340,7 +334,6 @@ export default function Details({ route, navigation }) {
       if (!isPull) {
         setLoadingWeather(true);
         setLoadingAi(true);
-        setLoadingPexels(true);
       }
       const data = await getDestinationById(destId);
       if (data) {
@@ -378,10 +371,8 @@ export default function Details({ route, navigation }) {
           setMainImage(allImages[0]);
           setThumbnails(allImages.slice(0, 4));
         } else {
-          const pexelsImgs = await getPexelsImages(item);
-          if (pexelsImgs?.length) {
-            setThumbnails(pexelsImgs.slice(0, 4));
-          }
+          setMainImage(null);
+          setThumbnails([]);
         }
       }
     } catch {
@@ -398,7 +389,6 @@ export default function Details({ route, navigation }) {
     } finally {
       setLoadingWeather(false);
       setLoadingAi(false);
-      setLoadingPexels(false);
     }
   }, [item]);
 
@@ -431,15 +421,9 @@ export default function Details({ route, navigation }) {
   useEffect(() => {
     setShowWeatherInfo(false);
     weatherInfoAnim.setValue(0);
-    setIsDescriptionExpanded(false);
-    setMainImage(item.image_url);
-    setLoadingPexels(true);
-    setThumbnails([
-      item.image_url,
-      null,
-      null,
-      null,
-    ]);
+    const currentImg = item.image_url || item.coverImageUrl || null;
+    setMainImage(currentImg);
+    setThumbnails(currentImg ? [currentImg] : []);
     Promise.all([
       fetchDestinationDetails(),
       fetchPrice(),
@@ -459,13 +443,38 @@ export default function Details({ route, navigation }) {
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       <View style={styles.imageSection}>
-        <TouchableOpacity
-          activeOpacity={0.95}
-          onPress={() => setIsImageModalVisible(true)}
-          style={styles.mainImageTouchable}
-        >
-          <Image source={{ uri: mainImage }} style={styles.mainImage} resizeMode="cover" />
-        </TouchableOpacity>
+        {mainImage ? (
+          <TouchableOpacity
+            activeOpacity={0.95}
+            onPress={() => setIsImageModalVisible(true)}
+            style={styles.mainImageTouchable}
+          >
+            <Image source={{ uri: mainImage }} style={styles.mainImage} resizeMode="cover" />
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={[
+              styles.mainImage,
+              {
+                backgroundColor: isDarkMode ? "#141414" : "#222222",
+                justifyContent: "center",
+                alignItems: "center",
+              },
+            ]}
+          >
+            <Ionicons name="image-outline" size={54} color="rgba(255, 255, 255, 0.35)" />
+            <Text
+              style={{
+                color: "rgba(255, 255, 255, 0.6)",
+                marginTop: 12,
+                fontSize: 15,
+                fontWeight: "500",
+              }}
+            >
+              Sem imagens disponível.
+            </Text>
+          </View>
+        )}
 
         <SafeAreaView style={styles.topBar} pointerEvents="box-none">
           <TouchableOpacity
@@ -499,20 +508,22 @@ export default function Details({ route, navigation }) {
               <Ionicons name={isFavorited ? "heart" : "heart-outline"} size={22} color={currentTheme.accent} />
             </TouchableOpacity>
 
-            <View style={styles.rightThumbnails} pointerEvents="box-none">
-              {thumbnails.map((imgUrl, index) => (
-                <ThumbnailItem
-                  key={imgUrl ? `${imgUrl}-${index}` : `loading-thumb-${index}`}
-                  imgUrl={imgUrl}
-                  isSelected={mainImage === imgUrl}
-                  accent={currentTheme.accent}
-                  size={STRICT_THUMB_SIZE}
-                  isLoading={index > 0 && (!imgUrl || loadingPexels)}
-                  isDarkMode={isDarkMode}
-                  onPress={() => imgUrl && setMainImage(imgUrl)}
-                />
-              ))}
-            </View>
+            {thumbnails.length > 1 && (
+              <View style={styles.rightThumbnails} pointerEvents="box-none">
+                {thumbnails.map((imgUrl, index) => (
+                  <ThumbnailItem
+                    key={imgUrl ? `${imgUrl}-${index}` : `loading-thumb-${index}`}
+                    imgUrl={imgUrl}
+                    isSelected={mainImage === imgUrl}
+                    accent={currentTheme.accent}
+                    size={STRICT_THUMB_SIZE}
+                    isLoading={false}
+                    isDarkMode={isDarkMode}
+                    onPress={() => imgUrl && setMainImage(imgUrl)}
+                  />
+                ))}
+              </View>
+            )}
           </View>
         </SafeAreaView>
 

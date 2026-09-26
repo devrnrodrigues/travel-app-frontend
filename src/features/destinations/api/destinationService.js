@@ -1,8 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiClient } from "../../../config/apiClient";
-import { ENV } from "../../../config/env";
 
-export async function resolveDestinationImage(destination, fallbackCategory = "") {
+export async function resolveDestinationImage(destination) {
   if (destination.coverImageUrl && destination.coverImageUrl.startsWith("http")) {
     return destination.coverImageUrl;
   }
@@ -10,36 +8,6 @@ export async function resolveDestinationImage(destination, fallbackCategory = ""
   if (destination.image_url && destination.image_url.startsWith("http")) {
     return destination.image_url;
   }
-
-  const queryTerm =
-    destination.photoQuery ||
-    `${destination.name || destination.title || ""} ${fallbackCategory}`.trim();
-
-  const sanitized = String(destination.id || queryTerm).toLowerCase().replace(/[^a-z0-9]/g, "");
-  const cacheKey = `@pexels_img_${sanitized}`;
-
-  try {
-    const cached = await AsyncStorage.getItem(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    if (ENV.PEXELS_API_KEY && queryTerm) {
-      const response = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(queryTerm)}&per_page=3`,
-        { headers: { Authorization: ENV.PEXELS_API_KEY } }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.photos && data.photos.length > 0) {
-          const imgUrl = data.photos[0].src.large;
-          await AsyncStorage.setItem(cacheKey, imgUrl);
-          return imgUrl;
-        }
-      }
-    }
-  } catch {}
 
   return null;
 }
