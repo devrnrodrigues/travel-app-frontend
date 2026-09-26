@@ -32,6 +32,7 @@ import {
   getAiPrice,
   getPexelsImages,
 } from "./api/detailsApi";
+import { getDestinationById } from "./api/destinationService";
 import { useAuth } from "../auth/context/AuthContext";
 import {
   checkFavoriteApi,
@@ -78,6 +79,7 @@ function formatTimeAgo(dateString) {
 
 function getFirstParagraph(text) {
   if (!text) return "";
+  if (Array.isArray(text)) return (text[0] || "").trim();
   const paragraphs = text.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0);
   return (paragraphs[0] || text).trim();
 }
@@ -101,10 +103,25 @@ function getTruncatedFirstParagraph(text) {
 }
 
 function getRemainingParagraphs(text) {
-  if (!text) return "";
-  const paragraphs = text.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0);
-  if (paragraphs.length <= 1) return "";
-  return paragraphs.slice(1).join("\n\n").trim();
+  if (!text) return [];
+  if (Array.isArray(text)) {
+    return text.slice(1).map((p) => (p || "").trim()).filter(Boolean);
+  }
+  const paragraphs = text.split(/\r?\n\r?\n/).map((p) => p.trim()).filter(Boolean);
+  if (paragraphs.length <= 1) return [];
+  return paragraphs.slice(1);
+}
+
+function isDescriptionUnavailable(text) {
+  if (!text) return true;
+  const first = getFirstParagraph(text).toLowerCase();
+  return (
+    first.length === 0 ||
+    first.includes("indisponível") ||
+    first.includes("indisponivel") ||
+    first.includes("não foi possível") ||
+    first.includes("nao foi possivel")
+  );
 }
 
 export default function Details({ route, navigation }) {
@@ -112,7 +129,13 @@ export default function Details({ route, navigation }) {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { item, currentTheme } = route.params;
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(
+    Array.isArray(item?.description)
+      ? item.description
+      : Array.isArray(item?.aiSummary)
+      ? item.aiSummary
+      : []
+  );
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const toggleDescription = () => {
@@ -309,31 +332,73 @@ export default function Details({ route, navigation }) {
     }
   };
 
-  const fetchWeatherData = useCallback(async (isPull = false) => {
+  const fetchDestinationDetails = useCallback(async (isPull = false) => {
+    const destId = item?.id || item?.item_id;
+    if (!destId) return;
+
     try {
-      if (!isPull) setLoadingWeather(true);
-      const weatherData = await getWeather(item.id || item.item_id);
-      setWeather(weatherData);
+      if (!isPull) {
+        setLoadingWeather(true);
+        setLoadingAi(true);
+        setLoadingPexels(true);
+      }
+      const data = await getDestinationById(destId);
+      if (data) {
+        if (data.weather) {
+          setWeather({
+            temp: Math.round(data.weather.temperature ?? 0),
+            humidity: data.weather.rainProbability ?? 0,
+            rainProbability: data.weather.rainProbability ?? 0,
+            wind: Math.round(data.weather.windSpeed ?? 0),
+            condition: data.weather.conditionText || "Tempo estável",
+            updatedAt: data.weather.updatedAt,
+          });
+        } else {
+          const fallbackWeather = await getWeather(destId);
+          setWeather(fallbackWeather);
+        }
+
+        if (data.description && (Array.isArray(data.description) ? data.description.length > 0 : Boolean(data.description))) {
+          setDescription(data.description);
+        } else {
+          const geminiText = await getAiDescription(item, isPull);
+          setDescription(geminiText || []);
+        }
+
+        const backendImages = Array.isArray(data.images) && data.images.length > 0
+          ? data.images.map((img) => img.url).filter(Boolean)
+          : [];
+
+        const allImages = [
+          data.coverImageUrl || item.image_url,
+          ...backendImages.filter((u) => u !== (data.coverImageUrl || item.image_url)),
+        ].filter(Boolean);
+
+        if (allImages.length > 0) {
+          setMainImage(allImages[0]);
+          setThumbnails(allImages.slice(0, 4));
+        } else {
+          const pexelsImgs = await getPexelsImages(item);
+          if (pexelsImgs?.length) {
+            setThumbnails(pexelsImgs.slice(0, 4));
+          }
+        }
+      }
     } catch {
-      if (!isPull) setWeather(null);
+      try {
+        const [fallbackWeather, geminiText] = await Promise.all([
+          getWeather(destId),
+          getAiDescription(item, isPull),
+        ]);
+        if (fallbackWeather) setWeather(fallbackWeather);
+        setDescription(geminiText || []);
+      } catch {
+        if (!isPull) setDescription(["Não foi possível carregar a descrição."]);
+      }
     } finally {
       setLoadingWeather(false);
-    }
-  }, [item?.id, item?.item_id]);
-
-  const fetchAiDescription = useCallback(async (isPull = false) => {
-    try {
-      if (!isPull) setLoadingAi(true);
-      const geminiText = await getAiDescription(item);
-      const loremParagraphs =
-        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\nSed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.";
-      const fullText = geminiText ? `${geminiText.trim()}\n\n${loremParagraphs}` : loremParagraphs;
-      setDescription(fullText);
-    } catch (error) {
-      console.error(error);
-      if (!isPull) setDescription("Não foi possível carregar a descrição gerada por IA.");
-    } finally {
       setLoadingAi(false);
+      setLoadingPexels(false);
     }
   }, [item]);
 
@@ -349,32 +414,11 @@ export default function Details({ route, navigation }) {
     }
   }, [item]);
 
-  const fetchPexelsImages = useCallback(async (isPull = false) => {
-    try {
-      if (!isPull) setLoadingPexels(true);
-      const images = await getPexelsImages(item);
-      if (images?.length) {
-        const filtered = images.filter((img) => img !== item.image_url);
-        const combined = [item.image_url, ...filtered].slice(0, 4);
-        setThumbnails(combined);
-      } else {
-        setThumbnails([item.image_url]);
-      }
-    } catch (error) {
-      console.error(error);
-      if (!isPull) setThumbnails([item.image_url]);
-    } finally {
-      setLoadingPexels(false);
-    }
-  }, [item]);
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await Promise.all([
-        fetchWeatherData(true),
-        fetchAiDescription(true),
-        fetchPexelsImages(true),
+        fetchDestinationDetails(true),
         fetchPrice(true),
         loadFavoriteStatus(),
         reviewsSectionRef.current?.fetchReviews ? reviewsSectionRef.current.fetchReviews(true) : Promise.resolve(),
@@ -382,7 +426,7 @@ export default function Details({ route, navigation }) {
     } finally {
       setRefreshing(false);
     }
-  }, [fetchWeatherData, fetchAiDescription, fetchPexelsImages, fetchPrice, loadFavoriteStatus]);
+  }, [fetchDestinationDetails, fetchPrice, loadFavoriteStatus]);
 
   useEffect(() => {
     setShowWeatherInfo(false);
@@ -397,12 +441,10 @@ export default function Details({ route, navigation }) {
       null,
     ]);
     Promise.all([
-      fetchWeatherData(),
-      fetchAiDescription(),
-      fetchPexelsImages(),
+      fetchDestinationDetails(),
       fetchPrice(),
     ]);
-  }, [item?.id, fetchWeatherData, fetchAiDescription, fetchPexelsImages, fetchPrice]);
+  }, [item?.id, fetchDestinationDetails, fetchPrice]);
 
   return (
     <Animated.View
@@ -518,6 +560,12 @@ export default function Details({ route, navigation }) {
 
           {loadingAi ? (
             <DetailsDescriptionSkeleton isDarkMode={isDarkMode} />
+          ) : isDescriptionUnavailable(description) ? (
+            <FadeInView duration={240}>
+              <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>
+                {getFirstParagraph(description) || "Descrição indisponível."}
+              </Text>
+            </FadeInView>
           ) : (
             <FadeInView duration={240}>
               {!isDescriptionExpanded ? (
@@ -535,28 +583,35 @@ export default function Details({ route, navigation }) {
                   <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>
                     {getFirstParagraph(description)}
                   </Text>
-                  {getRemainingParagraphs(description) ? (
-                    <Text
-                      style={[
-                        styles.descriptionBody,
-                        { marginTop: 12 },
-                        !isDarkMode && { color: "#374151" },
-                      ]}
-                    >
-                      {getRemainingParagraphs(description)}{" "}
+                  {getRemainingParagraphs(description).map((para, idx, arr) => {
+                    const isLast = idx === arr.length - 1;
+                    return (
                       <Text
-                        onPress={toggleDescription}
-                        style={{ color: currentTheme.accent, fontWeight: "700" }}
+                        key={idx}
+                        style={[
+                          styles.descriptionBody,
+                          { marginTop: 12 },
+                          !isDarkMode && { color: "#374151" },
+                        ]}
                       >
-                        ver menos
+                        {para}
+                        {isLast && (
+                          <Text
+                            onPress={toggleDescription}
+                            style={{ color: currentTheme.accent, fontWeight: "700" }}
+                          >
+                            {" "}ver menos
+                          </Text>
+                        )}
                       </Text>
-                    </Text>
-                  ) : (
+                    );
+                  })}
+                  {getRemainingParagraphs(description).length === 0 && (
                     <Text
                       onPress={toggleDescription}
-                      style={{ color: currentTheme.accent, fontWeight: "700" }}
+                      style={{ color: currentTheme.accent, fontWeight: "700", marginTop: 8 }}
                     >
-                      {" "}ver menos
+                      ver menos
                     </Text>
                   )}
                 </View>

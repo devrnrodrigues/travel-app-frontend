@@ -23,10 +23,33 @@ export async function getWeather(destinationId) {
   }
 }
 
-export async function getAiDescription(item) {
-  const cacheKey = `@gemini_desc_${item.id}`;
-  const cached = await AsyncStorage.getItem(cacheKey);
-  if (cached) return cached;
+export async function getAiDescription(item, forceRefresh = false) {
+  const cacheKey = `@gemini_desc_v4_${item.id}`;
+  if (!forceRefresh) {
+    const cached = await AsyncStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length >= 3) {
+          return parsed;
+        }
+      } catch {
+      }
+    }
+  }
+
+  const destinationName = item.title || item.name || "o destino";
+  const destinationLoc = [item.city, item.state, item.location || item.country]
+    .filter(Boolean)
+    .join(", ") || "França";
+
+  const prompt = `Escreva uma descrição turística para ${destinationName}, localizado em ${destinationLoc}.
+A resposta DEVE ter exatamente 3 parágrafos curtos (separados apenas por quebra de linha dupla):
+- Regra de tamanho: Cada parágrafo deve ter estritamente entre 4 a 6 frases curtas e objetivas (aproximadamente 35 a 50 palavras por parágrafo). Seja conciso e evite frases longas ou prolixas.
+- 1º parágrafo: Apresentação do local, atmosfera e o que mais impressiona de início.
+- 2º parágrafo: História essencial e detalhes visuais ou arquitetônicos marcantes.
+- 3º parágrafo: Dicas práticas e diretas para aproveitar a visita da melhor forma.
+REGRAS OBRIGATÓRIAS: Não use títulos, marcadores, numerações ou asteriscos (**). Apenas os 3 parágrafos de texto direto.`;
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
@@ -36,11 +59,7 @@ export async function getAiDescription(item) {
       body: JSON.stringify({
         contents: [
           {
-            parts: [
-              {
-                text: `Escreva uma descrição turística e atraente de até 4 linhas para ${item.title} localizado em ${item.location}.`,
-              },
-            ],
+            parts: [{ text: prompt }],
           },
         ],
       }),
@@ -48,9 +67,21 @@ export async function getAiDescription(item) {
   );
 
   const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Descrição indisponível.";
-  await AsyncStorage.setItem(cacheKey, text);
-  return text;
+  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const paragraphs = rawText
+    .replace(/\*\*/g, "")
+    .replace(/^#+\s*/gm, "")
+    .split(/\r?\n\r?\n+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
+  const result =
+    paragraphs.length > 0
+      ? paragraphs
+      : ["Descrição indisponível."];
+
+  await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
+  return result;
 }
 
 export async function getAiPrice(item) {
