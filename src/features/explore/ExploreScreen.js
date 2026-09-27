@@ -158,9 +158,6 @@ export default function Explore({ navigation }) {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-    hasPreviousPage,
-    fetchPreviousPage,
-    isFetchingPreviousPage,
     refetch,
     isRefetching,
   } = useInfiniteQuery({
@@ -173,13 +170,6 @@ export default function Explore({ navigation }) {
       }
       return lastPageParam + 1;
     },
-    getPreviousPageParam: (firstPage, allPages, firstPageParam) => {
-      if (firstPageParam <= 0) {
-        return undefined;
-      }
-      return firstPageParam - 1;
-    },
-    maxPages: 10,
   });
 
   const destinations = useMemo(() => {
@@ -297,12 +287,6 @@ export default function Explore({ navigation }) {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const loadPreviousPage = useCallback(() => {
-    if (hasPreviousPage && !isFetchingPreviousPage) {
-      fetchPreviousPage();
-    }
-  }, [hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
-
   const handleScroll = useCallback((event) => {
     const { nativeEvent } = event;
     const currentY = nativeEvent.contentOffset.y;
@@ -320,13 +304,10 @@ export default function Explore({ navigation }) {
       if (!isSearchBarVisibleRef.current) {
         showSearchBar();
       }
-      if (currentY <= 150) {
-        loadPreviousPage();
-      }
     }
 
     lastScrollY.current = currentY;
-  }, [hideSearchBar, showSearchBar, loadPreviousPage]);
+  }, [hideSearchBar, showSearchBar]);
 
   const searchTranslateY = searchBarAnim.interpolate({
     inputRange: [0, 1],
@@ -388,7 +369,7 @@ export default function Explore({ navigation }) {
     [isDarkMode, handleCardPress]
   );
 
-  const keyExtractor = useCallback((item, index) => (item?.id ? `${item.id}-${index}` : String(index)), []);
+  const keyExtractor = useCallback((item) => (item?.id ? String(item.id) : String(Math.random())), []);
 
   return (
     <ImageBackground source={bgSource} style={styles.screenDarkBg} resizeMode="cover">
@@ -440,8 +421,8 @@ export default function Explore({ navigation }) {
                 keyboardShouldPersistTaps="handled"
                 scrollEventThrottle={16}
                 onEndReached={loadNextPage}
-                onEndReachedThreshold={0.5}
-                windowSize={5}
+                onEndReachedThreshold={0.3}
+                windowSize={7}
                 maxToRenderPerBatch={12}
                 initialNumToRender={12}
                 removeClippedSubviews={Platform.OS === "android"}
@@ -452,13 +433,6 @@ export default function Explore({ navigation }) {
                     tintColor={currentTheme?.accent || "#4CAF50"}
                     colors={[currentTheme?.accent || "#4CAF50"]}
                   />
-                }
-                ListHeaderComponent={
-                  isFetchingPreviousPage ? (
-                    <View style={styles.loadingMoreContainer}>
-                      <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
-                    </View>
-                  ) : null
                 }
                 ListEmptyComponent={
                   <View style={styles.emptyStateContainer}>
@@ -477,7 +451,9 @@ export default function Explore({ navigation }) {
                     <View style={styles.loadingMoreContainer}>
                       <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
                     </View>
-                  ) : null
+                  ) : (
+                    <View style={{ height: 24 }} />
+                  )
                 }
               />
             </FadeInView>
