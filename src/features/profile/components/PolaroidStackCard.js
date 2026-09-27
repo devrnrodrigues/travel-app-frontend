@@ -8,7 +8,7 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { styles } from "../profile.styles";
 
 const SLOT_CONFIGS = [
@@ -18,14 +18,8 @@ const SLOT_CONFIGS = [
   { transX: 0, transY: -8, rot: 0, scale: 0.82, dim: 0.3, opacity: 0 },
 ];
 
-export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
+const PolaroidStackCard = React.memo(function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
   const navigation = useNavigation();
-  const [, setTick] = useState(0);
-  useFocusEffect(
-    useCallback(() => {
-      setTick((t) => t + 1);
-    }, [])
-  );
   const photos = item.photos || [];
   const total = photos.length;
 
@@ -40,7 +34,6 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
       return 1;
     })
   );
-
 
   const anims = useRef(
     photos.map((_, i) => {
@@ -234,4 +227,6 @@ export default function PolaroidStackCard({ item, isDarkMode, currentTheme }) {
       </View>
     </View>
   );
-}
+});
+
+export default PolaroidStackCard;

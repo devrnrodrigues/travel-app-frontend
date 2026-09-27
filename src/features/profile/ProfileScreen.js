@@ -819,6 +819,80 @@ export default function ProfileScreen({ navigation }) {
 
   const effectiveGalleryCount = displayedCollections.length;
 
+  const galleryRows = useMemo(() => {
+    if (effectiveGalleryCount <= 4) return [];
+    const rows = [];
+    const totalRows = Math.ceil(effectiveGalleryCount / 2);
+    for (let r = 0; r < totalRows; r++) {
+      const leftIdx = r * 2;
+      const rightIdx = r * 2 + 1;
+      rows.push({
+        rowIndex: r,
+        leftItem: leftIdx < effectiveGalleryCount ? displayedCollections[leftIdx] : null,
+        rightItem: rightIdx < effectiveGalleryCount ? displayedCollections[rightIdx] : null,
+      });
+    }
+    return rows;
+  }, [displayedCollections, effectiveGalleryCount]);
+
+  const getRowItemLayout = useCallback(
+    (_, index) => ({
+      length: rowHeight + 12,
+      offset: (rowHeight + 12) * index,
+      index,
+    }),
+    [rowHeight]
+  );
+
+  const renderGalleryRow = useCallback(
+    ({ item: row }) => {
+      const { rowIndex, leftItem, rightItem } = row;
+      const animStyle = getRowAnimProps(rowIndex);
+
+      return (
+        <Animated.View
+          key={rowIndex}
+          style={[
+            styles.galleryRow,
+            {
+              height: rowHeight,
+              minHeight: rowHeight,
+              flexGrow: 0,
+              flexShrink: 0,
+              ...(Platform.OS === "web"
+                ? { flexBasis: rowHeight, width: "100%" }
+                : { flex: 0 }),
+            },
+            animStyle,
+          ]}
+        >
+          {leftItem ? (
+            <PolaroidStackCard
+              key={leftItem.id || `card_${rowIndex * 2}`}
+              item={leftItem}
+              isDarkMode={isDarkMode}
+              currentTheme={currentTheme}
+            />
+          ) : (
+            <View style={styles.gallerySpacer} />
+          )}
+
+          {rightItem ? (
+            <PolaroidStackCard
+              key={rightItem.id || `card_${rowIndex * 2 + 1}`}
+              item={rightItem}
+              isDarkMode={isDarkMode}
+              currentTheme={currentTheme}
+            />
+          ) : (
+            <View style={styles.gallerySpacer} />
+          )}
+        </Animated.View>
+      );
+    },
+    [rowHeight, getRowAnimProps, isDarkMode, currentTheme]
+  );
+
   const MainContentContainer = effectiveGalleryCount <= 4 ? ScrollView : View;
   const mainContainerProps = effectiveGalleryCount <= 4
     ? {
@@ -1023,13 +1097,21 @@ export default function ProfileScreen({ navigation }) {
                       </View>
                     </>
                   ) : (
-                    <Animated.ScrollView
+                    <Animated.FlatList
+                      data={galleryRows}
+                      keyExtractor={(row) => `gallery_row_${row.rowIndex}`}
+                      renderItem={renderGalleryRow}
+                      getItemLayout={getRowItemLayout}
                       style={styles.galleryScroll}
                       contentContainerStyle={styles.galleryScrollContent}
                       showsVerticalScrollIndicator={false}
                       bounces={true}
                       nestedScrollEnabled={true}
                       scrollEventThrottle={16}
+                      windowSize={5}
+                      maxToRenderPerBatch={4}
+                      initialNumToRender={4}
+                      removeClippedSubviews={Platform.OS === "android"}
                       onScroll={Animated.event(
                         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                         { useNativeDriver: Platform.OS !== "web" }
@@ -1042,64 +1124,7 @@ export default function ProfileScreen({ navigation }) {
                           colors={[currentTheme?.accent || "#4CAF50"]}
                         />
                       }
-                    >
-                      {Array.from({ length: Math.ceil(effectiveGalleryCount / 2) }).map(
-                        (_, rowIndex) => {
-                          const leftIdx = rowIndex * 2;
-                          const rightIdx = rowIndex * 2 + 1;
-                          const leftItem =
-                            leftIdx < effectiveGalleryCount
-                              ? displayedCollections[leftIdx]
-                              : null;
-                          const rightItem =
-                            rightIdx < effectiveGalleryCount
-                              ? displayedCollections[rightIdx]
-                              : null;
-                          const animStyle = getRowAnimProps(rowIndex);
-
-                          return (
-                            <Animated.View
-                              key={rowIndex}
-                              style={[
-                                styles.galleryRow,
-                                {
-                                  height: rowHeight,
-                                  minHeight: rowHeight,
-                                  flexGrow: 0,
-                                  flexShrink: 0,
-                                  ...(Platform.OS === "web"
-                                    ? { flexBasis: rowHeight, width: "100%" }
-                                    : { flex: 0 }),
-                                },
-                                animStyle,
-                              ]}
-                            >
-                              {leftItem ? (
-                                <PolaroidStackCard
-                                  key={leftItem.id || `card_${leftIdx}`}
-                                  item={leftItem}
-                                  isDarkMode={isDarkMode}
-                                  currentTheme={currentTheme}
-                                />
-                              ) : (
-                                <View style={styles.gallerySpacer} />
-                              )}
-
-                              {rightItem ? (
-                                <PolaroidStackCard
-                                  key={rightItem.id || `card_${rightIdx}`}
-                                  item={rightItem}
-                                  isDarkMode={isDarkMode}
-                                  currentTheme={currentTheme}
-                                />
-                              ) : (
-                                <View style={styles.gallerySpacer} />
-                              )}
-                            </Animated.View>
-                          );
-                        }
-                      )}
-                    </Animated.ScrollView>
+                    />
                   )}
                 </Animated.View>
               </MainContentContainer>
