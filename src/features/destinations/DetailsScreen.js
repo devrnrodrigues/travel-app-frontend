@@ -157,10 +157,13 @@ export default function Details({ route, navigation }) {
   const [weather, setWeather] = useState(null);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingAi, setLoadingAi] = useState(true);
+  const [loadingImages, setLoadingImages] = useState(true);
 
   const initialImg = item.image_url || item.coverImageUrl || null;
   const [mainImage, setMainImage] = useState(initialImg);
-  const [thumbnails, setThumbnails] = useState(initialImg ? [initialImg] : []);
+  const [thumbnails, setThumbnails] = useState(
+    initialImg ? [initialImg, null, null, null] : [null, null, null, null]
+  );
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const reviewsSectionRef = useRef(null);
@@ -334,6 +337,7 @@ export default function Details({ route, navigation }) {
       if (!isPull) {
         setLoadingWeather(true);
         setLoadingAi(true);
+        setLoadingImages(true);
       }
       const data = await getDestinationById(destId);
       if (data) {
@@ -389,6 +393,7 @@ export default function Details({ route, navigation }) {
     } finally {
       setLoadingWeather(false);
       setLoadingAi(false);
+      setLoadingImages(false);
     }
   }, [item]);
 
@@ -423,7 +428,10 @@ export default function Details({ route, navigation }) {
     weatherInfoAnim.setValue(0);
     const currentImg = item.image_url || item.coverImageUrl || null;
     setMainImage(currentImg);
-    setThumbnails(currentImg ? [currentImg] : []);
+    setLoadingImages(true);
+    setThumbnails(
+      currentImg ? [currentImg, null, null, null] : [null, null, null, null]
+    );
     Promise.all([
       fetchDestinationDetails(),
       fetchPrice(),
@@ -508,7 +516,7 @@ export default function Details({ route, navigation }) {
               <Ionicons name={isFavorited ? "heart" : "heart-outline"} size={22} color={currentTheme.accent} />
             </TouchableOpacity>
 
-            {thumbnails.length > 1 && (
+            {(loadingImages || thumbnails.length > 1) && (
               <View style={styles.rightThumbnails} pointerEvents="box-none">
                 {thumbnails.map((imgUrl, index) => (
                   <ThumbnailItem
@@ -517,7 +525,7 @@ export default function Details({ route, navigation }) {
                     isSelected={mainImage === imgUrl}
                     accent={currentTheme.accent}
                     size={STRICT_THUMB_SIZE}
-                    isLoading={false}
+                    isLoading={!imgUrl || (index > 0 && loadingImages)}
                     isDarkMode={isDarkMode}
                     onPress={() => imgUrl && setMainImage(imgUrl)}
                   />
@@ -861,7 +869,7 @@ export default function Details({ route, navigation }) {
       <ImageGalleryModal
         visible={isImageModalVisible}
         onClose={() => setIsImageModalVisible(false)}
-        thumbnails={thumbnails}
+        thumbnails={thumbnails.filter(Boolean)}
         mainImage={mainImage}
         onSelectImage={setMainImage}
         defaultImage={item.image_url}
