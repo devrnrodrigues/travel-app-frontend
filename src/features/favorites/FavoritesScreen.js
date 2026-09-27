@@ -70,10 +70,10 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
     item?.realRating && item.realRating !== "0.0" && item.realRating !== "0"
       ? item.realRating
       : item?.rating != null && Number(item.rating) > 0
-      ? Number(item.rating).toFixed(1)
-      : item?.destinationRating != null && Number(item.destinationRating) > 0
-      ? Number(item.destinationRating).toFixed(1)
-      : null;
+        ? Number(item.rating).toFixed(1)
+        : item?.destinationRating != null && Number(item.destinationRating) > 0
+          ? Number(item.destinationRating).toFixed(1)
+          : null;
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -517,11 +517,11 @@ export default function Favorites({ navigation }) {
           colors={
             currentTheme?.colors && currentTheme.colors.length >= 3
               ? [
-                  currentTheme.colors[0],
-                  currentTheme.colors[1],
-                  "rgba(0, 0, 0, 0.72)",
-                  "rgba(0, 0, 0, 0.96)",
-                ]
+                currentTheme.colors[0],
+                currentTheme.colors[1],
+                "rgba(0, 0, 0, 0.72)",
+                "rgba(0, 0, 0, 0.96)",
+              ]
               : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
           }
           locations={[0, 0.38, 0.72, 1]}
