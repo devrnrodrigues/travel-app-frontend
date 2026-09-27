@@ -108,6 +108,7 @@ export default function ProfileScreen({ navigation }) {
   const [galleryCount, setGalleryCount] = useState(4);
   const [hideFavorites, setHideFavorites] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const hasSyncedInitialProfile = useRef(false);
   const userRef = useRef(user);
 
@@ -703,16 +704,20 @@ export default function ProfileScreen({ navigation }) {
     setRefreshing(true);
     try {
       await Promise.all([
-        syncProfileWithBackend(),
-        loadProfile(),
+        queryClient.invalidateQueries({ queryKey: ["collections"] }),
+        queryClient.invalidateQueries({ queryKey: ["profile"] }),
+        queryClient.invalidateQueries({ queryKey: ["favorites"] }),
         refetchCollections(),
+        syncProfileWithBackend(),
       ]);
+      await loadProfile();
+      setRefreshKey((prev) => prev + 1);
     } catch (err) {
       console.error("Erro no refresh:", err);
     } finally {
       setRefreshing(false);
     }
-  }, [syncProfileWithBackend, loadProfile, refetchCollections]);
+  }, [queryClient, syncProfileWithBackend, loadProfile, refetchCollections]);
 
   const handleGalleryCountChange = useCallback(async (count) => {
     setGalleryCount(count);
@@ -868,7 +873,7 @@ export default function ProfileScreen({ navigation }) {
         >
           {leftItem ? (
             <PolaroidStackCard
-              key={leftItem.id || `card_${rowIndex * 2}`}
+              key={leftItem.id ? `${leftItem.id}_${refreshKey}` : `card_${rowIndex * 2}_${refreshKey}`}
               item={leftItem}
               isDarkMode={isDarkMode}
               currentTheme={currentTheme}
@@ -879,7 +884,7 @@ export default function ProfileScreen({ navigation }) {
 
           {rightItem ? (
             <PolaroidStackCard
-              key={rightItem.id || `card_${rowIndex * 2 + 1}`}
+              key={rightItem.id ? `${rightItem.id}_${refreshKey}` : `card_${rowIndex * 2 + 1}_${refreshKey}`}
               item={rightItem}
               isDarkMode={isDarkMode}
               currentTheme={currentTheme}
@@ -890,31 +895,26 @@ export default function ProfileScreen({ navigation }) {
         </Animated.View>
       );
     },
-    [rowHeight, getRowAnimProps, isDarkMode, currentTheme]
+    [rowHeight, getRowAnimProps, isDarkMode, currentTheme, refreshKey]
   );
 
-  const MainContentContainer = effectiveGalleryCount <= 4 ? ScrollView : View;
-  const mainContainerProps = effectiveGalleryCount <= 4
-    ? {
-        style: styles.flex1,
-        contentContainerStyle: { flexGrow: 1 },
-        showsVerticalScrollIndicator: false,
-        bounces: true,
-        alwaysBounceVertical: true,
-        pointerEvents: loading ? "none" : "auto",
-        refreshControl: (
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={currentTheme?.accent || "#4CAF50"}
-            colors={[currentTheme?.accent || "#4CAF50"]}
-          />
-        ),
-      }
-    : {
-        style: styles.flex1,
-        pointerEvents: loading ? "none" : "auto",
-      };
+  const MainContentContainer = ScrollView;
+  const mainContainerProps = {
+    style: styles.flex1,
+    contentContainerStyle: { flexGrow: 1 },
+    showsVerticalScrollIndicator: false,
+    bounces: true,
+    alwaysBounceVertical: true,
+    pointerEvents: loading ? "none" : "auto",
+    refreshControl: (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        tintColor={currentTheme?.accent || "#4CAF50"}
+        colors={[currentTheme?.accent || "#4CAF50"]}
+      />
+    ),
+  };
 
   return (
     <View style={styles.container}>
@@ -941,13 +941,14 @@ export default function ProfileScreen({ navigation }) {
           <SafeAreaView style={styles.flex1}>
             <View style={styles.flex1}>
               <MainContentContainer {...mainContainerProps}>
-                <Animated.View
-                  style={[
-                    styles.profileCard,
-                    !isDarkMode && styles.profileCardLight,
-                    { opacity: cardOpacity },
-                  ]}
-                >
+                <View key={refreshKey} style={styles.flex1}>
+                  <Animated.View
+                    style={[
+                      styles.profileCard,
+                      !isDarkMode && styles.profileCardLight,
+                      { opacity: cardOpacity },
+                    ]}
+                  >
                   <TouchableOpacity
                     style={styles.settingsButton}
                     onPress={() => setModalVisible(true)}
@@ -972,7 +973,12 @@ export default function ProfileScreen({ navigation }) {
                   >
                     {user?.avatarUrl ? (
                       <Image
-                        source={{ uri: user.avatarUrl }}
+                        key={`avatar_${refreshKey}`}
+                        source={{
+                          uri: user.avatarUrl.includes("?")
+                            ? `${user.avatarUrl}&t=${refreshKey}`
+                            : `${user.avatarUrl}?t=${refreshKey}`,
+                        }}
                         style={styles.avatarImage}
                         resizeMode="cover"
                       />
@@ -1014,6 +1020,7 @@ export default function ProfileScreen({ navigation }) {
                   style={[
                     styles.galleryContainer,
                     effectiveGalleryCount > 4 && styles.galleryContainerScrollable,
+                    effectiveGalleryCount > 4 && { height: galleryHeight },
                     { opacity: galleryOpacity },
                   ]}
                   onLayout={handleGalleryLayout}
@@ -1054,7 +1061,7 @@ export default function ProfileScreen({ navigation }) {
                       <View style={styles.galleryRow}>
                         {displayedCollections[0] ? (
                           <PolaroidStackCard
-                            key={displayedCollections[0].id || "card_0"}
+                            key={displayedCollections[0].id ? `${displayedCollections[0].id}_${refreshKey}` : `card_0_${refreshKey}`}
                             item={displayedCollections[0]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
@@ -1064,7 +1071,7 @@ export default function ProfileScreen({ navigation }) {
                         )}
                         {displayedCollections[1] ? (
                           <PolaroidStackCard
-                            key={displayedCollections[1].id || "card_1"}
+                            key={displayedCollections[1].id ? `${displayedCollections[1].id}_${refreshKey}` : `card_1_${refreshKey}`}
                             item={displayedCollections[1]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
@@ -1076,7 +1083,7 @@ export default function ProfileScreen({ navigation }) {
                       <View style={styles.galleryRow}>
                         {displayedCollections[2] ? (
                           <PolaroidStackCard
-                            key={displayedCollections[2].id || "card_2"}
+                            key={displayedCollections[2].id ? `${displayedCollections[2].id}_${refreshKey}` : `card_2_${refreshKey}`}
                             item={displayedCollections[2]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
@@ -1086,7 +1093,7 @@ export default function ProfileScreen({ navigation }) {
                         )}
                         {displayedCollections[3] ? (
                           <PolaroidStackCard
-                            key={displayedCollections[3].id || "card_3"}
+                            key={displayedCollections[3].id ? `${displayedCollections[3].id}_${refreshKey}` : `card_3_${refreshKey}`}
                             item={displayedCollections[3]}
                             isDarkMode={isDarkMode}
                             currentTheme={currentTheme}
@@ -1098,8 +1105,10 @@ export default function ProfileScreen({ navigation }) {
                     </>
                   ) : (
                     <Animated.FlatList
+                      key={`gallery_flatlist_${refreshKey}`}
+                      extraData={refreshKey}
                       data={galleryRows}
-                      keyExtractor={(row) => `gallery_row_${row.rowIndex}`}
+                      keyExtractor={(row) => `gallery_row_${row.rowIndex}_${refreshKey}`}
                       renderItem={renderGalleryRow}
                       getItemLayout={getRowItemLayout}
                       style={styles.galleryScroll}
@@ -1116,17 +1125,10 @@ export default function ProfileScreen({ navigation }) {
                         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                         { useNativeDriver: Platform.OS !== "web" }
                       )}
-                      refreshControl={
-                        <RefreshControl
-                          refreshing={refreshing}
-                          onRefresh={handleRefresh}
-                          tintColor={currentTheme?.accent || "#4CAF50"}
-                          colors={[currentTheme?.accent || "#4CAF50"]}
-                        />
-                      }
                     />
                   )}
                 </Animated.View>
+                </View>
               </MainContentContainer>
 
               {showSkeleton && (
