@@ -10,7 +10,9 @@ export async function getFavoritesApi({ page = 0, size = 10 } = {}) {
   const endpoint = query ? `/favorites?${query}` : "/favorites";
   const data = await apiClient.get(endpoint);
   const rawList = Array.isArray(data) ? data : (data?.content || []);
-  const list = size ? rawList.slice(0, size) : rawList;
+  const list = Array.isArray(data) && size != null
+    ? rawList.slice(page * size, page * size + size)
+    : rawList;
 
   return Promise.all(
     list.map(async (fav) => {

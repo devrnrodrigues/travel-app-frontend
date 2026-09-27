@@ -24,7 +24,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { useFocusEffect } from "@react-navigation/native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import styles, { dialogStyles } from "./favorites.styles";
@@ -259,10 +259,29 @@ export default function Favorites({ navigation }) {
   const queryClient = useQueryClient();
   const userId = user?.id || user?._id || "anon";
 
-  const { data, isLoading, isRefetching, refetch } = useQuery({
+  const PAGE_SIZE = 10;
+
+  const {
+    data,
+    isLoading,
+    isRefetching,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["favorites", userId],
-    queryFn: () => getFavoritesApi({ page: 0, size: 10 }),
     enabled: !!user,
+    queryFn: async ({ pageParam = 0 }) => {
+      return getFavoritesApi({ page: pageParam, size: PAGE_SIZE });
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      if (!lastPage || lastPage.length < PAGE_SIZE) {
+        return undefined;
+      }
+      return lastPageParam + 1;
+    },
   });
 
   const { data: isFavoritesHidden } = useQuery({
@@ -274,7 +293,23 @@ export default function Favorites({ navigation }) {
     initialData: false,
   });
 
-  const favorites = isFavoritesHidden ? [] : (data || []);
+  const favorites = useMemo(() => {
+    if (isFavoritesHidden || !data?.pages) return [];
+    const flat = data.pages.flat();
+    const seen = new Set();
+    return flat.filter((item) => {
+      const key = item?.destinationId || item?.id;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [isFavoritesHidden, data]);
+
+  const loadNextPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
   const loading = isLoading && favorites.length === 0;
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -419,6 +454,15 @@ export default function Favorites({ navigation }) {
     ? Math.max(basePadding, Math.floor((innerHeight - totalCardsHeight) / 2))
     : basePadding;
 
+  const getItemLayout = useCallback(
+    (_, index) => ({
+      length: cardSlot,
+      offset: verticalPadding + cardSlot * index,
+      index,
+    }),
+    [cardSlot, verticalPadding]
+  );
+
   if (itemToDelete?.title) {
     lastItemTitleRef.current = itemToDelete.title;
   }
@@ -430,9 +474,18 @@ export default function Favorites({ navigation }) {
       const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
       await removeFavoriteApi(destId);
 
-      queryClient.setQueriesData({ queryKey: ["favorites"] }, (old) =>
-        (old || []).filter((fav) => (fav.destinationId || fav.id) !== destId)
-      );
+      queryClient.setQueriesData({ queryKey: ["favorites"] }, (old) => {
+        if (!old) return old;
+        if (old.pages) {
+          return {
+            ...old,
+            pages: old.pages.map((page) =>
+              page.filter((fav) => (fav.destinationId || fav.id) !== destId)
+            ),
+          };
+        }
+        return (old || []).filter((fav) => (fav.destinationId || fav.id) !== destId);
+      });
       setItemToDelete(null);
     } catch (error) {
       console.error("Erro ao remover favorito:", error);
@@ -453,7 +506,8 @@ export default function Favorites({ navigation }) {
     useCallback(() => {
       scrollY.setValue(scrollOffsetRef.current);
       queryClient.invalidateQueries({ queryKey: ["hideFavorites"] });
-    }, [queryClient])
+      queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
+    }, [queryClient, userId])
   );
 
   return (
@@ -617,7 +671,14 @@ export default function Favorites({ navigation }) {
                       data={filteredFavorites}
                       keyboardShouldPersistTaps="handled"
                       showsVerticalScrollIndicator={false}
-                      keyExtractor={(item) => item.id.toString()}
+                      keyExtractor={(item) => (item.destinationId || item.id).toString()}
+                      onEndReached={loadNextPage}
+                      onEndReachedThreshold={0.5}
+                      windowSize={5}
+                      maxToRenderPerBatch={10}
+                      initialNumToRender={8}
+                      removeClippedSubviews={Platform.OS === "android"}
+                      getItemLayout={getItemLayout}
                       refreshControl={
                         <RefreshControl
                           refreshing={isRefetching}
@@ -663,6 +724,13 @@ export default function Favorites({ navigation }) {
                           setItemToDelete={setItemToDelete}
                         />
                       )}
+                      ListFooterComponent={
+                        isFetchingNextPage ? (
+                          <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                            <ActivityIndicator size="small" color={currentTheme.accent || "#4CAF50"} />
+                          </View>
+                        ) : null
+                      }
                       ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                           {searchQuery.trim() ? (
