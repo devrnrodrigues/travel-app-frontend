@@ -34,6 +34,9 @@ export default function AnimatedProfileInput({
         {
           borderWidth: 1.5,
           borderColor,
+          minHeight: props.multiline ? 80 : 50,
+          width: "100%",
+          justifyContent: "center",
         },
         style,
       ]}
@@ -42,6 +45,10 @@ export default function AnimatedProfileInput({
         style={[
           styles.textInput,
           !isDarkMode && styles.textInputLight,
+          {
+            color: !isDarkMode ? "#000000" : "#FFFFFF",
+            minHeight: props.multiline ? 70 : 46,
+          },
           props.multiline ? styles.textInputMultiline : styles.textInputSingle,
         ]}
         {...props}

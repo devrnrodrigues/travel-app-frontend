@@ -19,6 +19,7 @@ import {
   Platform,
   Keyboard,
   StyleSheet,
+  KeyboardAvoidingView,
 } from "react-native";
 
 const { height: WINDOW_HEIGHT } = Dimensions.get("window");
@@ -93,6 +94,7 @@ export default function ProfileScreen({ navigation }) {
   const [newCollectionName, setNewCollectionName] = useState("");
   const [isCollectionNameFocused, setIsCollectionNameFocused] = useState(false);
   const [selectedCollectionPhotos, setSelectedCollectionPhotos] = useState([]);
+  const [isPickingPhotos, setIsPickingPhotos] = useState(false);
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -217,6 +219,7 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const handlePickCollectionPhotos = async () => {
+    if (isPickingPhotos || isCreatingCollection) return;
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
@@ -226,6 +229,8 @@ export default function ProfileScreen({ navigation }) {
         );
         return;
       }
+
+      setIsPickingPhotos(true);
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
@@ -237,11 +242,33 @@ export default function ProfileScreen({ navigation }) {
         return;
       }
 
-      const uris = result.assets.map((asset) => asset.uri);
-      setSelectedCollectionPhotos(uris);
+      const compressedUris = [];
+      for (let i = 0; i < result.assets.length; i++) {
+        const a = result.assets[i];
+        let finalUri = a.uri;
+        try {
+          const manipulated = await manipulateAsync(
+            a.uri,
+            [],
+            { format: SaveFormat.WEBP, compress: 0.85 }
+          );
+          finalUri = manipulated.uri;
+        } catch {
+          finalUri = a.uri;
+        }
+        compressedUris.push(finalUri);
+      }
+
+      setSelectedCollectionPhotos((prev) => [...prev, ...compressedUris]);
     } catch {
       Alert.alert("Erro", "Não foi possível selecionar as fotos.");
+    } finally {
+      setIsPickingPhotos(false);
     }
+  };
+
+  const handleRemoveCollectionPhoto = (indexToRemove) => {
+    setSelectedCollectionPhotos((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleSaveCollection = async () => {
@@ -1709,157 +1736,212 @@ export default function ProfileScreen({ navigation }) {
               animationType="fade"
               statusBarTranslucent={true}
               navigationBarTranslucent={true}
-              onRequestClose={() => setAddCollectionModalVisible(false)}
+              onRequestClose={() => {
+                if (isCreatingCollection || isPickingPhotos) return;
+                setAddCollectionModalVisible(false);
+              }}
             >
-              <TouchableWithoutFeedback onPress={() => setAddCollectionModalVisible(false)}>
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  if (isCreatingCollection || isPickingPhotos) return;
+                  setAddCollectionModalVisible(false);
+                }}
+              >
                 <View style={styles.addCollectionModalOverlay}>
-                  <TouchableWithoutFeedback>
-                    <View
-                      style={[
-                        styles.addCollectionModalCard,
-                        !isDarkMode && styles.addCollectionModalCardLight,
-                      ]}
-                    >
-                      <View style={styles.addCollectionModalHeader}>
-                        <Text
-                          style={[
-                            styles.addCollectionModalTitle,
-                            !isDarkMode && styles.addCollectionModalTitleLight,
-                          ]}
-                        >
-                          Adicionar coleção
-                        </Text>
-                      </View>
-
-                      <Text
+                  <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : undefined}
+                    style={{ width: "100%", maxWidth: 380, alignItems: "center" }}
+                  >
+                    <TouchableWithoutFeedback>
+                      <View
                         style={[
-                          styles.addCollectionSectionTitle,
-                          !isDarkMode && styles.addCollectionSectionTitleLight,
-                          { marginTop: 12, marginBottom: 6 },
+                          styles.addCollectionModalCard,
+                          !isDarkMode && styles.addCollectionModalCardLight,
                         ]}
                       >
-                        Nome
-                      </Text>
-                      <AnimatedProfileInput
-                        isFocused={isCollectionNameFocused}
-                        currentTheme={currentTheme}
-                        isDarkMode={isDarkMode}
-                        maxLength={30}
-                        style={{ marginBottom: 4 }}
-                        placeholder="Ex: viagem para europa, praias..."
-                        placeholderTextColor={
-                          !isDarkMode
-                            ? "rgba(0, 0, 0, 0.40)"
-                            : "rgba(255, 255, 255, 0.5)"
-                        }
-                        value={newCollectionName}
-                        onChangeText={setNewCollectionName}
-                        onFocus={() => setIsCollectionNameFocused(true)}
-                        onBlur={() => setIsCollectionNameFocused(false)}
-                      />
-
-                      <Text
-                        style={[
-                          styles.addCollectionSectionTitle,
-                          !isDarkMode && styles.addCollectionSectionTitleLight,
-                          { marginTop: 4, marginBottom: 6 },
-                        ]}
-                      >
-                        Fotos
-                      </Text>
-                      <TouchableOpacity
-                        style={[
-                          styles.addCollectionPhotoBox,
-                          !isDarkMode && styles.addCollectionPhotoBoxLight,
-                        ]}
-                        activeOpacity={0.75}
-                        disabled={isCreatingCollection}
-                        onPress={handlePickCollectionPhotos}
-                      >
-                        <View
-                          style={[
-                            styles.addCollectionPhotoIconCircle,
-                            { backgroundColor: `${currentTheme.accent}22` },
-                          ]}
-                        >
-                          <Ionicons
-                            name={
-                              selectedCollectionPhotos.length > 0
-                                ? "checkmark-circle"
-                                : "cloud-upload-outline"
-                            }
-                            size={26}
-                            color={currentTheme.accent}
-                          />
-                        </View>
-                        <Text
-                          style={[
-                            styles.addCollectionPhotoTitle,
-                            !isDarkMode && styles.addCollectionPhotoTitleLight,
-                          ]}
-                        >
-                          {selectedCollectionPhotos.length > 0
-                            ? `${selectedCollectionPhotos.length} foto${selectedCollectionPhotos.length > 1 ? "s" : ""} selecionada${selectedCollectionPhotos.length > 1 ? "s" : ""}`
-                            : "Inserir fotos"}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.addCollectionPhotoSubtitle,
-                            !isDarkMode && styles.addCollectionPhotoSubtitleLight,
-                          ]}
-                        >
-                          {selectedCollectionPhotos.length > 0
-                            ? "Toque para alterar as fotos"
-                            : "Toque para escolher fotos do dispositivo"}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <View style={styles.addCollectionModalActions}>
-                        <TouchableOpacity
-                          style={[
-                            styles.addCollectionCancelBtn,
-                            !isDarkMode && styles.addCollectionCancelBtnLight,
-                          ]}
-                          activeOpacity={0.7}
-                          disabled={isCreatingCollection}
-                          onPress={() => {
-                            if (isCreatingCollection) return;
-                            setNewCollectionName("");
-                            setSelectedCollectionPhotos([]);
-                            setAddCollectionModalVisible(false);
-                          }}
-                        >
+                        <View style={styles.addCollectionModalHeader}>
                           <Text
                             style={[
-                              styles.addCollectionCancelText,
-                              !isDarkMode && styles.addCollectionCancelTextLight,
+                              styles.addCollectionModalTitle,
+                              !isDarkMode && styles.addCollectionModalTitleLight,
                             ]}
                           >
-                            Cancelar
+                            Adicionar coleção
                           </Text>
-                        </TouchableOpacity>
+                        </View>
 
+                        <Text
+                          style={[
+                            styles.addCollectionSectionTitle,
+                            !isDarkMode && styles.addCollectionSectionTitleLight,
+                            { marginTop: 12, marginBottom: 6 },
+                          ]}
+                        >
+                          Nome
+                        </Text>
+                        <AnimatedProfileInput
+                          isFocused={isCollectionNameFocused}
+                          currentTheme={currentTheme}
+                          isDarkMode={isDarkMode}
+                          maxLength={30}
+                          style={{ marginBottom: 4 }}
+                          placeholder="Ex: viagem para europa, praias..."
+                          placeholderTextColor={
+                            !isDarkMode
+                              ? "rgba(0, 0, 0, 0.40)"
+                              : "rgba(255, 255, 255, 0.5)"
+                          }
+                          value={newCollectionName}
+                          onChangeText={setNewCollectionName}
+                          onFocus={() => setIsCollectionNameFocused(true)}
+                          onBlur={() => setIsCollectionNameFocused(false)}
+                        />
+
+                        <Text
+                          style={[
+                            styles.addCollectionSectionTitle,
+                            !isDarkMode && styles.addCollectionSectionTitleLight,
+                            { marginTop: 4, marginBottom: 6 },
+                          ]}
+                        >
+                          Fotos
+                        </Text>
                         <TouchableOpacity
                           style={[
-                            styles.addCollectionSaveBtn,
-                            { backgroundColor: currentTheme.accent },
-                            isCreatingCollection && { opacity: 0.7 },
+                            styles.addCollectionPhotoBox,
+                            !isDarkMode && styles.addCollectionPhotoBoxLight,
+                            selectedCollectionPhotos.length > 0 && { paddingVertical: 14 },
                           ]}
-                          activeOpacity={0.8}
-                          disabled={isCreatingCollection}
-                          onPress={handleSaveCollection}
+                          activeOpacity={0.75}
+                          disabled={isCreatingCollection || isPickingPhotos}
+                          onPress={handlePickCollectionPhotos}
                         >
-                          {isCreatingCollection ? (
-                            <ActivityIndicator size="small" color="#000000" />
+                          {isPickingPhotos ? (
+                            <View style={{ alignItems: "center", paddingVertical: 4 }}>
+                              <ActivityIndicator
+                                size="small"
+                                color={currentTheme.accent}
+                                style={{ marginBottom: 8 }}
+                              />
+                              <Text
+                                style={[
+                                  styles.addCollectionPhotoTitle,
+                                  !isDarkMode && styles.addCollectionPhotoTitleLight,
+                                ]}
+                              >
+                                Processando fotos...
+                              </Text>
+                            </View>
                           ) : (
-                            <Text style={styles.addCollectionSaveText}>
-                              Salvar
-                            </Text>
+                            <>
+                            {selectedCollectionPhotos.length === 0 && (
+                              <View
+                                style={[
+                                  styles.addCollectionPhotoIconCircle,
+                                  { backgroundColor: `${currentTheme.accent}22` },
+                                ]}
+                              >
+                                <Ionicons
+                                  name="cloud-upload-outline"
+                                  size={26}
+                                  color={currentTheme.accent}
+                                />
+                              </View>
+                            )}
+                              <Text
+                                style={[
+                                  styles.addCollectionPhotoTitle,
+                                  !isDarkMode && styles.addCollectionPhotoTitleLight,
+                                ]}
+                              >
+                                {selectedCollectionPhotos.length > 0
+                                  ? `${selectedCollectionPhotos.length} foto${selectedCollectionPhotos.length > 1 ? "s" : ""} selecionada${selectedCollectionPhotos.length > 1 ? "s" : ""}`
+                                  : "Inserir fotos"}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.addCollectionPhotoSubtitle,
+                                  !isDarkMode && styles.addCollectionPhotoSubtitleLight,
+                                ]}
+                              >
+                                {selectedCollectionPhotos.length > 0
+                                  ? "Toque para adicionar mais fotos"
+                                  : "Toque para escolher fotos do dispositivo"}
+                              </Text>
+                            </>
                           )}
                         </TouchableOpacity>
+
+                        {selectedCollectionPhotos.length > 0 && (
+                          <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={styles.selectedCollectionImagesScroll}
+                            contentContainerStyle={styles.selectedCollectionImagesContent}
+                          >
+                            {selectedCollectionPhotos.map((uri, index) => (
+                              <View key={uri + index} style={styles.selectedCollectionImageWrapper}>
+                                <Image source={{ uri }} style={styles.selectedCollectionImageThumbnail} />
+                                <TouchableOpacity
+                                  style={styles.removeCollectionImageBadge}
+                                  onPress={() => handleRemoveCollectionPhoto(index)}
+                                  activeOpacity={0.7}
+                                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                >
+                                  <Ionicons name="close" size={12} color="#FFFFFF" />
+                                </TouchableOpacity>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        )}
+
+                        <View style={styles.addCollectionModalActions}>
+                          <TouchableOpacity
+                            style={[
+                              styles.addCollectionCancelBtn,
+                              !isDarkMode && styles.addCollectionCancelBtnLight,
+                            ]}
+                            activeOpacity={0.7}
+                            disabled={isCreatingCollection || isPickingPhotos}
+                            onPress={() => {
+                              if (isCreatingCollection || isPickingPhotos) return;
+                              setNewCollectionName("");
+                              setSelectedCollectionPhotos([]);
+                              setAddCollectionModalVisible(false);
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.addCollectionCancelText,
+                                !isDarkMode && styles.addCollectionCancelTextLight,
+                              ]}
+                            >
+                              Cancelar
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={[
+                              styles.addCollectionSaveBtn,
+                              { backgroundColor: currentTheme.accent },
+                              (isCreatingCollection || isPickingPhotos) && { opacity: 0.7 },
+                            ]}
+                            activeOpacity={0.8}
+                            disabled={isCreatingCollection || isPickingPhotos}
+                            onPress={handleSaveCollection}
+                          >
+                            {isCreatingCollection ? (
+                              <ActivityIndicator size="small" color="#000000" />
+                            ) : (
+                              <Text style={styles.addCollectionSaveText}>
+                                Salvar
+                              </Text>
+                            )}
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
-                  </TouchableWithoutFeedback>
+                    </TouchableWithoutFeedback>
+                  </KeyboardAvoidingView>
                 </View>
               </TouchableWithoutFeedback>
             </Modal>

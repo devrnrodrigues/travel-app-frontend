@@ -199,18 +199,22 @@ export const styles = StyleSheet.create({
     backgroundColor: "#F2F2F7",
   },
   textInput: {
-    flex: 1,
+    width: "100%",
     color: "#FFFFFF",
-    padding: 15,
+    fontSize: 15,
+    paddingHorizontal: 15,
+    paddingVertical: Platform.OS === "android" ? 10 : 12,
     outlineStyle: "none",
   },
   textInputLight: {
     color: "#000000",
   },
   textInputMultiline: {
+    minHeight: 70,
     textAlignVertical: "top",
   },
   textInputSingle: {
+    minHeight: 46,
     textAlignVertical: "center",
   },
   countryScroll: {
@@ -763,6 +767,39 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#000000",
+  },
+  selectedCollectionImagesScroll: {
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  selectedCollectionImagesContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 2,
+  },
+  selectedCollectionImageWrapper: {
+    position: "relative",
+    width: 54,
+    height: 54,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  selectedCollectionImageThumbnail: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+  },
+  removeCollectionImageBadge: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
