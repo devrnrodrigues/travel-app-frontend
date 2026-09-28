@@ -313,10 +313,10 @@ export default function Home({ navigation }) {
                     contentContainerStyle={styles.cardsList}
                     onEndReached={loadNextPage}
                     onEndReachedThreshold={0.5}
-                    windowSize={5}
-                    maxToRenderPerBatch={6}
-                    initialNumToRender={6}
-                    removeClippedSubviews={Platform.OS === "android"}
+                    windowSize={11}
+                    maxToRenderPerBatch={8}
+                    initialNumToRender={8}
+                    removeClippedSubviews={false}
                     renderItem={({ item }) => (
                       <HomeCardItem
                         item={item}
