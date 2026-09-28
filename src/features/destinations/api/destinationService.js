@@ -28,6 +28,13 @@ export async function normalizeDestination(destination, fallbackCategory = "") {
       ? Number(destination.rating).toFixed(1)
       : "0.0";
 
+  const coverImageObj = Array.isArray(destination.images)
+    ? (destination.images.find((img) => img.isCover) || destination.images[0])
+    : null;
+
+  const avgColor = destination.avgColor || coverImageObj?.avgColor || null;
+  const alt = destination.alt || coverImageObj?.alt || title;
+
   return {
     ...destination,
     id: destination.id,
@@ -42,6 +49,8 @@ export async function normalizeDestination(destination, fallbackCategory = "") {
     coverImageUrl: destination.coverImageUrl || imageUrl,
     photoQuery: destination.photoQuery,
     image_url: imageUrl,
+    avgColor,
+    alt,
     realRating,
     rating: destination.rating ?? 0.0,
     reviewCount: destination.reviewCount ?? 0,

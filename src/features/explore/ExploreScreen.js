@@ -29,6 +29,7 @@ import { ExploreSkeletonGrid } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import styles, { GAP, COLUMN_WIDTH, CARD_HEIGHT, categoryThemes, defaultTheme } from "./explore.styles";
 import { getDestinations } from "../destinations/api/destinationService";
+import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 
 const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode }) {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -69,19 +70,21 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
         styles.gridItem,
         { width: COLUMN_WIDTH, height: CARD_HEIGHT },
         !isDarkMode && styles.gridItemLight,
+        item.avgColor ? { backgroundColor: item.avgColor } : null,
       ]}
       onPress={handlePress}
     >
       {item.image_url ? (
         <>
           <Animated.Image
-            source={{ uri: item.image_url }}
+            source={{ uri: getOptimizedImageUrl(item.image_url, 350) }}
             style={[styles.gridImage, { opacity: imgAnim }]}
             resizeMode="cover"
             onLoad={handleImageLoad}
+            accessibilityLabel={item.alt || item.name || item.title}
           />
           {!imageLoaded && (
-            <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight]} />
+            <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight, item.avgColor ? { backgroundColor: item.avgColor } : null]} />
           )}
         </>
       ) : (

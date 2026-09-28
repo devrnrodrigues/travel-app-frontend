@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, Animated, StyleSheet, Platform } f
 import { BlurView } from "expo-blur";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import styles from "../home.styles";
+import { getOptimizedImageUrl } from "../../../shared/utils/imageUrl";
 
 const HomeCardItem = React.memo(function HomeCardItem({
   item,
@@ -12,7 +13,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
 }) {
   const hasImage = Boolean(item.image_url && typeof item.image_url === "string" && item.image_url.startsWith("http"));
   const isLocal = !hasImage && Boolean(item.isLocalSource && item.image_url);
-  const cardImgSource = isLocal ? item.image_url : (hasImage ? { uri: item.image_url } : null);
+  const cardImgSource = isLocal ? item.image_url : (hasImage ? { uri: getOptimizedImageUrl(item.image_url, 800) } : null);
 
   const [imageLoaded, setImageLoaded] = useState(Boolean(cardImgSource && isLocal));
   const imgAnim = useRef(new Animated.Value(cardImgSource && isLocal ? 1 : 0)).current;
@@ -35,7 +36,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      style={styles.card}
+      style={[styles.card, item.avgColor ? { backgroundColor: item.avgColor } : null]}
       onPress={() => navigation.navigate("Details", { item, currentTheme })}
     >
       {cardImgSource ? (
@@ -43,6 +44,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
           source={cardImgSource}
           style={[styles.cardImage, { opacity: imgAnim }]}
           onLoad={handleImageLoad}
+          accessibilityLabel={item.alt || item.title || item.name}
         />
       ) : (
         <View
