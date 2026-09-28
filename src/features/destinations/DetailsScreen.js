@@ -28,8 +28,8 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import styles from "./styles/details.styles";
 import {
   getWeather,
-  getAiDescription,
-  getAiPrice,
+  // getAiDescription,
+  // getAiPrice,
 } from "./api/detailsApi";
 import { getDestinationById } from "./api/destinationService";
 import { useAuth } from "../auth/context/AuthContext";
@@ -46,7 +46,7 @@ import {
 import FadeInView from "../../shared/components/FadeInView";
 import ImageGalleryModal, { ThumbnailItem } from "./components/ImageGalleryModal";
 import ReviewsSection from "./components/ReviewsSection";
-import EstimatedPriceModal, { MOCK_ESTIMATED_PRICE } from "./components/EstimatedPriceModal";
+import EstimatedPriceModal from "./components/EstimatedPriceModal";
 
 const { width } = Dimensions.get("window");
 const STRICT_THUMB_SIZE = Math.round(width * 0.115);
@@ -124,6 +124,16 @@ function isDescriptionUnavailable(text) {
   );
 }
 
+function parseCostEstimates(raw) {
+  if (!raw) return null;
+  if (typeof raw === "object") return raw;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export default function Details({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -174,7 +184,9 @@ export default function Details({ route, navigation }) {
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [averageRating, setAverageRating] = useState("N/A");
   const [loadingReviews, setLoadingReviews] = useState(true);
-  const [estimatedPrice, setEstimatedPrice] = useState(null);
+  const [costEstimates, setCostEstimates] = useState(() =>
+    parseCostEstimates(item?.aiCostEstimates)
+  );
   const [loadingPrice, setLoadingPrice] = useState(true);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [showWeatherInfo, setShowWeatherInfo] = useState(false);
@@ -341,6 +353,7 @@ export default function Details({ route, navigation }) {
         setLoadingWeather(true);
         setLoadingAi(true);
         setLoadingImages(true);
+        setLoadingPrice(true);
       }
       const data = await getDestinationById(destId);
       if (data) {
@@ -361,8 +374,15 @@ export default function Details({ route, navigation }) {
         if (data.description && (Array.isArray(data.description) ? data.description.length > 0 : Boolean(data.description))) {
           setDescription(data.description);
         } else {
-          const geminiText = await getAiDescription(item, isPull);
-          setDescription(geminiText || []);
+          // const geminiText = await getAiDescription(item, isPull);
+          // setDescription(geminiText || []);
+          setDescription(["Descrição indisponivel."]);
+        }
+
+        if (data.aiCostEstimates) {
+          setCostEstimates(parseCostEstimates(data.aiCostEstimates));
+        } else {
+          setCostEstimates(null);
         }
 
         const backendImages = Array.isArray(data.images) && data.images.length > 0
@@ -384,32 +404,32 @@ export default function Details({ route, navigation }) {
       }
     } catch {
       try {
-        const [fallbackWeather, geminiText] = await Promise.all([
-          getWeather(destId),
-          getAiDescription(item, isPull),
-        ]);
+        const fallbackWeather = await getWeather(destId);
+        // const [fallbackWeather, geminiText] = await Promise.all([
+        //   getWeather(destId),
+        //   getAiDescription(item, isPull),
+        // ]);
         if (fallbackWeather) setWeather(fallbackWeather);
-        setDescription(geminiText || []);
+        // setDescription(geminiText || []);
+        setDescription(["Descrição indisponivel."]);
       } catch {
-        if (!isPull) setDescription(["Não foi possível carregar a descrição."]);
+        if (!isPull) setDescription(["Descrição indisponivel."]);
       }
+      setCostEstimates(null);
     } finally {
       setLoadingWeather(false);
       setLoadingAi(false);
       setLoadingImages(false);
+      setLoadingPrice(false);
     }
   }, [item]);
 
   const fetchPrice = useCallback(async (isPull = false) => {
     try {
-      if (!isPull) setLoadingPrice(true);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const price = await getAiPrice(item);
-      setEstimatedPrice(price);
+      // const price = await getAiPrice(item);
+      // setEstimatedPrice(price);
     } catch (error) {
       console.error("Erro ao obter preço estimado:", error);
-    } finally {
-      setLoadingPrice(false);
     }
   }, [item]);
 
@@ -433,14 +453,12 @@ export default function Details({ route, navigation }) {
     const currentImg = item.image_url || item.coverImageUrl || null;
     setMainImage(currentImg);
     setLoadingImages(true);
+    setLoadingPrice(true);
     setThumbnails(
       currentImg ? [currentImg, null, null, null] : [null, null, null, null]
     );
-    Promise.all([
-      fetchDestinationDetails(),
-      fetchPrice(),
-    ]);
-  }, [item?.id, fetchDestinationDetails, fetchPrice]);
+    fetchDestinationDetails();
+  }, [item?.id, fetchDestinationDetails]);
 
   return (
     <Animated.View
@@ -868,7 +886,9 @@ export default function Details({ route, navigation }) {
                   </View>
                 ) : (
                   <Text style={[styles.priceValue, !isDarkMode && { color: "#111827" }]}>
-                    {`R$ ${MOCK_ESTIMATED_PRICE.daily_total.min} - ${MOCK_ESTIMATED_PRICE.daily_total.max}`}
+                    {costEstimates?.daily_total?.min != null && costEstimates?.daily_total?.max != null
+                      ? `R$ ${costEstimates.daily_total.min} - ${costEstimates.daily_total.max}`
+                      : "R$ ???? - ????"}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -917,6 +937,8 @@ export default function Details({ route, navigation }) {
       <EstimatedPriceModal
         visible={showPriceModal}
         onClose={() => setShowPriceModal(false)}
+        data={costEstimates}
+        loading={loadingPrice}
         currentTheme={currentTheme}
         isDarkMode={isDarkMode}
       />

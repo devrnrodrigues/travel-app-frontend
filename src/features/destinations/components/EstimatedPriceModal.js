@@ -16,47 +16,6 @@ import { SkeletonBox } from "../../../shared/components/Skeleton";
 
 const { width } = Dimensions.get("window");
 
-export const MOCK_ESTIMATED_PRICE = {
-  currency: "BRL",
-  basis: {
-    hotel: "per_room_per_night",
-    food: "per_person_per_day",
-    activities: "per_person_per_day",
-    transport: "per_person_per_day",
-  },
-  daily_total: {
-    min: 250,
-    max: 740,
-    avg: 495,
-  },
-  breakdown: {
-    hotel_per_room: {
-      min: 150,
-      max: 400,
-      avg: 275,
-    },
-    food: {
-      min: 80,
-      max: 180,
-      avg: 130,
-    },
-    activities: {
-      min: 0,
-      max: 100,
-      avg: 50,
-    },
-    transport: {
-      min: 20,
-      max: 60,
-      avg: 40,
-    },
-  },
-  estimated_for: {
-    year: 2026,
-    season: "typical",
-  },
-};
-
 const BREAKDOWN_CONFIG = [
   {
     key: "hotel_per_room",
@@ -79,12 +38,12 @@ const BREAKDOWN_CONFIG = [
 export default function EstimatedPriceModal({
   visible,
   onClose,
-  data = MOCK_ESTIMATED_PRICE,
+  data = null,
+  loading = false,
   currentTheme,
   isDarkMode,
 }) {
   const [modalRendered, setModalRendered] = useState(visible);
-  const [loading, setLoading] = useState(true);
   const [showHotelInfo, setShowHotelInfo] = useState(false);
   const hotelInfoAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -113,10 +72,6 @@ export default function EstimatedPriceModal({
 
   useEffect(() => {
     if (visible) {
-      setLoading(true);
-      const timer = setTimeout(() => {
-        setLoading(false);
-      }, 2000);
       setModalRendered(true);
       setShowHotelInfo(false);
       hotelInfoAnim.setValue(0);
@@ -179,9 +134,9 @@ export default function EstimatedPriceModal({
 
   const accentColor = currentTheme?.accent || "#3B82F6";
   const seasonText =
-    data.estimated_for?.season === "typical"
+    data?.estimated_for?.season === "typical"
       ? "temporada típica"
-      : data.estimated_for?.season || "temporada média";
+      : data?.estimated_for?.season || "temporada típica";
 
   return (
     <Modal
@@ -224,7 +179,7 @@ export default function EstimatedPriceModal({
                   isDarkMode ? styles.subtitleDark : styles.subtitleLight,
                 ]}
               >
-                Referência para {data.estimated_for?.year || 2026} em {seasonText}
+                Referência para {data?.estimated_for?.year || 2026} em {seasonText}
               </Text>
             </View>
 
@@ -279,7 +234,9 @@ export default function EstimatedPriceModal({
                       isDarkMode ? styles.textLight : styles.textDark,
                     ]}
                   >
-                    R$ {data.daily_total?.min} - {data.daily_total?.max}
+                    {data?.daily_total?.min != null && data?.daily_total?.max != null
+                      ? `R$ ${data?.daily_total?.min} - ${data?.daily_total?.max}`
+                      : "R$ ???? - ????"}
                   </Text>
                   <View style={styles.avgRow}>
                     <View
@@ -294,7 +251,9 @@ export default function EstimatedPriceModal({
                         isDarkMode ? styles.subtitleDark : styles.subtitleLight,
                       ]}
                     >
-                      Média diária de R$ {data.daily_total?.avg} por pessoa
+                      {data?.daily_total?.avg != null
+                        ? `Média diária de R$ ${data?.daily_total?.avg} por pessoa`
+                        : "Média diária de R$ ???? por pessoa"}
                     </Text>
                   </View>
                 </>
@@ -319,8 +278,7 @@ export default function EstimatedPriceModal({
 
             <View style={styles.breakdownList}>
               {BREAKDOWN_CONFIG.map((item, index) => {
-                const itemData = data.breakdown?.[item.key];
-                if (!itemData) return null;
+                const itemData = data?.breakdown?.[item.key];
                 const isLast = index === BREAKDOWN_CONFIG.length - 1;
 
                 return (
@@ -439,7 +397,9 @@ export default function EstimatedPriceModal({
                                 isDarkMode ? styles.textLight : styles.textDark,
                               ]}
                             >
-                              R$ {itemData.min} - {itemData.max}
+                              {itemData?.min != null && itemData?.max != null
+                                ? `R$ ${itemData?.min} - ${itemData?.max}`
+                                : "R$ ???? - ????"}
                             </Text>
                             <Text
                               style={[
@@ -449,7 +409,9 @@ export default function EstimatedPriceModal({
                                   : styles.subtitleLight,
                               ]}
                             >
-                              Média: R$ {itemData.avg}
+                              {itemData?.avg != null
+                                ? `Média: R$ ${itemData?.avg}`
+                                : "Média: R$ ????"}
                             </Text>
                           </>
                         )}
