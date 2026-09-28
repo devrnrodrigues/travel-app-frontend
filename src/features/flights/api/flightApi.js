@@ -7,6 +7,12 @@ export const CABIN_CLASS_MAP = {
   "Primeira Classe": "FIRST",
 };
 
+export const SORT_MAP = {
+  "Mais Econômico": "CHEAPEST",
+  "Melhor Viagem": "BEST",
+  "Mais Rápido": "FASTEST",
+};
+
 export async function getAirportsApi() {
   try {
     const data = await apiClient.get("/airports");
@@ -37,12 +43,26 @@ export async function searchFlights({
   children,
   cabinClass,
   currency,
+  sort = "CHEAPEST",
+  onlyDirect = false,
 }) {
   const fromId = fromIata.includes(".AIRPORT") ? fromIata : `${fromIata}.AIRPORT`;
   const toId = toIata.includes(".AIRPORT") ? toIata : `${toIata}.AIRPORT`;
   const apiCabinClass = CABIN_CLASS_MAP[cabinClass] || "ECONOMY";
-  const childrenQty = parseInt(children, 10) || 0;
-  const childrenParam = Array(childrenQty).fill("17").join(",");
+  const apiSort = SORT_MAP[sort] || sort || "CHEAPEST";
+  let childrenParam = "";
+  if (Array.isArray(children)) {
+    childrenParam = children.join(",");
+  } else if (typeof children === "string" && children.trim().length > 0) {
+    if (children.includes(",")) {
+      childrenParam = children.trim();
+    } else {
+      const parsed = parseInt(children, 10) || 0;
+      if (parsed > 0) {
+        childrenParam = Array(parsed).fill("17").join(",");
+      }
+    }
+  }
 
   const params = new URLSearchParams({
     fromId,
@@ -50,7 +70,7 @@ export async function searchFlights({
     departDate,
     pageNo: "1",
     adults: String(adults || "1"),
-    sort: "CHEAPEST",
+    sort: apiSort,
     cabinClass: apiCabinClass,
     currencyCode: currency || "BRL",
   });
@@ -72,12 +92,15 @@ export async function searchFlights({
     const outbound = card.outbound;
     const inbound = card.inbound;
     const hasReturn = Boolean(inbound);
+    const stopsCount = card.stopsCount || 0;
+    const isDirect = stopsCount === 0 || card.stopsLabel === "Direto";
 
     return {
       id: card.id || String(Math.random()),
       company: card.airlineName || "Companhia Aérea",
       logo: card.airlineLogoUrl || null,
-      stops: card.stopsLabel || (card.stopsCount > 0 ? `${card.stopsCount} escala(s)` : "Direto"),
+      stops: card.stopsLabel || (stopsCount > 0 ? `${stopsCount} escala(s)` : "Direto"),
+      isDirect,
       departureTime: outbound?.departureTime || null,
       arrivalTime: outbound?.arrivalTime || null,
       duration: outbound?.duration || null,
@@ -95,7 +118,12 @@ export async function searchFlights({
     };
   });
 
-  const unique = normalized.filter((ticket, index, self) =>
+  let filtered = normalized;
+  if (onlyDirect) {
+    filtered = filtered.filter((t) => t.isDirect);
+  }
+
+  const unique = filtered.filter((ticket, index, self) =>
     index === self.findIndex((t) =>
       t.price === ticket.price &&
       t.company === ticket.company &&
@@ -104,5 +132,9 @@ export async function searchFlights({
     )
   );
 
-  return [...unique].sort((a, b) => a.priceNum - b.priceNum);
+  if (apiSort === "CHEAPEST") {
+    return [...unique].sort((a, b) => a.priceNum - b.priceNum);
+  }
+
+  return [...unique];
 }

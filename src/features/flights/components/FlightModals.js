@@ -3,7 +3,21 @@ import { View, Text, TouchableOpacity, Modal, FlatList } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import styles from "../flightSearch.styles";
 
-const CURRENCY_LIST = ["BRL", "USD", "EUR", "AED", "GBP"];
+export const CURRENCY_MAP = {
+  BRL: "Real",
+  USD: "Dólar",
+  EUR: "Euro",
+  GBP: "Libra",
+  AED: "Dirham",
+};
+
+export const CURRENCY_LIST = [
+  { code: "BRL", label: "BRL (Real)" },
+  { code: "USD", label: "USD (Dólar)" },
+  { code: "EUR", label: "EUR (Euro)" },
+  { code: "GBP", label: "GBP (Libra)" },
+  { code: "AED", label: "AED (Dirham)" },
+];
 
 const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const MONTH_NAMES = [
@@ -168,17 +182,83 @@ export function CurrencyModal({
           </Text>
           <FlatList
             data={CURRENCY_LIST}
-            keyExtractor={(item) => item}
+            keyExtractor={(item) => item.code}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(0, 0, 0, 0.08)" }]}
                 onPress={() => {
-                  onSelectCurrency(item);
+                  onSelectCurrency(item.code);
                   onClose();
                 }}
               >
                 <Feather name="dollar-sign" size={16} color={currentTheme.accent} style={styles.marginRight10} />
-                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#000000" }]}>{item}</Text>
+                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#000000" }]}>{item.label}</Text>
+              </TouchableOpacity>
+            )}
+          />
+          <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
+            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(0, 0, 0, 0.6)" }]}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export function SortModal({
+  visible,
+  onClose,
+  onSelectSort,
+  sortMap,
+  currentTheme,
+  isDarkMode,
+}) {
+  const data = Object.keys(sortMap).map((label) => ({ id: sortMap[label], label }));
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent={true}
+      navigationBarTranslucent={true}
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View
+          style={[
+            styles.modalDestinationContent,
+            !isDarkMode && {
+              backgroundColor: "#FFFFFF",
+              borderWidth: 0,
+              shadowColor: "transparent",
+              shadowOpacity: 0,
+              shadowRadius: 0,
+              elevation: 0,
+            },
+          ]}
+        >
+          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#000000" }]}>
+            Critério de Busca
+          </Text>
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.autocompleteItem, !isDarkMode && { borderBottomColor: "rgba(0, 0, 0, 0.08)" }]}
+                onPress={() => {
+                  onSelectSort(item.label);
+                  onClose();
+                }}
+              >
+                <Feather
+                  name={item.id === "CHEAPEST" ? "dollar-sign" : item.id === "FASTEST" ? "zap" : "award"}
+                  size={16}
+                  color={currentTheme.accent}
+                  style={styles.marginRight10}
+                />
+                <Text style={[styles.autocompleteText, !isDarkMode && { color: "#000000" }]}>{item.label}</Text>
               </TouchableOpacity>
             )}
           />
@@ -240,6 +320,11 @@ export function CalendarModal({
     onClose();
   };
 
+  const now = new Date();
+  const isCurrentOrPastMonth =
+    currentCalendarYear < now.getFullYear() ||
+    (currentCalendarYear === now.getFullYear() && currentCalendarMonth <= now.getMonth());
+
   return (
     <Modal
       visible={visible}
@@ -265,14 +350,24 @@ export function CalendarModal({
         >
           <View style={styles.calendarSelectorRow}>
             <TouchableOpacity
-              style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" }]}
+              style={[
+                styles.calendarNavButton,
+                !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+                isCurrentOrPastMonth && { opacity: 0.25 },
+              ]}
+              disabled={isCurrentOrPastMonth}
               onPress={() => changeMonth(-1)}
             >
               <Feather name="chevron-left" size={18} color={!isDarkMode ? "#000000" : "#FFFFFF"} />
             </TouchableOpacity>
-            <Text style={[styles.calendarTitleText, !isDarkMode && { color: "#000000" }]}>
-              {MONTH_NAMES[currentCalendarMonth]} {currentCalendarYear}
-            </Text>
+            <View style={{ alignItems: "center" }}>
+              <Text style={[styles.calendarTitleText, !isDarkMode && { color: "#000000" }]}>
+                {MONTH_NAMES[currentCalendarMonth]} {currentCalendarYear}
+              </Text>
+              <Text style={{ fontSize: 11, color: !isDarkMode ? "#6B7280" : "#8E8E93", marginTop: 2 }}>
+                {target === "IDA" ? "Selecione a data de ida" : "Selecione a data de volta"}
+              </Text>
+            </View>
             <TouchableOpacity
               style={[styles.calendarNavButton, !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" }]}
               onPress={() => changeMonth(1)}
@@ -289,14 +384,19 @@ export function CalendarModal({
             {generateCalendarDays().map((item, index) => {
               const today = new Date(); today.setHours(0, 0, 0, 0);
               const cellDate = new Date(currentCalendarYear, currentCalendarMonth, Number(item.dayStr));
+              cellDate.setHours(0, 0, 0, 0);
               const isPast = !item.isEmpty && cellDate < today;
+              const departDateObj = departDate && departDate.includes("-") ? new Date(departDate + "T00:00:00") : today;
+              departDateObj.setHours(0, 0, 0, 0);
+              const isBeforeDepart = target === "VOLTA" && cellDate < departDateObj;
+              const isDisabled = item.isEmpty || isPast || isBeforeDepart;
               const fullDate = `${currentCalendarYear}-${String(currentCalendarMonth + 1).padStart(2, "0")}-${item.dayStr}`;
               const isSelected = !item.isEmpty &&
                 (target === "IDA" ? departDate : returnDate) === fullDate;
               return (
                 <TouchableOpacity
                   key={index}
-                  disabled={item.isEmpty || isPast}
+                  disabled={isDisabled}
                   style={[
                     styles.calendarDay,
                     isSelected && [styles.calendarDayActive, { backgroundColor: currentTheme.accent }],
@@ -307,7 +407,7 @@ export function CalendarModal({
                     styles.calendarDayText,
                     !isDarkMode && { color: "#000000" },
                     isSelected && styles.calendarDayTextActive,
-                    isPast && (styles.calendarDayTextDisabled || { color: "rgba(0, 0, 0, 0.25)" }),
+                    isDisabled && (styles.calendarDayTextDisabled || { color: "rgba(0, 0, 0, 0.25)" }),
                     item.isEmpty && styles.calendarDayTextEmpty,
                   ]}>
                     {item.dayStr}
@@ -318,6 +418,89 @@ export function CalendarModal({
           </View>
           <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
             <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(0, 0, 0, 0.6)" }]}>Fechar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export function ChildAgeModal({
+  visible,
+  onClose,
+  childIndex,
+  currentAge,
+  onSelectAge,
+  currentTheme,
+  isDarkMode,
+}) {
+  const ages = Array.from({ length: 18 }, (_, i) => ({
+    age: i,
+    label: i === 0 ? "Bebê (< 1 ano / colo)" : `${i} ${i === 1 ? "ano" : "anos"}`,
+  }));
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent={true}
+      navigationBarTranslucent={true}
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View
+          style={[
+            styles.modalDestinationContent,
+            !isDarkMode && {
+              backgroundColor: "#FFFFFF",
+              borderWidth: 0,
+              shadowColor: "transparent",
+              shadowOpacity: 0,
+              shadowRadius: 0,
+              elevation: 0,
+            },
+          ]}
+        >
+          <Text style={[styles.calendarTitleText, { marginBottom: 15, textAlign: "center" }, !isDarkMode && { color: "#000000" }]}>
+            Idade da Criança {childIndex + 1}
+          </Text>
+          <FlatList
+            data={ages}
+            keyExtractor={(item) => String(item.age)}
+            style={{ maxHeight: 320 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.autocompleteItem,
+                  !isDarkMode && { borderBottomColor: "rgba(0, 0, 0, 0.08)" },
+                  currentAge === item.age && { backgroundColor: "rgba(128, 128, 128, 0.12)" },
+                ]}
+                onPress={() => {
+                  onSelectAge(item.age);
+                  onClose();
+                }}
+              >
+                <Feather
+                  name="user"
+                  size={16}
+                  color={currentAge === item.age ? currentTheme.accent : (!isDarkMode ? "#6B7280" : "#8E8E93")}
+                  style={styles.marginRight10}
+                />
+                <Text
+                  style={[
+                    styles.autocompleteText,
+                    !isDarkMode && { color: "#000000" },
+                    currentAge === item.age && { fontWeight: "700", color: currentTheme.accent },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+          <TouchableOpacity style={styles.closeModalButton} onPress={onClose}>
+            <Text style={[styles.closeModalButtonText, !isDarkMode && { color: "rgba(0, 0, 0, 0.6)" }]}>Cancelar</Text>
           </TouchableOpacity>
         </View>
       </View>
