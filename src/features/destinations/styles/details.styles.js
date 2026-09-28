@@ -204,7 +204,8 @@ export default StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 14,
+    paddingTop: 16,
+    paddingBottom: 28,
     paddingHorizontal: width * 0.07,
     backgroundColor: "#0A0A0A",
     shadowColor: "#000",
@@ -220,6 +221,7 @@ export default StyleSheet.create({
     fontSize: 12,
     color: "#FFFFFF",
     fontWeight: "600",
+    marginBottom: 3,
   },
   priceValue: {
     fontSize: 24,

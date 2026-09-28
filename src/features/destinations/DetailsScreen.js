@@ -20,7 +20,7 @@ import {
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
@@ -46,6 +46,7 @@ import {
 import FadeInView from "../../shared/components/FadeInView";
 import ImageGalleryModal, { ThumbnailItem } from "./components/ImageGalleryModal";
 import ReviewsSection from "./components/ReviewsSection";
+import EstimatedPriceModal, { MOCK_ESTIMATED_PRICE } from "./components/EstimatedPriceModal";
 
 const { width } = Dimensions.get("window");
 const STRICT_THUMB_SIZE = Math.round(width * 0.115);
@@ -124,6 +125,7 @@ function isDescriptionUnavailable(text) {
 }
 
 export default function Details({ route, navigation }) {
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
@@ -174,6 +176,7 @@ export default function Details({ route, navigation }) {
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [estimatedPrice, setEstimatedPrice] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(true);
+  const [showPriceModal, setShowPriceModal] = useState(false);
   const [showWeatherInfo, setShowWeatherInfo] = useState(false);
   const weatherInfoAnim = useRef(new Animated.Value(0)).current;
 
@@ -400,6 +403,7 @@ export default function Details({ route, navigation }) {
   const fetchPrice = useCallback(async (isPull = false) => {
     try {
       if (!isPull) setLoadingPrice(true);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       const price = await getAiPrice(item);
       setEstimatedPrice(price);
     } catch (error) {
@@ -640,23 +644,22 @@ export default function Details({ route, navigation }) {
 
           <View style={[styles.marginBottom24, { marginTop: 24 }]}>
             <View style={styles.rowSpaceBetween}>
-              <View style={styles.rowCenter}>
+              <TouchableOpacity
+                onPress={toggleWeatherInfo}
+                activeOpacity={0.7}
+                style={styles.rowCenter}
+              >
                 <Text style={[styles.descriptionHeader, { marginBottom: 0 }, !isDarkMode && { color: "#111827" }]}>
                   Clima
                 </Text>
-                <TouchableOpacity
-                  onPress={toggleWeatherInfo}
-                  activeOpacity={0.65}
-                  hitSlop={{ top: 12, bottom: 12, left: 10, right: 10 }}
-                  style={styles.weatherCenterMargin}
-                >
+                <View style={styles.weatherCenterMargin}>
                   <Feather
                     name="info"
                     size={14}
                     color={showWeatherInfo ? currentTheme.accent : (!isDarkMode ? "#9CA3AF" : "rgba(255, 255, 255, 0.45)")}
                   />
-                </TouchableOpacity>
-              </View>
+                </View>
+              </TouchableOpacity>
             </View>
 
             <Animated.View style={[styles.weatherNoticeWrapper, { maxHeight: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 24] }), opacity: weatherInfoAnim.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0.5, 1] }), marginTop: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 4] }) }]}>
@@ -821,6 +824,8 @@ export default function Details({ route, navigation }) {
             styles.footerPriceRow,
             {
               backgroundColor: footerPriceBg,
+              paddingTop: 16,
+              paddingBottom: Math.max(insets.bottom + 12, 28),
               borderTopWidth: isDarkMode ? StyleSheet.hairlineWidth : 0,
               borderTopColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "transparent",
               shadowColor: "#000",
@@ -832,16 +837,42 @@ export default function Details({ route, navigation }) {
           ]}
         >
           <View style={styles.priceContainer}>
-            <Text style={[styles.priceLabel, !isDarkMode && { color: "#6B7280" }]}>Preço Estimado</Text>
-            {loadingPrice ? (
-              <SkeletonBox width={85} height={20} borderRadius={5} isDarkMode={isDarkMode} />
-            ) : (
-              <FadeInView duration={200}>
-                <Text style={[styles.priceValue, !isDarkMode && { color: "#111827" }]}>
-                  {estimatedPrice ? `R$ ${estimatedPrice.toLocaleString("pt-BR")}` : "N/A"}
-                </Text>
-              </FadeInView>
-            )}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setShowPriceModal(true)}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+            >
+              <Text style={[styles.priceLabel, !isDarkMode && { color: "#6B7280" }]}>
+                Diária estimada
+              </Text>
+              <Feather
+                name="help-circle"
+                size={14}
+                color={currentTheme?.accent || "#3B82F6"}
+                style={{ marginTop: -1 }}
+              />
+            </TouchableOpacity>
+            <FadeInView duration={200}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setShowPriceModal(true)}
+              >
+                {loadingPrice ? (
+                  <View style={{ marginTop: 5, marginBottom: 2 }}>
+                    <SkeletonBox
+                      width={130}
+                      height={22}
+                      borderRadius={6}
+                      isDarkMode={isDarkMode}
+                    />
+                  </View>
+                ) : (
+                  <Text style={[styles.priceValue, !isDarkMode && { color: "#111827" }]}>
+                    {`R$ ${MOCK_ESTIMATED_PRICE.daily_total.min} - ${MOCK_ESTIMATED_PRICE.daily_total.max}`}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </FadeInView>
           </View>
           <TouchableOpacity
             style={[
@@ -861,7 +892,15 @@ export default function Details({ route, navigation }) {
               })
             }
           >
-            <Feather name="chevron-right" size={28} color={!isDarkMode ? "#FFFFFF" : "#000"} />
+            <Image
+              source={require("../../../assets/airplane-ticket.webp")}
+              style={{
+                width: 26,
+                height: 26,
+                tintColor: !isDarkMode ? "#FFFFFF" : "#000000",
+              }}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>
@@ -873,6 +912,13 @@ export default function Details({ route, navigation }) {
         mainImage={mainImage}
         onSelectImage={setMainImage}
         defaultImage={item.image_url}
+      />
+
+      <EstimatedPriceModal
+        visible={showPriceModal}
+        onClose={() => setShowPriceModal(false)}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
       />
     </Animated.View>
   );
