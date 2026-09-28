@@ -852,7 +852,7 @@ export default function ProfileScreen({ navigation }) {
   const effectiveGalleryCount = displayedCollections.length;
 
   const galleryRows = useMemo(() => {
-    if (effectiveGalleryCount <= 4) return [];
+    if (effectiveGalleryCount === 0) return [];
     const rows = [];
     const totalRows = Math.ceil(effectiveGalleryCount / 2);
     for (let r = 0; r < totalRows; r++) {
@@ -866,64 +866,6 @@ export default function ProfileScreen({ navigation }) {
     }
     return rows;
   }, [displayedCollections, effectiveGalleryCount]);
-
-  const getRowItemLayout = useCallback(
-    (_, index) => ({
-      length: rowHeight + 12,
-      offset: (rowHeight + 12) * index,
-      index,
-    }),
-    [rowHeight]
-  );
-
-  const renderGalleryRow = useCallback(
-    ({ item: row }) => {
-      const { rowIndex, leftItem, rightItem } = row;
-      const animStyle = getRowAnimProps(rowIndex);
-
-      return (
-        <Animated.View
-          key={rowIndex}
-          style={[
-            styles.galleryRow,
-            {
-              height: rowHeight,
-              minHeight: rowHeight,
-              flexGrow: 0,
-              flexShrink: 0,
-              ...(Platform.OS === "web"
-                ? { flexBasis: rowHeight, width: "100%" }
-                : { flex: 0 }),
-            },
-            animStyle,
-          ]}
-        >
-          {leftItem ? (
-            <PolaroidStackCard
-              key={leftItem.id ? `${leftItem.id}_${refreshKey}` : `card_${rowIndex * 2}_${refreshKey}`}
-              item={leftItem}
-              isDarkMode={isDarkMode}
-              currentTheme={currentTheme}
-            />
-          ) : (
-            <View style={styles.gallerySpacer} />
-          )}
-
-          {rightItem ? (
-            <PolaroidStackCard
-              key={rightItem.id ? `${rightItem.id}_${refreshKey}` : `card_${rowIndex * 2 + 1}_${refreshKey}`}
-              item={rightItem}
-              isDarkMode={isDarkMode}
-              currentTheme={currentTheme}
-            />
-          ) : (
-            <View style={styles.gallerySpacer} />
-          )}
-        </Animated.View>
-      );
-    },
-    [rowHeight, getRowAnimProps, isDarkMode, currentTheme, refreshKey]
-  );
 
   const MainContentContainer = ScrollView;
   const mainContainerProps = {
@@ -1083,76 +1025,36 @@ export default function ProfileScreen({ navigation }) {
                         </Text>
                       </TouchableOpacity>
                     </View>
-                  ) : effectiveGalleryCount <= 4 ? (
-                    <>
-                      <View style={styles.galleryRow}>
-                        {displayedCollections[0] ? (
-                          <PolaroidStackCard
-                            key={displayedCollections[0].id ? `${displayedCollections[0].id}_${refreshKey}` : `card_0_${refreshKey}`}
-                            item={displayedCollections[0]}
-                            isDarkMode={isDarkMode}
-                            currentTheme={currentTheme}
-                          />
-                        ) : (
-                          <View style={styles.gallerySpacer} />
-                        )}
-                        {displayedCollections[1] ? (
-                          <PolaroidStackCard
-                            key={displayedCollections[1].id ? `${displayedCollections[1].id}_${refreshKey}` : `card_1_${refreshKey}`}
-                            item={displayedCollections[1]}
-                            isDarkMode={isDarkMode}
-                            currentTheme={currentTheme}
-                          />
-                        ) : (
-                          <View style={styles.gallerySpacer} />
-                        )}
-                      </View>
-                      <View style={styles.galleryRow}>
-                        {displayedCollections[2] ? (
-                          <PolaroidStackCard
-                            key={displayedCollections[2].id ? `${displayedCollections[2].id}_${refreshKey}` : `card_2_${refreshKey}`}
-                            item={displayedCollections[2]}
-                            isDarkMode={isDarkMode}
-                            currentTheme={currentTheme}
-                          />
-                        ) : (
-                          <View style={styles.gallerySpacer} />
-                        )}
-                        {displayedCollections[3] ? (
-                          <PolaroidStackCard
-                            key={displayedCollections[3].id ? `${displayedCollections[3].id}_${refreshKey}` : `card_3_${refreshKey}`}
-                            item={displayedCollections[3]}
-                            isDarkMode={isDarkMode}
-                            currentTheme={currentTheme}
-                          />
-                        ) : (
-                          <View style={styles.gallerySpacer} />
-                        )}
-                      </View>
-                    </>
                   ) : (
-                    <Animated.FlatList
-                      key={`gallery_flatlist_${refreshKey}`}
-                      extraData={refreshKey}
-                      data={galleryRows}
-                      keyExtractor={(row) => `gallery_row_${row.rowIndex}_${refreshKey}`}
-                      renderItem={renderGalleryRow}
-                      getItemLayout={getRowItemLayout}
-                      style={styles.galleryScroll}
-                      contentContainerStyle={styles.galleryScrollContent}
-                      showsVerticalScrollIndicator={false}
-                      bounces={true}
-                      nestedScrollEnabled={true}
-                      scrollEventThrottle={16}
-                      windowSize={5}
-                      maxToRenderPerBatch={4}
-                      initialNumToRender={4}
-                      removeClippedSubviews={Platform.OS === "android"}
-                      onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: Platform.OS !== "web" }
-                      )}
-                    />
+                    <View style={styles.galleryScrollContent}>
+                      {galleryRows.map((row) => (
+                        <View
+                          key={`gallery_row_${row.rowIndex}_${refreshKey}`}
+                          style={styles.galleryRow}
+                        >
+                          {row.leftItem ? (
+                            <PolaroidStackCard
+                              key={row.leftItem.id ? `${row.leftItem.id}_${refreshKey}` : `card_${row.rowIndex * 2}_${refreshKey}`}
+                              item={row.leftItem}
+                              isDarkMode={isDarkMode}
+                              currentTheme={currentTheme}
+                            />
+                          ) : (
+                            <View style={styles.gallerySpacer} />
+                          )}
+                          {row.rightItem ? (
+                            <PolaroidStackCard
+                              key={row.rightItem.id ? `${row.rightItem.id}_${refreshKey}` : `card_${row.rowIndex * 2 + 1}_${refreshKey}`}
+                              item={row.rightItem}
+                              isDarkMode={isDarkMode}
+                              currentTheme={currentTheme}
+                            />
+                          ) : (
+                            <View style={styles.gallerySpacer} />
+                          )}
+                        </View>
+                      ))}
+                    </View>
                   )}
                 </Animated.View>
                 </View>
