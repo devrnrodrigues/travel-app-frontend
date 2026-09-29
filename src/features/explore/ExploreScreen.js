@@ -189,6 +189,8 @@ export default function Explore({ navigation }) {
 
   const loading = isLoading && destinations.length === 0;
   const loadingMore = isFetchingNextPage;
+  const isLoadingMoreRef = useRef(false);
+  isLoadingMoreRef.current = isFetchingNextPage;
   const refreshing = isRefetching;
 
   const insets = useSafeAreaInsets();
@@ -291,6 +293,7 @@ export default function Explore({ navigation }) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleScroll = useCallback((event) => {
+    if (isLoadingMoreRef.current) return;
     const { nativeEvent } = event;
     const currentY = nativeEvent.contentOffset.y;
     const diff = currentY - lastScrollY.current;
@@ -303,7 +306,7 @@ export default function Explore({ navigation }) {
       if (!isSearchFocusedRef.current && isSearchBarVisibleRef.current) {
         hideSearchBar();
       }
-    } else if (diff < -15) {
+    } else if (diff < -55) {
       if (!isSearchBarVisibleRef.current) {
         showSearchBar();
       }
@@ -450,13 +453,11 @@ export default function Explore({ navigation }) {
                   </View>
                 }
                 ListFooterComponent={
-                  loadingMore ? (
-                    <View style={styles.loadingMoreContainer}>
+                  <View style={styles.loadingMoreContainer}>
+                    {loadingMore && (
                       <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
-                    </View>
-                  ) : (
-                    <View style={{ height: 24 }} />
-                  )
+                    )}
+                  </View>
                 }
               />
             </FadeInView>
