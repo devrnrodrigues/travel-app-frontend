@@ -463,6 +463,11 @@ export default function Favorites({ navigation }) {
     [cardSlot, verticalPadding]
   );
 
+  const skeletonInnerHeight = Math.max(300, WINDOW_HEIGHT - (insets?.top || 0) - (insets?.bottom || 0) - SEARCH_BAR_HEIGHT - 126);
+  const skeletonCardHeight = Math.max(68, Math.floor((skeletonInnerHeight - (basePadding * 2) - totalGaps) / VISIBLE_CARDS));
+  const skeletonTotalCardsHeight = skeletonCardHeight * VISIBLE_CARDS + (VISIBLE_CARDS - 1) * cardGap;
+  const skeletonVerticalPadding = Math.max(basePadding, Math.floor((skeletonInnerHeight - skeletonTotalCardsHeight) / 2));
+
   if (itemToDelete?.title) {
     lastItemTitleRef.current = itemToDelete.title;
   }
@@ -659,9 +664,9 @@ export default function Favorites({ navigation }) {
                 {loading ? (
                   <FavoritesSkeletonList
                     isDarkMode={isDarkMode}
-                    cardHeight={cardHeight}
+                    cardHeight={skeletonCardHeight}
                     cardMarginBottom={cardMarginBottom}
-                    paddingTop={verticalPadding}
+                    paddingTop={skeletonVerticalPadding}
                     paddingHorizontal={12}
                   />
                 ) : (
