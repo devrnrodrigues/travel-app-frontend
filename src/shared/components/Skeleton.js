@@ -58,27 +58,27 @@ export function ShimmerOverlay({
 
   const defaultColors = isDarkMode
     ? [
-        "rgba(255, 255, 255, 0)",
-        "rgba(255, 255, 255, 0.005)",
-        "rgba(255, 255, 255, 0.02)",
-        "rgba(255, 255, 255, 0.05)",
-        "rgba(255, 255, 255, 0.08)",
-        "rgba(255, 255, 255, 0.05)",
-        "rgba(255, 255, 255, 0.02)",
-        "rgba(255, 255, 255, 0.005)",
-        "rgba(255, 255, 255, 0)",
-      ]
+      "rgba(255, 255, 255, 0)",
+      "rgba(255, 255, 255, 0.005)",
+      "rgba(255, 255, 255, 0.02)",
+      "rgba(255, 255, 255, 0.05)",
+      "rgba(255, 255, 255, 0.08)",
+      "rgba(255, 255, 255, 0.05)",
+      "rgba(255, 255, 255, 0.02)",
+      "rgba(255, 255, 255, 0.005)",
+      "rgba(255, 255, 255, 0)",
+    ]
     : [
-        "rgba(255, 255, 255, 0)",
-        "rgba(255, 255, 255, 0.02)",
-        "rgba(255, 255, 255, 0.06)",
-        "rgba(255, 255, 255, 0.14)",
-        "rgba(255, 255, 255, 0.22)",
-        "rgba(255, 255, 255, 0.14)",
-        "rgba(255, 255, 255, 0.06)",
-        "rgba(255, 255, 255, 0.02)",
-        "rgba(255, 255, 255, 0)",
-      ];
+      "rgba(255, 255, 255, 0)",
+      "rgba(255, 255, 255, 0.02)",
+      "rgba(255, 255, 255, 0.06)",
+      "rgba(255, 255, 255, 0.14)",
+      "rgba(255, 255, 255, 0.22)",
+      "rgba(255, 255, 255, 0.14)",
+      "rgba(255, 255, 255, 0.06)",
+      "rgba(255, 255, 255, 0.02)",
+      "rgba(255, 255, 255, 0)",
+    ];
 
   const locations = [0, 0.15, 0.3, 0.42, 0.5, 0.58, 0.7, 0.85, 1];
   const colors = customColors || defaultColors;
@@ -181,10 +181,10 @@ export function HomeCardSkeleton({
         },
       ]}
     >
-      {}
+      { }
       <View style={{ flex: 1 }} />
 
-      {}
+      { }
       <View
         style={[
           homeStyles.cardInfo,
@@ -201,7 +201,7 @@ export function HomeCardSkeleton({
         ]}
       >
         <View style={{ flex: 1, justifyContent: "center", marginRight: 10 }}>
-          {}
+          { }
           <View
             style={{
               height: 18,
@@ -211,7 +211,7 @@ export function HomeCardSkeleton({
               marginBottom: 8,
             }}
           />
-          {}
+          { }
           <View
             style={{
               height: 12,
@@ -222,7 +222,7 @@ export function HomeCardSkeleton({
           />
         </View>
 
-        {}
+        { }
         <View
           style={[
             homeStyles.ratingContainer,
@@ -250,7 +250,7 @@ export function HomeCardSkeleton({
         </View>
       </View>
 
-      {}
+      { }
       <ShimmerOverlay
         animatedValue={anim}
         width={CARD_WIDTH}
@@ -535,7 +535,7 @@ export function SearchCardSkeleton({
         position: "relative",
       }}
     >
-      {}
+      { }
       <View
         style={{
           width: imageSize,
@@ -545,7 +545,7 @@ export function SearchCardSkeleton({
         }}
       />
 
-      {}
+      { }
       <View style={{ marginLeft: 14, flex: 1, justifyContent: "center" }}>
         <View
           style={{
@@ -566,7 +566,7 @@ export function SearchCardSkeleton({
         />
       </View>
 
-      {}
+      { }
       {showBadge && (
         <View
           style={{
@@ -581,7 +581,7 @@ export function SearchCardSkeleton({
         />
       )}
 
-      {}
+      { }
       <ShimmerOverlay
         animatedValue={anim}
         width={cardWidth}
@@ -634,6 +634,7 @@ function PolaroidStackCardSkeleton({
   anim,
   placeholderBg1,
   placeholderBg2,
+  rowHeight,
 }) {
   const backCardBg = isDarkMode ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.15)";
   const frontCardBg = isDarkMode ? "rgba(255, 255, 255, 0.07)" : "rgba(255, 255, 255, 0.22)";
@@ -726,7 +727,7 @@ function PolaroidStackCardSkeleton({
       <ShimmerOverlay
         animatedValue={anim}
         width={(width - 44) / 2}
-        height={320}
+        height={rowHeight}
         isDarkMode={isDarkMode}
       />
     </View>
@@ -735,6 +736,10 @@ function PolaroidStackCardSkeleton({
 
 export function ProfileSkeleton({ isDarkMode = true }) {
   const anim = useShimmerAnimation();
+
+  const screenH = Dimensions.get("window").height;
+  const galleryH = Math.max(340, screenH - 350);
+  const rowH = Math.max(160, Math.floor((galleryH - 12) / 2));
 
   const avatarBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.35)";
   const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.35)";
@@ -810,33 +815,37 @@ export function ProfileSkeleton({ isDarkMode = true }) {
         />
       </View>
 
-      <View style={profileStyles.galleryContainer}>
-        <View style={profileStyles.galleryRow}>
+      <View style={[profileStyles.galleryContainer, { gap: 12 }]}>
+        <View style={[profileStyles.galleryRow, { height: rowH }]}>
           <PolaroidStackCardSkeleton
             isDarkMode={isDarkMode}
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
+            rowHeight={rowH}
           />
           <PolaroidStackCardSkeleton
             isDarkMode={isDarkMode}
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
+            rowHeight={rowH}
           />
         </View>
-        <View style={profileStyles.galleryRow}>
+        <View style={[profileStyles.galleryRow, { height: rowH }]}>
           <PolaroidStackCardSkeleton
             isDarkMode={isDarkMode}
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
+            rowHeight={rowH}
           />
           <PolaroidStackCardSkeleton
             isDarkMode={isDarkMode}
             anim={anim}
             placeholderBg1={placeholderBg1}
             placeholderBg2={placeholderBg2}
+            rowHeight={rowH}
           />
         </View>
       </View>
@@ -879,7 +888,7 @@ export function DetailsReviewsSkeleton({ isDarkMode = true, count = 2 }) {
             borderBottomColor: borderCol,
           }}
         >
-          {}
+          { }
           <View
             style={{
               width: 36,
@@ -890,14 +899,14 @@ export function DetailsReviewsSkeleton({ isDarkMode = true, count = 2 }) {
               marginTop: 2,
             }}
           />
-          {}
+          { }
           <View style={{ flex: 1 }}>
-            {}
+            { }
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <View style={{ width: 85, height: 12, borderRadius: 4, backgroundColor: bg1 }} />
               <View style={{ width: 42, height: 10, borderRadius: 3, backgroundColor: bg2 }} />
             </View>
-            {}
+            { }
             <View style={{ width: "95%", height: 11, borderRadius: 3, backgroundColor: bg2, marginBottom: 6 }} />
             <View style={{ width: i === 0 ? "70%" : "50%", height: 11, borderRadius: 3, backgroundColor: bg2 }} />
           </View>
