@@ -340,6 +340,7 @@ export default function ProfileScreen({ navigation }) {
   }, [galleryHeight]);
 
   const scrollY = useRef(new Animated.Value(0)).current;
+  const galleryScrollRef = useRef(null);
 
   const getRowAnimProps = useCallback(
     (rowIndex) => {
@@ -355,15 +356,15 @@ export default function ProfileScreen({ navigation }) {
       let translateYRange = [];
 
       if (rowIndex === 0) {
-        inputRange = [-50, 0, exitStart + S * 0.35, exitEnd];
-        opacityRange = [1, 1, 0.65, 0];
-        scaleRange = [1, 1, 0.97, 0.92];
-        translateYRange = [0, 0, -4, -14];
+        inputRange = [-50, 0, exitStart + S * 0.35, exitEnd, exitEnd + S];
+        opacityRange = [1, 1, 0.65, 0, 0];
+        scaleRange = [1, 1, 0.97, 0.92, 0.92];
+        translateYRange = [0, 0, -4, -14, -14];
       } else if (rowIndex === 1) {
-        inputRange = [0, exitStart, exitStart + S * 0.35, exitEnd];
-        opacityRange = [1, 1, 0.65, 0];
-        scaleRange = [1, 1, 0.97, 0.92];
-        translateYRange = [0, 0, -4, -14];
+        inputRange = [-50, 0, exitStart, exitStart + S * 0.35, exitEnd, exitEnd + S];
+        opacityRange = [1, 1, 1, 0.65, 0, 0];
+        scaleRange = [1, 1, 1, 0.97, 0.92, 0.92];
+        translateYRange = [0, 0, 0, -4, -14, -14];
       } else if (rowIndex === 2) {
         inputRange = [
           Math.max(0, enterStart),
@@ -796,6 +797,10 @@ export default function ProfileScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       loadProfile();
+      scrollY.setValue(0);
+      if (galleryScrollRef.current) {
+        galleryScrollRef.current.scrollTo({ y: 0, animated: false });
+      }
     }, [])
   );
 
@@ -1025,12 +1030,57 @@ export default function ProfileScreen({ navigation }) {
                         </Text>
                       </TouchableOpacity>
                     </View>
+                  ) : effectiveGalleryCount > 4 ? (
+                    <Animated.ScrollView
+                      ref={galleryScrollRef}
+                      style={styles.galleryScroll}
+                      contentContainerStyle={styles.galleryScrollContent}
+                      showsVerticalScrollIndicator={false}
+                      scrollEventThrottle={16}
+                      nestedScrollEnabled={true}
+                      onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: false }
+                      )}
+                    >
+                      {galleryRows.map((row) => (
+                        <Animated.View
+                          key={`gallery_row_${row.rowIndex}_${refreshKey}`}
+                          style={[
+                            styles.galleryRow,
+                            { height: rowHeight },
+                            getRowAnimProps(row.rowIndex),
+                          ]}
+                        >
+                          {row.leftItem ? (
+                            <PolaroidStackCard
+                              key={row.leftItem.id ? `${row.leftItem.id}_${refreshKey}` : `card_${row.rowIndex * 2}_${refreshKey}`}
+                              item={row.leftItem}
+                              isDarkMode={isDarkMode}
+                              currentTheme={currentTheme}
+                            />
+                          ) : (
+                            <View style={styles.gallerySpacer} />
+                          )}
+                          {row.rightItem ? (
+                            <PolaroidStackCard
+                              key={row.rightItem.id ? `${row.rightItem.id}_${refreshKey}` : `card_${row.rowIndex * 2 + 1}_${refreshKey}`}
+                              item={row.rightItem}
+                              isDarkMode={isDarkMode}
+                              currentTheme={currentTheme}
+                            />
+                          ) : (
+                            <View style={styles.gallerySpacer} />
+                          )}
+                        </Animated.View>
+                      ))}
+                    </Animated.ScrollView>
                   ) : (
                     <View style={styles.galleryScrollContent}>
                       {galleryRows.map((row) => (
                         <View
                           key={`gallery_row_${row.rowIndex}_${refreshKey}`}
-                          style={styles.galleryRow}
+                          style={[styles.galleryRow, { height: rowHeight }]}
                         >
                           {row.leftItem ? (
                             <PolaroidStackCard

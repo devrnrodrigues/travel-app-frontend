@@ -326,7 +326,6 @@ export const styles = StyleSheet.create({
     ...(Platform.OS === "web" ? { width: "100%", minHeight: "100%" } : {}),
   },
   galleryRow: {
-    flex: 1,
     width: "100%",
     flexDirection: "row",
     gap: 12,
