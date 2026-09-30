@@ -400,7 +400,7 @@ export default function Explore({ navigation }) {
             <ScrollView
               contentContainerStyle={[
                 styles.flatListContent,
-                { backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" },
+                { backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" },
               ]}
               showsVerticalScrollIndicator={false}
               scrollEnabled={false}
@@ -418,7 +418,7 @@ export default function Explore({ navigation }) {
                 columnWrapperStyle={styles.columnWrapper}
                 contentContainerStyle={[
                   styles.flatListContent,
-                  { backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" },
+                  { backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" },
                 ]}
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}

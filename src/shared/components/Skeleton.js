@@ -357,7 +357,7 @@ export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 
   const anim = useShimmerAnimation();
 
   return (
-    <View style={{ gap: GAP, backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" }}>
+    <View style={{ gap: GAP, backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" }}>
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <View
           key={`skel-row-${rowIndex}`}

@@ -87,7 +87,7 @@ export default StyleSheet.create({
     overflow: "hidden",
   },
   gridItemLight: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F3F4F6",
   },
   gridImage: {
     width: "100%",
