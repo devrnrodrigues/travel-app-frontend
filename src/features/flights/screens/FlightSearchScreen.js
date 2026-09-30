@@ -427,8 +427,8 @@ export default function DetailsTicket({ navigation, route }) {
             style={[
               styles.roundButton,
               !isDarkMode
-                ? { backgroundColor: "rgba(255, 255, 255, 0.8)", shadowColor: "#000", shadowOpacity: 0.1 }
-                : { backgroundColor: "rgba(0, 0, 0, 0.7)" },
+                ? { backgroundColor: "rgba(255, 255, 255, 0.8)", elevation: 0 }
+                : { backgroundColor: "rgba(0, 0, 0, 0.7)", elevation: 0 },
             ]}
             onPress={() => (searchSubmitted ? setSearchSubmitted(false) : handleGoBack())}
             activeOpacity={0.7}
@@ -451,11 +451,7 @@ export default function DetailsTicket({ navigation, route }) {
           styles.infoBottomSection,
           !isDarkMode && {
             backgroundColor: "#FFFFFF",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: -6 },
-            shadowOpacity: 0.08,
-            shadowRadius: 16,
-            elevation: 8,
+            elevation: 0,
           },
         ]}
       >
@@ -527,11 +523,7 @@ export default function DetailsTicket({ navigation, route }) {
                       backgroundColor: "#F7F8F9",
                       color: "#111827",
                       borderWidth: 0,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.04,
-                      shadowRadius: 6,
-                      elevation: 1,
+                      elevation: 0,
                     },
                   ]}
                   value={originInput}
@@ -559,11 +551,7 @@ export default function DetailsTicket({ navigation, route }) {
                     !isDarkMode && {
                       backgroundColor: "#FFFFFF",
                       borderWidth: 0,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 8,
-                      elevation: 4,
+                      elevation: 0,
                     },
                   ]}
                 >
@@ -596,11 +584,7 @@ export default function DetailsTicket({ navigation, route }) {
                   !isDarkMode && {
                     backgroundColor: "#F7F8F9",
                     borderWidth: formErrors.destination ? 1 : 0,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 6,
-                    elevation: 1,
+                    elevation: 0,
                   },
                 ]}
                 onPress={() => setDestinationModalVisible(true)}
@@ -630,11 +614,7 @@ export default function DetailsTicket({ navigation, route }) {
                   !isDarkMode && {
                     backgroundColor: "#F7F8F9",
                     borderWidth: formErrors.departDate ? 1 : 0,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 6,
-                    elevation: 1,
+                    elevation: 0,
                   },
                 ]}
                 onPress={() => handleOpenCalendar("IDA")}
@@ -659,11 +639,7 @@ export default function DetailsTicket({ navigation, route }) {
                       !isDarkMode && {
                         backgroundColor: "#F7F8F9",
                         borderWidth: formErrors.returnDate ? 1 : 0,
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.04,
-                        shadowRadius: 6,
-                        elevation: 1,
+                        elevation: 0,
                       },
                     ]}
                     onPress={() => handleOpenCalendar("VOLTA")}
@@ -690,11 +666,7 @@ export default function DetailsTicket({ navigation, route }) {
                         backgroundColor: "#F7F8F9",
                         color: "#111827",
                         borderWidth: formErrors.adults ? 1 : 0,
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.04,
-                        shadowRadius: 6,
-                        elevation: 1,
+                        elevation: 0,
                       },
                     ]}
                     value={adults}
@@ -717,11 +689,7 @@ export default function DetailsTicket({ navigation, route }) {
                         backgroundColor: "#F7F8F9",
                         color: "#111827",
                         borderWidth: 0,
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.04,
-                        shadowRadius: 6,
-                        elevation: 1,
+                        elevation: 0,
                       },
                     ]}
                     value={children}
@@ -778,11 +746,7 @@ export default function DetailsTicket({ navigation, route }) {
                   !isDarkMode && {
                     backgroundColor: "#F7F8F9",
                     borderWidth: 0,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 6,
-                    elevation: 1,
+                    elevation: 0,
                   },
                 ]}
                 onPress={() => setSortModalVisible(true)}
@@ -800,11 +764,7 @@ export default function DetailsTicket({ navigation, route }) {
                   !isDarkMode && {
                     backgroundColor: "#F7F8F9",
                     borderWidth: 0,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 6,
-                    elevation: 1,
+                    elevation: 0,
                   },
                 ]}
                 onPress={() => setClassModalVisible(true)}
@@ -821,11 +781,7 @@ export default function DetailsTicket({ navigation, route }) {
                   !isDarkMode && {
                     backgroundColor: "#F7F8F9",
                     borderWidth: 0,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 6,
-                    elevation: 1,
+                    elevation: 0,
                   },
                 ]}
                 onPress={() => setCurrencyModalVisible(true)}
@@ -880,11 +836,7 @@ export default function DetailsTicket({ navigation, route }) {
                 !isDarkMode && {
                   backgroundColor: "#FFFFFF",
                   borderTopWidth: 0,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: -4 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 },
               ]}
             >
@@ -898,8 +850,8 @@ export default function DetailsTicket({ navigation, route }) {
                 style={[
                   styles.actionButton,
                   !isDarkMode
-                    ? { backgroundColor: "#000000", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 }
-                    : { backgroundColor: currentTheme.accent },
+                    ? { backgroundColor: "#000000", elevation: 0 }
+                    : { backgroundColor: currentTheme.accent, elevation: 0 },
                 ]}
                 onPress={handleSearchFlights}
                 activeOpacity={0.8}
