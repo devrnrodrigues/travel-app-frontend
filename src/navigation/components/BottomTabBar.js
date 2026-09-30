@@ -25,7 +25,7 @@ export default function BottomTabBar({ state, navigation }) {
   const tabBgColor = isDarkMode
     ? "rgba(10, 10, 10, 0.85)"
     : isExplore
-    ? "rgba(240, 240, 240, 0.80)"
+    ? "rgba(200, 200, 200, 0.80)"
     : "rgba(240, 240, 240, 0.40)";
 
   const prevIndexRef = useRef(state.index);
