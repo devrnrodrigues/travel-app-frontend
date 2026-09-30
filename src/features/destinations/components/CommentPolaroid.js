@@ -146,7 +146,7 @@ export default function CommentPolaroid({
                 polaroidStyles.card,
                 {
                   zIndex: zIndices[i] || 1,
-                  elevation: (zIndices[i] === 10 || total === 1) ? 2 : 1,
+                  elevation: 0,
                   opacity: curAnim.opacity,
                   transform: [
                     { translateX: curAnim.transX },

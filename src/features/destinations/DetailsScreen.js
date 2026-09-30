@@ -575,7 +575,7 @@ export default function Details({ route, navigation }) {
             shadowOffset: { width: 0, height: -6 },
             shadowOpacity: !isDarkMode ? 0.08 : 0.6,
             shadowRadius: 16,
-            elevation: 8,
+            elevation: 0,
           },
         ]}
       >
@@ -709,7 +709,7 @@ export default function Details({ route, navigation }) {
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.09,
                   shadowRadius: 8,
-                  elevation: 3,
+                  elevation: 0,
                 } : {
                   borderWidth: 0,
                   borderColor: "transparent",
@@ -717,7 +717,7 @@ export default function Details({ route, navigation }) {
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.6,
                   shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 },
               ]}
             >
@@ -743,7 +743,7 @@ export default function Details({ route, navigation }) {
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.09,
                   shadowRadius: 8,
-                  elevation: 3,
+                  elevation: 0,
                 } : {
                   borderWidth: 0,
                   borderColor: "transparent",
@@ -751,7 +751,7 @@ export default function Details({ route, navigation }) {
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.6,
                   shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 },
               ]}
             >
@@ -777,7 +777,7 @@ export default function Details({ route, navigation }) {
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.09,
                   shadowRadius: 8,
-                  elevation: 3,
+                  elevation: 0,
                 } : {
                   borderWidth: 0,
                   borderColor: "transparent",
@@ -785,7 +785,7 @@ export default function Details({ route, navigation }) {
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.6,
                   shadowRadius: 8,
-                  elevation: 6,
+                  elevation: 0,
                 },
               ]}
             >
@@ -844,13 +844,13 @@ export default function Details({ route, navigation }) {
               backgroundColor: footerPriceBg,
               paddingTop: 16,
               paddingBottom: Math.max(insets.bottom + 12, 28),
-              borderTopWidth: isDarkMode ? StyleSheet.hairlineWidth : 0,
-              borderTopColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "transparent",
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: -4 },
               shadowOpacity: !isDarkMode ? 0.05 : 0.4,
               shadowRadius: 8,
-              elevation: 6,
+              elevation: 0,
             },
           ]}
         >
@@ -898,7 +898,7 @@ export default function Details({ route, navigation }) {
             style={[
               styles.actionButton,
               !isDarkMode
-                ? { backgroundColor: "#000000", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 }
+                ? { backgroundColor: "#000000", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 6, elevation: 0 }
                 : { backgroundColor: currentTheme.accent },
             ]}
             activeOpacity={0.8}

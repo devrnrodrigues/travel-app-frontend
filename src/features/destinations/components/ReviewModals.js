@@ -69,6 +69,20 @@ export function ReviewFormModal({
     }
   }, [visible]);
 
+  const isSubmittingRef = useRef(false);
+
+  useEffect(() => {
+    if (!isSubmitting) {
+      isSubmittingRef.current = false;
+    }
+  }, [isSubmitting]);
+
+  useEffect(() => {
+    if (!visible) {
+      isSubmittingRef.current = false;
+    }
+  }, [visible]);
+
   useEffect(() => {
     const showEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -77,19 +91,19 @@ export function ReviewFormModal({
 
     const showSub = Keyboard.addListener(showEvent, (e) => {
       const keyboardHeight = e.endCoordinates ? e.endCoordinates.height : 280;
-      Animated.spring(modalTranslateY, {
+      Animated.timing(modalTranslateY, {
         toValue: -Math.max(keyboardHeight * 0.52, 140),
-        friction: 8,
-        tension: 65,
+        duration: 200,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start();
     });
 
     const hideSub = Keyboard.addListener(hideEvent, () => {
-      Animated.spring(modalTranslateY, {
+      Animated.timing(modalTranslateY, {
         toValue: 0,
-        friction: 8,
-        tension: 65,
+        duration: 200,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start();
     });
@@ -182,6 +196,25 @@ export function ReviewFormModal({
 
   const handleRemoveImage = (indexToRemove) => {
     setPhotosList((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const doSubmit = () => {
+    if (isSubmitting || isProcessingPhotos || isSubmittingRef.current) return;
+    const trimmed = (inputComment || "").trim();
+    if (!trimmed) {
+      Alert.alert("Atenção", "Por favor, escreva um comentário antes de enviar.");
+      return;
+    }
+    isSubmittingRef.current = true;
+    Keyboard.dismiss();
+    const keptPhotoIds = photosList.filter((p) => p.isExisting).map((p) => p.id);
+    const newImages = photosList.filter((p) => !p.isExisting).map((p) => p.uri);
+    onSubmit({
+      keptPhotoIds,
+      newImages,
+      allPhotos: photosList,
+      clearPhotos: keptPhotoIds.length === 0,
+    });
   };
 
   return (
@@ -354,17 +387,9 @@ export function ReviewFormModal({
           )}
 
           <TouchableOpacity
-            onPress={() => {
-              Keyboard.dismiss();
-              const keptPhotoIds = photosList.filter((p) => p.isExisting).map((p) => p.id);
-              const newImages = photosList.filter((p) => !p.isExisting).map((p) => p.uri);
-              onSubmit({
-                keptPhotoIds,
-                newImages,
-                allPhotos: photosList,
-                clearPhotos: keptPhotoIds.length === 0,
-              });
-            }}
+            onPress={doSubmit}
+            onPressIn={doSubmit}
+            activeOpacity={0.8}
             disabled={isSubmitting || isProcessingPhotos}
             style={[reviewStyles.submitBtn, { backgroundColor: currentTheme.accent }]}
           >
@@ -422,7 +447,7 @@ export function DeleteReviewModal({
           style={[
             reviewStyles.dialogCard,
             !isDarkMode && {
-              backgroundColor: "#FFFFFF",
+              backgroundColor: "#F8F9FA",
               borderWidth: 0,
               shadowColor: "transparent",
               shadowOpacity: 0,

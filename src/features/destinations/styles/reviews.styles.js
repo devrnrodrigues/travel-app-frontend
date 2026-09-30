@@ -20,7 +20,7 @@ const reviewStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.35,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0,
   },
 
   inlineActionText: {
@@ -190,18 +190,18 @@ const reviewStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.12,
     shadowRadius: 3,
-    elevation: 2,
+    elevation: 0,
   },
 
   anchoredDropdownLight: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 0,
-    borderColor: "transparent",
+    backgroundColor: "#F8F9FA",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(0, 0, 0, 0.06)",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 0,
   },
 
   anchoredDropdownItem: {
@@ -250,18 +250,18 @@ const reviewStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.12,
     shadowRadius: 3,
-    elevation: 2,
+    elevation: 0,
   },
 
   dropdownMenuCardLight: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 0,
-    borderColor: "transparent",
+    backgroundColor: "#F8F9FA",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(0, 0, 0, 0.06)",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 0,
   },
 
   dropdownMenuItem: {
@@ -336,12 +336,13 @@ const reviewStyles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 20,
     backgroundColor: "#161616",
-    borderRadius: 16,
+    borderRadius: 18,
+    marginTop: 28,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 0,
   },
 
   emptyText: {
@@ -409,7 +410,7 @@ const reviewStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.35,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0,
   },
 
   inputLight: {
@@ -495,7 +496,7 @@ const reviewStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    elevation: 4,
+    elevation: 0,
   },
 
   submitBtnText: {

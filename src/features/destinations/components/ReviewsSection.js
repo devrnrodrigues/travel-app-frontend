@@ -442,15 +442,17 @@ const ReviewsSection = forwardRef(function ReviewsSection({
               <View
                 style={[
                   reviewStyles.emptyBox,
-                  !isDarkMode && {
-                    backgroundColor: "#FFFFFF",
+                  {
+                    backgroundColor: !isDarkMode ? "#F8F9FA" : "#161616",
+                  },
+                  !isDarkMode ? {
                     borderWidth: 0,
                     shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 5,
-                    elevation: 1,
-                  },
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.09,
+                    shadowRadius: 8,
+                    elevation: 0,
+                  } : null,
                 ]}
               >
                 <Ionicons name="chatbox-ellipses-outline" size={32} color={!isDarkMode ? "#9CA3AF" : "rgba(255,255,255,0.3)"} />
