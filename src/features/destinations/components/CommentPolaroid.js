@@ -146,7 +146,7 @@ export default function CommentPolaroid({
                 polaroidStyles.card,
                 {
                   zIndex: zIndices[i] || 1,
-                  elevation: 0,
+                  elevation: zIndices[i] != null ? Math.min(3, Math.max(1, Math.round(zIndices[i] / 3))) : 2,
                   opacity: curAnim.opacity,
                   transform: [
                     { translateX: curAnim.transX },
@@ -205,9 +205,10 @@ const polaroidStyles = StyleSheet.create({
     paddingBottom: 10,
     borderRadius: 3,
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 2.5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.14,
+    shadowRadius: 3.5,
+    elevation: 3,
   },
   imageBox: {
     flex: 1,
