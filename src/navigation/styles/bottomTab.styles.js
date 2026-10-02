@@ -1,8 +1,8 @@
 import { StyleSheet, Dimensions } from "react-native";
 
 const { width } = Dimensions.get("window");
-export const TAB_WIDTH = width - 40;
-export const TAB_HEIGHT = 72;
+export const TAB_WIDTH = width;
+export const TAB_HEIGHT = 50;
 export const SWEEP_WIDTH = TAB_WIDTH * 0.7;
 
 export const styles = StyleSheet.create({
@@ -11,11 +11,9 @@ export const styles = StyleSheet.create({
   },
   bottomTab: {
     position: "absolute",
-    bottom: 35,
-    left: 20,
-    right: 20,
-    height: TAB_HEIGHT,
-    borderRadius: 36,
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
@@ -27,23 +25,21 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0,
     shadowRadius: 0,
     shadowOffset: { width: 0, height: 0 },
-    maxWidth: 500,
-    alignSelf: "center",
   },
   bottomTabLight: {
-    borderWidth: 1,
+    borderTopWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.20)",
   },
   tabItem: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 24,
+    borderRadius: 20,
   },
   activeTab: {
     borderWidth: 1.5,
-    borderRadius: 24,
+    borderRadius: 20,
     backgroundColor: "transparent",
   },
   horizontalSweepContainer: {
@@ -51,22 +47,22 @@ export const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: SWEEP_WIDTH,
-    height: TAB_HEIGHT,
+    bottom: 0,
   },
   horizontalSweepGradient: {
     width: SWEEP_WIDTH,
-    height: TAB_HEIGHT,
+    height: "100%",
   },
   verticalSweepContainer: {
     position: "absolute",
     top: 0,
     left: 0,
-    width: TAB_WIDTH,
-    height: TAB_HEIGHT,
+    right: 0,
+    bottom: 0,
   },
   verticalSweepGradient: {
-    width: TAB_WIDTH,
-    height: TAB_HEIGHT,
+    width: "100%",
+    height: "100%",
   },
   loadingContainer: {
     flex: 1,

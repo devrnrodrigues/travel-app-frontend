@@ -6,6 +6,7 @@ import {
   Easing,
   Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "react-native-vector-icons/Feather";
 import { useTheme } from "../../theme/ThemeContext";
@@ -17,6 +18,7 @@ import {
 } from "../styles/bottomTab.styles";
 
 export default function BottomTabBar({ state, navigation }) {
+  const insets = useSafeAreaInsets();
   const { currentTheme, isDarkMode } = useTheme();
   const activeAccent = currentTheme?.accent || "#4CAF50";
 
@@ -136,7 +138,11 @@ export default function BottomTabBar({ state, navigation }) {
     <View
       style={[
         styles.bottomTab,
-        { backgroundColor: tabBgColor },
+        {
+          backgroundColor: tabBgColor,
+          height: TAB_HEIGHT + insets.bottom,
+          paddingBottom: insets.bottom,
+        },
         !isDarkMode && styles.bottomTabLight,
       ]}
     >
