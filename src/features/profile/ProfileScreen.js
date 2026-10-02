@@ -29,7 +29,7 @@ const SCREEN_HEIGHT = Math.max(
   900
 );
 const MODAL_DISMISS_OFFSET = SCREEN_HEIGHT + 50;
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
@@ -50,24 +50,14 @@ import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { uploadAvatarApi, getProfileApi, updateProfileApi } from "./api/profileService";
 import { createCollectionApi, getCollectionsApi } from "./api/collectionService";
 import { getFavoritesApi } from "../favorites/api/favoriteService";
-
-const PROFILE_BOTTOM_TREES_IMAGE = {
-  uri: "https://images.pexels.com/photos/6040064/pexels-photo-6040064.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-};
+import profileNavBgImage from "../../../assets/images/profile-nav-bg.png";
 
 export default function ProfileScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const { user, logout, updateUser } = useAuth();
   const { currentTheme, isDarkMode, toggleThemeMode } = useTheme();
   const bgSource =
     typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
-  const bottomNavBgSource = useMemo(() => {
-    if (currentTheme?.footerBg) {
-      return typeof currentTheme.footerBg === "string"
-        ? { uri: currentTheme.footerBg }
-        : currentTheme.footerBg;
-    }
-    return bgSource || PROFILE_BOTTOM_TREES_IMAGE;
-  }, [currentTheme, bgSource]);
 
   const isFlorestas =
     currentTheme?.slug === "florestas" ||
@@ -897,7 +887,45 @@ export default function ProfileScreen({ navigation }) {
     return rows;
   }, [displayedCollections, effectiveGalleryCount]);
 
-  const MainContentContainer = ScrollView;
+  const [screenHeight, setScreenHeight] = useState(WINDOW_HEIGHT);
+  const [bodyY, setBodyY] = useState(206);
+  const [lastElementBottom, setLastElementBottom] = useState(WINDOW_HEIGHT);
+  const totalElementsBottom = bodyY + lastElementBottom;
+
+  const handleRootLayout = useCallback((e) => {
+    const h = e.nativeEvent.layout.height;
+    if (h > 0 && Math.abs(h - screenHeight) > 1) {
+      setScreenHeight(h);
+    }
+  }, [screenHeight]);
+
+  const handleBodyLayout = useCallback((e) => {
+    const y = e.nativeEvent.layout.y;
+    if (y > 0 && Math.abs(y - bodyY) > 1) {
+      setBodyY(y);
+    }
+  }, [bodyY]);
+
+  const bottomNavBgOpacity = useMemo(() => {
+    const threshold = totalElementsBottom - screenHeight + 155;
+    if (threshold <= 0) {
+      return scrollY.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 1],
+        extrapolate: "clamp",
+      });
+    }
+    const fadeDistance = 40;
+    const fadeStart = Math.max(0, threshold - fadeDistance);
+    const fadeEnd = Math.max(fadeStart + 1, threshold);
+    return scrollY.interpolate({
+      inputRange: [fadeStart, fadeEnd],
+      outputRange: [0, 1],
+      extrapolate: "clamp",
+    });
+  }, [totalElementsBottom, screenHeight, scrollY]);
+
+  const MainContentContainer = Animated.ScrollView;
   const mainContainerProps = {
     style: styles.flex1,
     contentContainerStyle: { flexGrow: 1 },
@@ -905,6 +933,11 @@ export default function ProfileScreen({ navigation }) {
     bounces: true,
     alwaysBounceVertical: true,
     pointerEvents: loading ? "none" : "auto",
+    onScroll: Animated.event(
+      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+      { useNativeDriver: Platform.OS !== "web" }
+    ),
+    scrollEventThrottle: 16,
     refreshControl: (
       <RefreshControl
         refreshing={refreshing}
@@ -916,7 +949,10 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? "#0C0C0E" : "#FFFFFF" }]}>
+    <View
+      style={[styles.container, { backgroundColor: isDarkMode ? "#0C0C0E" : "#FFFFFF" }]}
+      onLayout={handleRootLayout}
+    >
       <SafeAreaView edges={["bottom"]} style={styles.flex1}>
         <View style={styles.flex1}>
           <MainContentContainer
@@ -953,6 +989,7 @@ export default function ProfileScreen({ navigation }) {
                   isDarkMode ? styles.newProfileBodyDark : styles.newProfileBodyLight,
                   { opacity: cardOpacity, flex: 1 },
                 ]}
+                onLayout={handleBodyLayout}
               >
                 <View style={styles.profileInfoGroup}>
                   <View style={styles.avatarContainer}>
@@ -1192,6 +1229,16 @@ export default function ProfileScreen({ navigation }) {
                     })}
                   </ScrollView>
                 </View>
+
+                <View
+                  style={{ height: 0 }}
+                  onLayout={(e) => {
+                    const y = e.nativeEvent.layout.y;
+                    if (y > 0 && Math.abs(y - lastElementBottom) > 1) {
+                      setLastElementBottom(y);
+                    }
+                  }}
+                />
               </Animated.View>
             </View>
           </MainContentContainer>
@@ -1222,6 +1269,7 @@ export default function ProfileScreen({ navigation }) {
                         styles.modalContent,
                         {
                           transform: [{ translateY: modalSlideAnim }],
+                          paddingBottom: Math.max(insets.bottom + 16, 34),
                         },
                         !isDarkMode && styles.modalContentLight,
                       ]}
@@ -1985,31 +2033,32 @@ export default function ProfileScreen({ navigation }) {
             </Modal>
           </SafeAreaView>
 
-          <View
-            style={styles.bottomNavBgContainer}
+          <Animated.View
+            style={[
+              styles.bottomNavBgContainer,
+              { opacity: bottomNavBgOpacity },
+            ]}
             pointerEvents="none"
           >
             <Image
-              source={bottomNavBgSource}
-              style={styles.bottomNavBgImage}
+              source={profileNavBgImage}
+              style={[
+                styles.bottomNavBgImage,
+                isDarkMode && { opacity: 0.40 },
+              ]}
               resizeMode="cover"
             />
-            <LinearGradient
-              colors={
-                isDarkMode
-                  ? ["rgba(12, 12, 14, 0.35)", "rgba(12, 12, 14, 0.60)"]
-                  : ["rgba(0, 0, 0, 0.20)", "rgba(0, 0, 0, 0.35)"]
-              }
-              style={StyleSheet.absoluteFillObject}
-            />
-            <LinearGradient
-              colors={[
-                isDarkMode ? "#0C0C0E" : "#FFFFFF",
-                "transparent",
-              ]}
-              style={styles.bottomNavGradientFade}
-            />
-          </View>
+            {isDarkMode && (
+              <LinearGradient
+                colors={[
+                  "transparent",
+                  "rgba(0, 0, 0, 0.45)",
+                  "rgba(0, 0, 0, 0.85)",
+                ]}
+                style={StyleSheet.absoluteFillObject}
+              />
+            )}
+          </Animated.View>
     </View>
   );
 }

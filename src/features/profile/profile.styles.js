@@ -1,6 +1,10 @@
 import { StyleSheet, Platform, Dimensions } from "react-native";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const NAV_BG_ASPECT_RATIO = 1376 / 638;
+const NAV_BG_HEIGHT = Math.round(SCREEN_WIDTH / NAV_BG_ASPECT_RATIO);
 
 
 export const styles = StyleSheet.create({
@@ -160,7 +164,7 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     marginTop: -24,
     paddingTop: 0,
-    paddingBottom: 95,
+    paddingBottom: 165,
     paddingHorizontal: 20,
     alignItems: "center",
   },
@@ -369,16 +373,16 @@ export const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 105,
+    height: 155,
     overflow: "hidden",
   },
   bottomNavBgImage: {
     position: "absolute",
-    bottom: 0,
+    bottom: -32,
     left: 0,
     right: 0,
     width: "100%",
-    height: 125,
+    height: NAV_BG_HEIGHT,
   },
   bottomNavGradientFade: {
     position: "absolute",
