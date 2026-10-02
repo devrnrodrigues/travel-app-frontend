@@ -1,4 +1,7 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
+
 
 export const styles = StyleSheet.create({
   container: {
@@ -111,6 +114,278 @@ export const styles = StyleSheet.create({
     textShadowColor: "#000000",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  coverBanner: {
+    width: "100%",
+    height: 230,
+    position: "relative",
+    overflow: "hidden",
+  },
+  coverOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.26)",
+  },
+  coverTopBar: {
+    position: "absolute",
+    top: Platform.OS === "android" ? 42 : 18,
+    right: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    zIndex: 10,
+  },
+  coverIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  coverCameraBtn: {
+    position: "absolute",
+    bottom: 24,
+    right: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  newProfileBody: {
+    flex: 1,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -24,
+    paddingTop: 0,
+    paddingBottom: 95,
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  profileInfoGroup: {
+    width: "100%",
+    alignItems: "center",
+  },
+  newProfileBodyDark: {
+    backgroundColor: "#0C0C0E",
+  },
+  newProfileBodyLight: {
+    backgroundColor: "#FFFFFF",
+  },
+  avatarContainer: {
+    width: 102,
+    height: 102,
+    marginTop: -52,
+    marginBottom: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  avatarBordered: {
+    width: 102,
+    height: 102,
+    borderRadius: 51,
+    borderWidth: 4,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarImageBig: {
+    width: 102,
+    height: 102,
+    borderRadius: 51,
+  },
+  newUserName: {
+    fontSize: 21,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+    textAlign: "center",
+  },
+  newUserNameDark: {
+    color: "#FFFFFF",
+  },
+  newUserNameLight: {
+    color: "#111827",
+  },
+  newNationalityText: {
+    fontSize: 13.5,
+    fontWeight: "600",
+    marginTop: 4,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  newBioText: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
+    maxWidth: 310,
+    marginBottom: 20,
+  },
+  newBioTextDark: {
+    color: "#9CA3AF",
+  },
+  newBioTextLight: {
+    color: "#6B7280",
+  },
+  statsContainer: {
+    alignSelf: "stretch",
+    marginHorizontal: -20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingVertical: 18,
+    marginBottom: 24,
+  },
+  statsContainerDark: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+  },
+  statsContainerLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statDividerLine: {
+    width: StyleSheet.hairlineWidth,
+    height: 32,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  statValueDark: {
+    color: "#FFFFFF",
+  },
+  statValueLight: {
+    color: "#111827",
+  },
+  statLabelText: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginTop: 4,
+  },
+  statLabelTextDark: {
+    color: "#9CA3AF",
+  },
+  statLabelTextLight: {
+    color: "#6B7280",
+  },
+  collectionsSection: {
+    alignSelf: "stretch",
+    marginHorizontal: -20,
+    marginTop: 8,
+    marginBottom: 0,
+  },
+  collectionsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  collectionsHeading: {
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  collectionsHeadingDark: {
+    color: "#FFFFFF",
+  },
+  collectionsHeadingLight: {
+    color: "#111827",
+  },
+  collectionsScrollContent: {
+    gap: 14,
+    paddingTop: 6,
+    paddingBottom: 14,
+    paddingHorizontal: 14,
+  },
+  collectionCardItem: {
+    width: 180,
+    height: 260,
+    borderRadius: 22,
+    overflow: "hidden",
+    position: "relative",
+  },
+  collectionCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  collectionCardGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 95,
+    justifyContent: "flex-end",
+    padding: 14,
+  },
+  collectionCardTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  collectionCardSub: {
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 3,
+  },
+  addCardItem: {
+    width: 180,
+    height: 260,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  addCardCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: "rgba(255, 255, 255, 0.22)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  addCardText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  bottomNavBgContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 105,
+    overflow: "hidden",
+  },
+  bottomNavBgImage: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: 125,
+  },
+  bottomNavGradientFade: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 20,
   },
   modalOverlay: {
     flex: 1,

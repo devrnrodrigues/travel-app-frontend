@@ -49,12 +49,30 @@ import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { uploadAvatarApi, getProfileApi, updateProfileApi } from "./api/profileService";
 import { createCollectionApi, getCollectionsApi } from "./api/collectionService";
+import { getFavoritesApi } from "../favorites/api/favoriteService";
+
+const PROFILE_BOTTOM_TREES_IMAGE = {
+  uri: "https://images.pexels.com/photos/6040064/pexels-photo-6040064.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+};
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, updateUser } = useAuth();
   const { currentTheme, isDarkMode, toggleThemeMode } = useTheme();
   const bgSource =
     typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
+  const bottomNavBgSource = useMemo(() => {
+    if (currentTheme?.footerBg) {
+      return typeof currentTheme.footerBg === "string"
+        ? { uri: currentTheme.footerBg }
+        : currentTheme.footerBg;
+    }
+    return bgSource || PROFILE_BOTTOM_TREES_IMAGE;
+  }, [currentTheme, bgSource]);
+
+  const isFlorestas =
+    currentTheme?.slug === "florestas" ||
+    currentTheme?.name === "Florestas" ||
+    currentTheme?.icon === "leaf";
 
   const [loading, setLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(loading);
@@ -103,6 +121,13 @@ export default function ProfileScreen({ navigation }) {
     queryKey: ["collections"],
     queryFn: getCollectionsApi,
   });
+
+  const { data: favoritesData = [] } = useQuery({
+    queryKey: ["favorites", "profile_count"],
+    queryFn: () => getFavoritesApi({ page: 0, size: 50 }),
+    staleTime: 1000 * 60 * 2,
+  });
+  const favoritesCount = Array.isArray(favoritesData) ? favoritesData.length : 0;
 
   const [name, setName] = useState("");
   const [nationality, setNationality] = useState("Brasileiro");
@@ -891,234 +916,295 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={bgSource}
-        style={styles.flex1}
-        resizeMode="cover"
-        blurRadius={4} 
-      >
-        <LinearGradient
-          colors={
-            currentTheme?.colors && currentTheme.colors.length >= 3
-              ? [
-                  currentTheme.colors[0],
-                  currentTheme.colors[1],
-                  "rgba(0, 0, 0, 0.72)",
-                  "rgba(0, 0, 0, 0.96)",
-                ]
-              : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
-          }
-          locations={[0, 0.38, 0.72, 1]}
-          style={styles.flex1}
-        >
-          <SafeAreaView style={styles.flex1}>
-            <View style={styles.flex1}>
-              <MainContentContainer {...mainContainerProps}>
-                <View key={refreshKey} style={styles.flex1}>
-                  <Animated.View
-                    style={[
-                      styles.profileCard,
-                      !isDarkMode && styles.profileCardLight,
-                      { opacity: cardOpacity },
-                    ]}
-                  >
-                  <TouchableOpacity
-                    style={styles.settingsButton}
-                    onPress={() => setModalVisible(true)}
-                    activeOpacity={0.6}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  >
-                    <Ionicons
-                      name="settings-sharp"
-                      size={22}
-                      color={!isDarkMode ? "#FFFFFF" : "#FFF"}
-                    />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.avatar,
-                      !isDarkMode && styles.avatarLight,
-                    ]}
-                    activeOpacity={0.8}
-                    delayLongPress={300}
-                    onLongPress={() => setAvatarModalVisible(true)}
-                  >
-                    {user?.avatarUrl ? (
-                      <Image
-                        key={`avatar_${refreshKey}`}
-                        source={{
-                          uri: user.avatarUrl.includes("?")
-                            ? `${user.avatarUrl}&t=${refreshKey}`
-                            : `${user.avatarUrl}?t=${refreshKey}`,
-                        }}
-                        style={styles.avatarImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
+    <View style={[styles.container, { backgroundColor: isDarkMode ? "#0C0C0E" : "#FFFFFF" }]}>
+      <SafeAreaView edges={["bottom"]} style={styles.flex1}>
+        <View style={styles.flex1}>
+          <MainContentContainer
+            {...mainContainerProps}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            <View key={refreshKey} style={styles.flex1}>
+              <Animated.View style={{ opacity: cardOpacity }}>
+                <ImageBackground
+                  source={bgSource}
+                  style={styles.coverBanner}
+                  resizeMode="cover"
+                >
+                  <View style={styles.coverTopBar}>
+                    <TouchableOpacity
+                      style={styles.coverIconButton}
+                      onPress={() => setModalVisible(true)}
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    >
                       <Ionicons
-                        name="person"
-                        size={32}
-                        color={currentTheme.accent}
+                        name="settings-sharp"
+                        size={20}
+                        color="#FFFFFF"
                       />
-                    )}
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </View>
+                </ImageBackground>
+              </Animated.View>
+
+              <Animated.View
+                style={[
+                  styles.newProfileBody,
+                  isDarkMode ? styles.newProfileBodyDark : styles.newProfileBodyLight,
+                  { opacity: cardOpacity, flex: 1 },
+                ]}
+              >
+                <View style={styles.profileInfoGroup}>
+                  <View style={styles.avatarContainer}>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => setAvatarModalVisible(true)}
+                      delayLongPress={300}
+                      onLongPress={() => setAvatarModalVisible(true)}
+                    >
+                      <View
+                        style={[
+                          styles.avatarBordered,
+                          {
+                            borderColor: isDarkMode ? "#0C0C0E" : "#FFFFFF",
+                            backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
+                          },
+                        ]}
+                      >
+                        {user?.avatarUrl ? (
+                          <Image
+                            key={`avatar_${refreshKey}`}
+                            source={{
+                              uri: user.avatarUrl.includes("?")
+                                ? `${user.avatarUrl}&t=${refreshKey}`
+                                : `${user.avatarUrl}?t=${refreshKey}`,
+                            }}
+                            style={styles.avatarImageBig}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Ionicons
+                            name="person"
+                            size={42}
+                            color={currentTheme.accent}
+                          />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
                   <Text
                     style={[
-                      styles.userName,
-                      !isDarkMode && styles.userNameLight,
+                      styles.newUserName,
+                      isDarkMode ? styles.newUserNameDark : styles.newUserNameLight,
                     ]}
                   >
                     {name || "Usuário"}
                   </Text>
+
                   <Text
                     style={[
-                      styles.userSubtitle,
+                      styles.newNationalityText,
                       { color: currentTheme.accent },
                     ]}
                   >
-                    {nationality || "Viajante"}
+                    {nationality || "Brasileiro"}
                   </Text>
+
                   <Text
                     style={[
-                      styles.bioText,
-                      !isDarkMode && styles.bioTextLight,
+                      styles.newBioText,
+                      isDarkMode ? styles.newBioTextDark : styles.newBioTextLight,
                     ]}
                   >
                     {bio || "Sem bio definida."}
                   </Text>
-                </Animated.View>
 
-                <Animated.View
-                  style={[
-                    styles.galleryContainer,
-                    effectiveGalleryCount > 4 && styles.galleryContainerScrollable,
-                    effectiveGalleryCount > 4 && { height: galleryHeight },
-                    { opacity: galleryOpacity },
-                  ]}
-                  onLayout={handleGalleryLayout}
-                >
-                  {effectiveGalleryCount === 0 ? (
+                  <View
+                    style={[
+                      styles.statsContainer,
+                      isDarkMode ? styles.statsContainerDark : styles.statsContainerLight,
+                    ]}
+                  >
+                    <View style={styles.statItem}>
+                      <Text
+                        style={[
+                          styles.statValue,
+                          isDarkMode ? styles.statValueDark : styles.statValueLight,
+                        ]}
+                      >
+                        0
+                      </Text>
+                      <Text
+                        style={[
+                          styles.statLabelText,
+                          isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
+                        ]}
+                      >
+                        COMENTÁRIOS
+                      </Text>
+                    </View>
+
                     <View
                       style={[
-                        styles.emptyGalleryContainer,
-                        isDarkMode && styles.emptyGalleryContainerDark,
+                        styles.statDividerLine,
+                        {
+                          backgroundColor: isDarkMode
+                            ? "rgba(255, 255, 255, 0.12)"
+                            : "rgba(0, 0, 0, 0.08)",
+                        },
+                      ]}
+                    />
+
+                    <View style={styles.statItem}>
+                      <Text
+                        style={[
+                          styles.statValue,
+                          isDarkMode ? styles.statValueDark : styles.statValueLight,
+                        ]}
+                      >
+                        {displayedCollections.length}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.statLabelText,
+                          isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
+                        ]}
+                      >
+                        COLEÇÕES
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.statDividerLine,
+                        {
+                          backgroundColor: isDarkMode
+                            ? "rgba(255, 255, 255, 0.12)"
+                            : "rgba(0, 0, 0, 0.08)",
+                        },
+                      ]}
+                    />
+
+                    <View style={styles.statItem}>
+                      <Text
+                        style={[
+                          styles.statValue,
+                          isDarkMode ? styles.statValueDark : styles.statValueLight,
+                        ]}
+                      >
+                        {favoritesCount}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.statLabelText,
+                          isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
+                        ]}
+                      >
+                        FAVORITOS
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.collectionsSection}>
+                  <View style={styles.collectionsHeader}>
+                    <Text
+                      style={[
+                        styles.collectionsHeading,
+                        isDarkMode ? styles.collectionsHeadingDark : styles.collectionsHeadingLight,
                       ]}
                     >
-                      <Ionicons
-                        name="images-outline"
-                        size={40}
-                        color="rgba(255, 255, 255, 0.92)"
-                      />
-                      <Text style={styles.emptyGallerySubtitle}>
-                        Adicione coleções e salve as fotos das suas viagens.
-                      </Text>
-                      <TouchableOpacity
-                        style={styles.emptyGalleryBtn}
-                        onPress={() => setAddCollectionModalVisible(true)}
-                        activeOpacity={0.75}
-                      >
-                        <Ionicons
-                          name="add"
-                          size={16}
-                          color="rgba(255, 255, 255, 0.95)"
-                          style={{ marginRight: 4 }}
-                        />
-                        <Text style={styles.emptyGalleryBtnText}>
-                          Adicionar coleção
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : effectiveGalleryCount > 4 ? (
-                    <Animated.ScrollView
-                      ref={galleryScrollRef}
-                      style={styles.galleryScroll}
-                      contentContainerStyle={styles.galleryScrollContent}
-                      showsVerticalScrollIndicator={false}
-                      scrollEventThrottle={16}
-                      nestedScrollEnabled={true}
-                      onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: false }
-                      )}
+                      Minhas coleções
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 12.5,
+                        fontWeight: "600",
+                        color: currentTheme.accent,
+                      }}
                     >
-                      {galleryRows.map((row) => (
-                        <Animated.View
-                          key={`gallery_row_${row.rowIndex}_${refreshKey}`}
-                          style={[
-                            styles.galleryRow,
-                            { height: rowHeight },
-                            getRowAnimProps(row.rowIndex),
-                          ]}
-                        >
-                          {row.leftItem ? (
-                            <PolaroidStackCard
-                              key={row.leftItem.id ? `${row.leftItem.id}_${refreshKey}` : `card_${row.rowIndex * 2}_${refreshKey}`}
-                              item={row.leftItem}
-                              isDarkMode={isDarkMode}
-                              currentTheme={currentTheme}
-                            />
-                          ) : (
-                            <View style={styles.gallerySpacer} />
-                          )}
-                          {row.rightItem ? (
-                            <PolaroidStackCard
-                              key={row.rightItem.id ? `${row.rightItem.id}_${refreshKey}` : `card_${row.rowIndex * 2 + 1}_${refreshKey}`}
-                              item={row.rightItem}
-                              isDarkMode={isDarkMode}
-                              currentTheme={currentTheme}
-                            />
-                          ) : (
-                            <View style={styles.gallerySpacer} />
-                          )}
-                        </Animated.View>
-                      ))}
-                    </Animated.ScrollView>
-                  ) : (
-                    <View style={styles.galleryScrollContent}>
-                      {galleryRows.map((row) => (
-                        <View
-                          key={`gallery_row_${row.rowIndex}_${refreshKey}`}
-                          style={[styles.galleryRow, { height: rowHeight }]}
-                        >
-                          {row.leftItem ? (
-                            <PolaroidStackCard
-                              key={row.leftItem.id ? `${row.leftItem.id}_${refreshKey}` : `card_${row.rowIndex * 2}_${refreshKey}`}
-                              item={row.leftItem}
-                              isDarkMode={isDarkMode}
-                              currentTheme={currentTheme}
-                            />
-                          ) : (
-                            <View style={styles.gallerySpacer} />
-                          )}
-                          {row.rightItem ? (
-                            <PolaroidStackCard
-                              key={row.rightItem.id ? `${row.rightItem.id}_${refreshKey}` : `card_${row.rowIndex * 2 + 1}_${refreshKey}`}
-                              item={row.rightItem}
-                              isDarkMode={isDarkMode}
-                              currentTheme={currentTheme}
-                            />
-                          ) : (
-                            <View style={styles.gallerySpacer} />
-                          )}
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </Animated.View>
-                </View>
-              </MainContentContainer>
+                      {displayedCollections.length} {displayedCollections.length === 1 ? "coleção" : "coleções"}
+                    </Text>
+                  </View>
 
-              {showSkeleton && (
-                <Animated.View
-                  style={[StyleSheet.absoluteFill, { opacity: skeletonOpacity }]}
-                  pointerEvents={loading ? "auto" : "none"}
-                >
-                  <ProfileSkeleton isDarkMode={isDarkMode} />
-                </Animated.View>
-              )}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.collectionsScrollContent}
+                  >
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => setAddCollectionModalVisible(true)}
+                    >
+                      <LinearGradient
+                        colors={
+                          currentTheme?.colors && currentTheme.colors.length >= 2
+                            ? [currentTheme.colors[0], currentTheme.colors[1]]
+                            : [currentTheme.accent, "#7C3AED"]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.addCardItem}
+                      >
+                        <View style={styles.addCardCircle}>
+                          <Ionicons name="add" size={28} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.addCardText}>
+                          Adicionar{"\n"}coleção
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    {displayedCollections.map((col, idx) => {
+                      const coverUri =
+                        col.photos?.[0]?.url ||
+                        col.coverUrl ||
+                        "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80";
+
+                      return (
+                        <TouchableOpacity
+                          key={col.id ? `${col.id}_${idx}` : `col_${idx}`}
+                          style={styles.collectionCardItem}
+                          activeOpacity={0.85}
+                          onPress={() =>
+                            navigation.navigate("CollectionGallery", { collection: col })
+                          }
+                        >
+                          <Image
+                            source={{ uri: coverUri }}
+                            style={styles.collectionCardImage}
+                            resizeMode="cover"
+                          />
+                          <LinearGradient
+                            colors={["transparent", "rgba(0, 0, 0, 0.88)"]}
+                            style={styles.collectionCardGradient}
+                          >
+                            <Text numberOfLines={1} style={styles.collectionCardTitle}>
+                              {col.title}
+                            </Text>
+                            <Text style={styles.collectionCardSub}>
+                              {col.photos?.length || 0} {col.photos?.length === 1 ? "foto" : "fotos"}
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </Animated.View>
             </View>
+          </MainContentContainer>
+
+          {showSkeleton && (
+            <Animated.View
+              style={[StyleSheet.absoluteFill, { opacity: skeletonOpacity }]}
+              pointerEvents={loading ? "auto" : "none"}
+            >
+              <ProfileSkeleton isDarkMode={isDarkMode} />
+            </Animated.View>
+          )}
+        </View>
 
             <Modal
               animationType="fade"
@@ -1898,8 +1984,32 @@ export default function ProfileScreen({ navigation }) {
               </TouchableWithoutFeedback>
             </Modal>
           </SafeAreaView>
-        </LinearGradient>
-      </ImageBackground>
+
+          <View
+            style={styles.bottomNavBgContainer}
+            pointerEvents="none"
+          >
+            <Image
+              source={bottomNavBgSource}
+              style={styles.bottomNavBgImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={
+                isDarkMode
+                  ? ["rgba(12, 12, 14, 0.35)", "rgba(12, 12, 14, 0.60)"]
+                  : ["rgba(0, 0, 0, 0.20)", "rgba(0, 0, 0, 0.35)"]
+              }
+              style={StyleSheet.absoluteFillObject}
+            />
+            <LinearGradient
+              colors={[
+                isDarkMode ? "#0C0C0E" : "#FFFFFF",
+                "transparent",
+              ]}
+              style={styles.bottomNavGradientFade}
+            />
+          </View>
     </View>
   );
 }
