@@ -2,7 +2,7 @@ import { StyleSheet, Dimensions } from "react-native";
 
 const { width } = Dimensions.get("window");
 export const TAB_WIDTH = width;
-export const TAB_HEIGHT = 50;
+export const TAB_HEIGHT = 54;
 export const SWEEP_WIDTH = TAB_WIDTH * 0.7;
 
 export const styles = StyleSheet.create({
@@ -28,18 +28,18 @@ export const styles = StyleSheet.create({
   },
   bottomTabLight: {
     borderTopWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.20)",
+    borderColor: "#E5E7EB",
   },
   tabItem: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 20,
+    borderRadius: 21,
   },
   activeTab: {
     borderWidth: 1.5,
-    borderRadius: 20,
+    borderRadius: 21,
     backgroundColor: "transparent",
   },
   horizontalSweepContainer: {

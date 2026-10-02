@@ -39,6 +39,7 @@ export default function RootNavigator({ session, hasSeenWelcome }) {
           headerShown: false,
           animation: "none",
           contentStyle: { backgroundColor: themeBg },
+          navigationBarColor: isDarkMode ? "#000000" : "#FFFFFF",
         }}
       >
         {session ? (

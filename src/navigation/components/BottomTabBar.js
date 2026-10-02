@@ -24,11 +24,7 @@ export default function BottomTabBar({ state, navigation }) {
 
   const isExplore = state.routes[state.index]?.name === "Explore";
 
-  const tabBgColor = isDarkMode
-    ? "rgba(10, 10, 10, 0.85)"
-    : isExplore
-    ? "rgba(200, 200, 200, 0.80)"
-    : "rgba(240, 240, 240, 0.40)";
+  const tabBgColor = isDarkMode ? "#000000" : "#FFFFFF";
 
   const prevIndexRef = useRef(state.index);
   const sweepOpacity = useRef(new Animated.Value(0)).current;
@@ -127,11 +123,11 @@ export default function BottomTabBar({ state, navigation }) {
         "rgba(255, 255, 255, 0)",
       ]
     : [
-        "rgba(255, 255, 255, 0)",
-        "rgba(255, 255, 255, 0.04)",
-        "rgba(255, 255, 255, 0.16)",
-        "rgba(255, 255, 255, 0.04)",
-        "rgba(255, 255, 255, 0)",
+        "rgba(0, 0, 0, 0)",
+        "rgba(0, 0, 0, 0.02)",
+        "rgba(0, 0, 0, 0.06)",
+        "rgba(0, 0, 0, 0.02)",
+        "rgba(0, 0, 0, 0)",
       ];
 
   return (
@@ -189,13 +185,13 @@ export default function BottomTabBar({ state, navigation }) {
             >
               <Feather
                 name={iconName}
-                size={22}
+                size={24}
                 color={
                   isFocused
                     ? activeAccent
-                    : isExplore && !isDarkMode
-                    ? "#ffffffff"
-                    : "#ffffffff"
+                    : isDarkMode
+                    ? "#FFFFFF"
+                    : "#8E8E93"
                 }
               />
             </Animated.View>
