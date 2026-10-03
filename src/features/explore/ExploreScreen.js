@@ -16,6 +16,7 @@ import {
   Platform,
   FlatList,
   Easing,
+  DeviceEventEmitter,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -209,6 +210,7 @@ export default function Explore({ navigation }) {
   const isSearchBarVisibleRef = useRef(true);
   const lastScrollY = useRef(0);
   const isSearchFocusedRef = useRef(false);
+  const idleTimerRef = useRef(null);
 
   const hideSearchBar = useCallback(() => {
     if (isSearchFocusedRef.current || !isSearchBarVisibleRef.current) return;
@@ -224,6 +226,10 @@ export default function Explore({ navigation }) {
   }, [searchBarAnim]);
 
   const showSearchBar = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
     if (!isSearchBarVisibleRef.current) {
       isSearchBarVisibleRef.current = true;
       setIsSearchBarVisible(true);
@@ -242,6 +248,11 @@ export default function Explore({ navigation }) {
       showSearchBar();
     }
   }, [isSearchFocused, showSearchBar]);
+
+  useEffect(() => {
+    DeviceEventEmitter.emit("exploreSearchBarVisible", isSearchBarVisible);
+    navigation.setParams({ isSearchBarVisible });
+  }, [isSearchBarVisible, navigation]);
 
   useEffect(() => {
     const handleKeyboardHide = () => {
@@ -283,7 +294,43 @@ export default function Explore({ navigation }) {
     }
 
     lastScrollY.current = currentY;
+
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    if (!isSearchBarVisibleRef.current) {
+      idleTimerRef.current = setTimeout(() => {
+        showSearchBar();
+      }, 3000);
+    }
   }, [hideSearchBar, showSearchBar]);
+
+  const handleScrollBeginDrag = useCallback(() => {
+    dismissSearchFocus();
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+  }, [dismissSearchFocus]);
+
+  const handleScrollEnd = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    if (!isSearchBarVisibleRef.current) {
+      idleTimerRef.current = setTimeout(() => {
+        showSearchBar();
+      }, 3000);
+    }
+  }, [showSearchBar]);
+
+  useEffect(() => {
+    return () => {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+    };
+  }, []);
 
   const searchTranslateY = searchBarAnim.interpolate({
     inputRange: [0, 1],
@@ -298,7 +345,12 @@ export default function Explore({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       showSearchBar();
+      DeviceEventEmitter.emit("exploreSearchBarVisible", true);
       return () => {
+        if (idleTimerRef.current) {
+          clearTimeout(idleTimerRef.current);
+          idleTimerRef.current = null;
+        }
         dismissSearchFocus();
       };
     }, [showSearchBar, dismissSearchFocus])
@@ -482,7 +534,9 @@ export default function Explore({ navigation }) {
                 ]}
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
-                onScrollBeginDrag={dismissSearchFocus}
+                onScrollBeginDrag={handleScrollBeginDrag}
+                onScrollEndDrag={handleScrollEnd}
+                onMomentumScrollEnd={handleScrollEnd}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
                 scrollEventThrottle={16}
