@@ -20,6 +20,7 @@ import {
   Keyboard,
   StyleSheet,
   KeyboardAvoidingView,
+  useWindowDimensions,
 } from "react-native";
 
 const { height: WINDOW_HEIGHT } = Dimensions.get("window");
@@ -67,6 +68,7 @@ export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(loading);
   const transitionAnim = useRef(new Animated.Value(loading ? 0 : 1)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (loading) {
@@ -336,97 +338,7 @@ export default function ProfileScreen({ navigation }) {
   const [isSearchingCountry, setIsSearchingCountry] = useState(false);
   const searchTimeoutRef = useRef(null);
 
-  const defaultGalleryHeight = useMemo(() => {
-    const screenH = Dimensions.get("window").height;
-    return Math.max(340, screenH - 350);
-  }, []);
 
-  const [galleryHeight, setGalleryHeight] = useState(defaultGalleryHeight);
-
-  const handleGalleryLayout = useCallback((e) => {
-    const h = Math.round(e.nativeEvent.layout.height);
-    if (h > 100 && Math.abs(h - galleryHeight) > 6) {
-      setGalleryHeight(h);
-    }
-  }, [galleryHeight]);
-
-  const rowHeight = useMemo(() => {
-    return Math.max(160, Math.floor((galleryHeight - 12) / 2));
-  }, [galleryHeight]);
-
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const galleryScrollRef = useRef(null);
-
-  const getRowAnimProps = useCallback(
-    (rowIndex) => {
-      const S = rowHeight + 12;
-      const enterStart = (rowIndex - 2) * S;
-      const enterEnd = (rowIndex - 1) * S;
-      const exitStart = rowIndex * S;
-      const exitEnd = (rowIndex + 0.85) * S;
-
-      let inputRange = [];
-      let opacityRange = [];
-      let scaleRange = [];
-      let translateYRange = [];
-
-      if (rowIndex === 0) {
-        inputRange = [-50, 0, exitStart + S * 0.35, exitEnd, exitEnd + S];
-        opacityRange = [1, 1, 0.65, 0, 0];
-        scaleRange = [1, 1, 0.97, 0.92, 0.92];
-        translateYRange = [0, 0, -4, -14, -14];
-      } else if (rowIndex === 1) {
-        inputRange = [-50, 0, exitStart, exitStart + S * 0.35, exitEnd, exitEnd + S];
-        opacityRange = [1, 1, 1, 0.65, 0, 0];
-        scaleRange = [1, 1, 1, 0.97, 0.92, 0.92];
-        translateYRange = [0, 0, 0, -4, -14, -14];
-      } else if (rowIndex === 2) {
-        inputRange = [
-          Math.max(0, enterStart),
-          enterStart + S * 0.45,
-          enterEnd,
-          exitStart,
-          exitStart + S * 0.35,
-          exitEnd,
-        ];
-        opacityRange = [0, 0.65, 1, 1, 0.65, 0];
-        scaleRange = [0.92, 0.96, 1, 1, 0.97, 0.92];
-        translateYRange = [14, 6, 0, 0, -4, -14];
-      } else {
-        inputRange = [
-          0,
-          Math.max(0, enterStart),
-          enterStart + S * 0.45,
-          enterEnd,
-          exitStart + S,
-        ];
-        opacityRange = [0, 0, 0.65, 1, 1];
-        scaleRange = [0.92, 0.92, 0.96, 1, 1];
-        translateYRange = [14, 14, 6, 0, 0];
-      }
-
-      const opacity = scrollY.interpolate({
-        inputRange,
-        outputRange: opacityRange,
-        extrapolate: "clamp",
-      });
-
-      const scale = scrollY.interpolate({
-        inputRange,
-        outputRange: scaleRange,
-        extrapolate: "clamp",
-      });
-
-      const translateY = scrollY.interpolate({
-        inputRange,
-        outputRange: translateYRange,
-        extrapolate: "clamp",
-      });
-
-      return { opacity, transform: [{ scale }, { translateY }] };
-    },
-    [rowHeight, scrollY]
-  );
 
   useEffect(() => {
     AsyncStorage.getItem("@profile_gallery_count").then((val) => {
@@ -812,10 +724,6 @@ export default function ProfileScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       loadProfile();
-      scrollY.setValue(0);
-      if (galleryScrollRef.current) {
-        galleryScrollRef.current.scrollTo({ y: 0, animated: false });
-      }
     }, [])
   );
 
@@ -871,25 +779,54 @@ export default function ProfileScreen({ navigation }) {
 
   const effectiveGalleryCount = displayedCollections.length;
 
-  const galleryRows = useMemo(() => {
-    if (effectiveGalleryCount === 0) return [];
-    const rows = [];
-    const totalRows = Math.ceil(effectiveGalleryCount / 2);
-    for (let r = 0; r < totalRows; r++) {
-      const leftIdx = r * 2;
-      const rightIdx = r * 2 + 1;
-      rows.push({
-        rowIndex: r,
-        leftItem: leftIdx < effectiveGalleryCount ? displayedCollections[leftIdx] : null,
-        rightItem: rightIdx < effectiveGalleryCount ? displayedCollections[rightIdx] : null,
-      });
-    }
-    return rows;
-  }, [displayedCollections, effectiveGalleryCount]);
+  const { height: windowHeight } = useWindowDimensions();
+  const BASE_HEIGHT = 680;
+  const scale = Math.min(1, Math.max(0.65, windowHeight / BASE_HEIGHT));
+
+  const bannerHeight = Math.round(230 * scale);
+  const bodyOverlap = Math.round(24 * scale);
+  const avatarSize = Math.round(102 * scale);
+  const avatarMarginTop = -Math.round(52 * scale);
+  const avatarMarginBottom = Math.round(12 * scale);
+  const avatarBorderWidth = Math.round(4 * scale);
+  const avatarIconSize = Math.round(42 * scale);
+
+  const userNameFontSize = Math.round(21 * scale);
+  const nationalityFontSize = Math.round(13.5 * scale);
+  const nationalityMarginTop = Math.round(4 * scale);
+  const nationalityMarginBottom = Math.round(8 * scale);
+
+  const bioFontSize = Math.round(13 * scale);
+  const bioLineHeight = Math.round(19 * scale);
+  const bioMarginBottom = Math.round(20 * scale);
+
+  const statsPaddingVertical = Math.round(18 * scale);
+  const statsMarginBottom = Math.round(24 * scale);
+  const statValueFontSize = Math.round(22 * scale);
+  const statLabelFontSize = Math.round(11 * scale);
+  const statDividerHeight = Math.round(32 * scale);
+
+  const collectionsSectionMarginTop = Math.round(8 * scale);
+  const collectionsHeaderMarginBottom = Math.round(12 * scale);
+  const collectionsHeadingFontSize = Math.round(17 * scale);
+
+  const cardWidth = Math.round(180 * scale);
+  const cardHeight = Math.round(260 * scale);
+  const cardBorderRadius = Math.round(22 * scale);
+
+  const addCircleSize = Math.round(58 * scale);
+  const addIconSize = Math.round(28 * scale);
+  const addTextFontSize = Math.round(15 * scale);
+  const addTextLineHeight = Math.round(20 * scale);
+
+  const cardTitleFontSize = Math.round(15 * scale);
+  const cardSubFontSize = Math.round(12 * scale);
+  const cardGradientHeight = Math.round(95 * scale);
+  const cardGradientPadding = Math.round(14 * scale);
 
   const [screenHeight, setScreenHeight] = useState(WINDOW_HEIGHT);
   const [bodyY, setBodyY] = useState(206);
-  const [lastElementBottom, setLastElementBottom] = useState(WINDOW_HEIGHT);
+  const [lastElementBottom, setLastElementBottom] = useState(570);
   const totalElementsBottom = bodyY + lastElementBottom;
 
   const handleRootLayout = useCallback((e) => {
@@ -906,14 +843,14 @@ export default function ProfileScreen({ navigation }) {
     }
   }, [bodyY]);
 
+  const navBarHeight = 54 + insets.bottom;
+  const isBehindNavbar = totalElementsBottom > screenHeight - navBarHeight;
+  const canScroll = isBehindNavbar;
+
   const bottomNavBgOpacity = useMemo(() => {
-    const threshold = totalElementsBottom - screenHeight + 155;
+    const threshold = totalElementsBottom - (screenHeight - 155);
     if (threshold <= 0) {
-      return scrollY.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1],
-        extrapolate: "clamp",
-      });
+      return cardOpacity;
     }
     const fadeDistance = 40;
     const fadeStart = Math.max(0, threshold - fadeDistance);
@@ -923,47 +860,50 @@ export default function ProfileScreen({ navigation }) {
       outputRange: [0, 1],
       extrapolate: "clamp",
     });
-  }, [totalElementsBottom, screenHeight, scrollY]);
-
-  const MainContentContainer = Animated.ScrollView;
-  const mainContainerProps = {
-    style: styles.flex1,
-    contentContainerStyle: { flexGrow: 1 },
-    showsVerticalScrollIndicator: false,
-    bounces: true,
-    alwaysBounceVertical: true,
-    pointerEvents: loading ? "none" : "auto",
-    onScroll: Animated.event(
-      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-      { useNativeDriver: Platform.OS !== "web" }
-    ),
-    scrollEventThrottle: 16,
-    refreshControl: (
-      <RefreshControl
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-        tintColor={currentTheme?.accent || "#4CAF50"}
-        colors={[currentTheme?.accent || "#4CAF50"]}
-      />
-    ),
-  };
+  }, [totalElementsBottom, screenHeight, scrollY, cardOpacity]);
 
   return (
     <View
-      style={[styles.container, { backgroundColor: isDarkMode ? "#0C0C0E" : "#FFFFFF" }]}
+      style={[
+        styles.container,
+        { backgroundColor: isDarkMode ? "#0C0C0E" : "#FFFFFF" },
+      ]}
       onLayout={handleRootLayout}
     >
       <SafeAreaView edges={["bottom"]} style={styles.flex1}>
         <View style={styles.flex1}>
-          <MainContentContainer
-            {...mainContainerProps}
-            contentContainerStyle={{ flexGrow: 1 }}
+          <Animated.ScrollView
+            style={styles.flex1}
+            contentContainerStyle={[
+              { flexGrow: 1 },
+              canScroll && { paddingBottom: navBarHeight + 20 },
+            ]}
+            scrollEnabled={canScroll}
+            showsVerticalScrollIndicator={canScroll}
+            bounces={canScroll}
+            alwaysBounceVertical={canScroll}
+            pointerEvents={loading ? "none" : "auto"}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: Platform.OS !== "web" }
+            )}
+            scrollEventThrottle={16}
+            refreshControl={
+              canScroll ? (
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  tintColor={currentTheme?.accent || "#4CAF50"}
+                  colors={[currentTheme?.accent || "#4CAF50"]}
+                />
+              ) : undefined
+            }
           >
             <View key={refreshKey} style={styles.flex1}>
               <Animated.View style={{ opacity: cardOpacity }}>
                 <ImageBackground
                   source={bgSource}
-                  style={styles.coverBanner}
+                  style={[styles.coverBanner, scale < 1 && { height: bannerHeight }]}
                   resizeMode="cover"
                 >
                   <LinearGradient
@@ -1002,12 +942,27 @@ export default function ProfileScreen({ navigation }) {
                 style={[
                   styles.newProfileBody,
                   isDarkMode ? styles.newProfileBodyDark : styles.newProfileBodyLight,
-                  { opacity: cardOpacity, flex: 1 },
+                  {
+                    opacity: cardOpacity,
+                    flex: 1,
+                    paddingBottom: 0,
+                  },
+                  scale < 1 && { marginTop: -bodyOverlap },
                 ]}
                 onLayout={handleBodyLayout}
               >
                 <View style={styles.profileInfoGroup}>
-                  <View style={styles.avatarContainer}>
+                  <View
+                    style={[
+                      styles.avatarContainer,
+                      scale < 1 && {
+                        width: avatarSize,
+                        height: avatarSize,
+                        marginTop: avatarMarginTop,
+                        marginBottom: avatarMarginBottom,
+                      },
+                    ]}
+                  >
                     <TouchableOpacity
                       activeOpacity={0.85}
                       onPress={() => setAvatarModalVisible(true)}
@@ -1021,6 +976,12 @@ export default function ProfileScreen({ navigation }) {
                             borderColor: isDarkMode ? "#0C0C0E" : "#FFFFFF",
                             backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
                           },
+                          scale < 1 && {
+                            width: avatarSize,
+                            height: avatarSize,
+                            borderRadius: avatarSize / 2,
+                            borderWidth: avatarBorderWidth,
+                          },
                         ]}
                       >
                         {user?.avatarUrl ? (
@@ -1031,13 +992,20 @@ export default function ProfileScreen({ navigation }) {
                                 ? `${user.avatarUrl}&t=${refreshKey}`
                                 : `${user.avatarUrl}?t=${refreshKey}`,
                             }}
-                            style={styles.avatarImageBig}
+                            style={[
+                              styles.avatarImageBig,
+                              scale < 1 && {
+                                width: avatarSize,
+                                height: avatarSize,
+                                borderRadius: avatarSize / 2,
+                              },
+                            ]}
                             resizeMode="cover"
                           />
                         ) : (
                           <Ionicons
                             name="person"
-                            size={42}
+                            size={avatarIconSize}
                             color={currentTheme.accent}
                           />
                         )}
@@ -1049,6 +1017,7 @@ export default function ProfileScreen({ navigation }) {
                     style={[
                       styles.newUserName,
                       isDarkMode ? styles.newUserNameDark : styles.newUserNameLight,
+                      scale < 1 && { fontSize: userNameFontSize },
                     ]}
                   >
                     {name || "Usuário"}
@@ -1058,6 +1027,11 @@ export default function ProfileScreen({ navigation }) {
                     style={[
                       styles.newNationalityText,
                       { color: currentTheme.accent },
+                      scale < 1 && {
+                        fontSize: nationalityFontSize,
+                        marginTop: nationalityMarginTop,
+                        marginBottom: nationalityMarginBottom,
+                      },
                     ]}
                   >
                     {nationality || "Brasileiro"}
@@ -1067,6 +1041,11 @@ export default function ProfileScreen({ navigation }) {
                     style={[
                       styles.newBioText,
                       isDarkMode ? styles.newBioTextDark : styles.newBioTextLight,
+                      scale < 1 && {
+                        fontSize: bioFontSize,
+                        lineHeight: bioLineHeight,
+                        marginBottom: bioMarginBottom,
+                      },
                     ]}
                   >
                     {bio || "Sem bio definida."}
@@ -1076,6 +1055,10 @@ export default function ProfileScreen({ navigation }) {
                     style={[
                       styles.statsContainer,
                       isDarkMode ? styles.statsContainerDark : styles.statsContainerLight,
+                      scale < 1 && {
+                        paddingVertical: statsPaddingVertical,
+                        marginBottom: statsMarginBottom,
+                      },
                     ]}
                   >
                     <View style={styles.statItem}>
@@ -1083,6 +1066,7 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           styles.statValue,
                           isDarkMode ? styles.statValueDark : styles.statValueLight,
+                          scale < 1 && { fontSize: statValueFontSize },
                         ]}
                       >
                         0
@@ -1091,6 +1075,7 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           styles.statLabelText,
                           isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
+                          scale < 1 && { fontSize: statLabelFontSize },
                         ]}
                       >
                         COMENTÁRIOS
@@ -1105,6 +1090,7 @@ export default function ProfileScreen({ navigation }) {
                             ? "rgba(255, 255, 255, 0.12)"
                             : "rgba(0, 0, 0, 0.08)",
                         },
+                        scale < 1 && { height: statDividerHeight },
                       ]}
                     />
 
@@ -1113,6 +1099,7 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           styles.statValue,
                           isDarkMode ? styles.statValueDark : styles.statValueLight,
+                          scale < 1 && { fontSize: statValueFontSize },
                         ]}
                       >
                         {displayedCollections.length}
@@ -1121,6 +1108,7 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           styles.statLabelText,
                           isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
+                          scale < 1 && { fontSize: statLabelFontSize },
                         ]}
                       >
                         COLEÇÕES
@@ -1135,6 +1123,7 @@ export default function ProfileScreen({ navigation }) {
                             ? "rgba(255, 255, 255, 0.12)"
                             : "rgba(0, 0, 0, 0.08)",
                         },
+                        scale < 1 && { height: statDividerHeight },
                       ]}
                     />
 
@@ -1143,6 +1132,7 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           styles.statValue,
                           isDarkMode ? styles.statValueDark : styles.statValueLight,
+                          scale < 1 && { fontSize: statValueFontSize },
                         ]}
                       >
                         {favoritesCount}
@@ -1151,6 +1141,7 @@ export default function ProfileScreen({ navigation }) {
                         style={[
                           styles.statLabelText,
                           isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
+                          scale < 1 && { fontSize: statLabelFontSize },
                         ]}
                       >
                         FAVORITOS
@@ -1159,31 +1150,40 @@ export default function ProfileScreen({ navigation }) {
                   </View>
                 </View>
 
-                <View style={styles.collectionsSection}>
-                  <View style={styles.collectionsHeader}>
+                <View
+                  style={[
+                    styles.collectionsSection,
+                    scale < 1 && { marginTop: collectionsSectionMarginTop },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.collectionsHeader,
+                      scale < 1 && { marginBottom: collectionsHeaderMarginBottom },
+                    ]}
+                  >
                     <Text
                       style={[
                         styles.collectionsHeading,
                         isDarkMode ? styles.collectionsHeadingDark : styles.collectionsHeadingLight,
+                        scale < 1 && { fontSize: collectionsHeadingFontSize },
                       ]}
                     >
                       Minhas coleções
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 12.5,
-                        fontWeight: "600",
-                        color: currentTheme.accent,
-                      }}
-                    >
-                      {displayedCollections.length} {displayedCollections.length === 1 ? "coleção" : "coleções"}
                     </Text>
                   </View>
 
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.collectionsScrollContent}
+                    contentContainerStyle={[
+                      styles.collectionsScrollContent,
+                      scale < 1 && {
+                        gap: Math.round(14 * scale),
+                        paddingTop: Math.round(6 * scale),
+                        paddingBottom: Math.round(14 * scale),
+                      },
+                    ]}
                   >
                     <TouchableOpacity
                       activeOpacity={0.8}
@@ -1197,12 +1197,37 @@ export default function ProfileScreen({ navigation }) {
                         }
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
-                        style={styles.addCardItem}
+                        style={[
+                          styles.addCardItem,
+                          scale < 1 && {
+                            width: cardWidth,
+                            height: cardHeight,
+                            borderRadius: cardBorderRadius,
+                          },
+                        ]}
                       >
-                        <View style={styles.addCardCircle}>
-                          <Ionicons name="add" size={28} color="#FFFFFF" />
+                        <View
+                          style={[
+                            styles.addCardCircle,
+                            scale < 1 && {
+                              width: addCircleSize,
+                              height: addCircleSize,
+                              borderRadius: addCircleSize / 2,
+                              marginBottom: Math.round(14 * scale),
+                            },
+                          ]}
+                        >
+                          <Ionicons name="add" size={addIconSize} color="#FFFFFF" />
                         </View>
-                        <Text style={styles.addCardText}>
+                        <Text
+                          style={[
+                            styles.addCardText,
+                            scale < 1 && {
+                              fontSize: addTextFontSize,
+                              lineHeight: addTextLineHeight,
+                            },
+                          ]}
+                        >
                           Adicionar{"\n"}coleção
                         </Text>
                       </LinearGradient>
@@ -1217,7 +1242,14 @@ export default function ProfileScreen({ navigation }) {
                       return (
                         <TouchableOpacity
                           key={col.id ? `${col.id}_${idx}` : `col_${idx}`}
-                          style={styles.collectionCardItem}
+                          style={[
+                            styles.collectionCardItem,
+                            scale < 1 && {
+                              width: cardWidth,
+                              height: cardHeight,
+                              borderRadius: cardBorderRadius,
+                            },
+                          ]}
                           activeOpacity={0.85}
                           onPress={() =>
                             navigation.navigate("CollectionGallery", { collection: col })
@@ -1230,12 +1262,29 @@ export default function ProfileScreen({ navigation }) {
                           />
                           <LinearGradient
                             colors={["transparent", "rgba(0, 0, 0, 0.88)"]}
-                            style={styles.collectionCardGradient}
+                            style={[
+                              styles.collectionCardGradient,
+                              scale < 1 && {
+                                height: cardGradientHeight,
+                                padding: cardGradientPadding,
+                              },
+                            ]}
                           >
-                            <Text numberOfLines={1} style={styles.collectionCardTitle}>
+                            <Text
+                              numberOfLines={1}
+                              style={[
+                                styles.collectionCardTitle,
+                                scale < 1 && { fontSize: cardTitleFontSize },
+                              ]}
+                            >
                               {col.title}
                             </Text>
-                            <Text style={styles.collectionCardSub}>
+                            <Text
+                              style={[
+                                styles.collectionCardSub,
+                                scale < 1 && { fontSize: cardSubFontSize },
+                              ]}
+                            >
                               {col.photos?.length || 0} {col.photos?.length === 1 ? "foto" : "fotos"}
                             </Text>
                           </LinearGradient>
@@ -1256,7 +1305,7 @@ export default function ProfileScreen({ navigation }) {
                 />
               </Animated.View>
             </View>
-          </MainContentContainer>
+          </Animated.ScrollView>
 
           {showSkeleton && (
             <Animated.View

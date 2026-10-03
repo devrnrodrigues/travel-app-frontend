@@ -164,7 +164,7 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     marginTop: -24,
     paddingTop: 0,
-    paddingBottom: 165,
+    paddingBottom: 0,
     paddingHorizontal: 20,
     alignItems: "center",
   },
