@@ -468,14 +468,18 @@ export default function Favorites({ navigation }) {
               numColumns={2}
               columnWrapperStyle={styles.columnWrapper}
               contentContainerStyle={[
-                styles.listContent,
                 {
                   paddingBottom:
                     filteredFavorites.length > cardDimensions.targetRows * 2
                       ? cardDimensions.scrollPaddingBottom
                       : 0,
                 },
-                filteredFavorites.length === 0 && { flexGrow: 1 },
+                filteredFavorites.length === 0 && {
+                  flexGrow: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingBottom: cardDimensions.tabBarHeight,
+                },
               ]}
               onScrollBeginDrag={handleDeactivateSearch}
               keyboardShouldPersistTaps="handled"
