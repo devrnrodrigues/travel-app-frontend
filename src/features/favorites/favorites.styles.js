@@ -243,7 +243,7 @@ export default StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
-    paddingTop: 80,
+    paddingBottom: 40,
   },
   emptyIconContainer: {
     width: 72,
@@ -252,6 +252,11 @@ export default StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
+  },
+  emptyHeartContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
   },
   emptyTitle: {
     fontSize: 18,
@@ -264,21 +269,21 @@ export default StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
     maxWidth: 270,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   emptyActionBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 22,
-    borderRadius: 22,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
   emptyActionBtnText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
-    marginLeft: 6,
+    marginLeft: 5,
   },
   skeletonCard: {
     width: COLUMN_WIDTH,
@@ -294,6 +299,26 @@ export default StyleSheet.create({
     width: "100%",
     height: Math.min(270, Math.round(width * 0.62)),
     zIndex: 0,
+  },
+  foliageFooterContainer: {
+    position: "absolute",
+    bottom: 28,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: Math.min(220, Math.round(width * 0.44)),
+    zIndex: 0,
+  },
+  foliageFooter: {
+    width: "100%",
+    height: "100%",
+  },
+  foliageFooterDark: {
+    opacity: 0.35,
+  },
+  foliageFooterOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
   },
 });
 

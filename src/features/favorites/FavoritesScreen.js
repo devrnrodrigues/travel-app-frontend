@@ -32,6 +32,7 @@ import { getFavoritesApi, removeFavoriteApi } from "./api/favoriteService";
 import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 
 const foliageImage = require("../../../assets/images/image.png");
+const foliageFooterImage = require("../../../assets/images/image2.png");
 
 const FavoriteCardItem = React.memo(function FavoriteCardItem({
   item,
@@ -342,6 +343,14 @@ export default function Favorites({ navigation }) {
         resizeMode="cover"
         pointerEvents="none"
       />
+      <View style={styles.foliageFooterContainer} pointerEvents="none">
+        <Image
+          source={foliageFooterImage}
+          style={[styles.foliageFooter, isDarkMode && styles.foliageFooterDark]}
+          resizeMode="cover"
+        />
+        {isDarkMode && <View style={styles.foliageFooterOverlay} />}
+      </View>
       <SafeAreaView edges={["top"]} style={styles.container}>
         <View style={styles.navHeader}>
           <TouchableOpacity
@@ -541,19 +550,10 @@ export default function Favorites({ navigation }) {
                     </>
                   ) : (
                     <>
-                      <View
-                        style={[
-                          styles.emptyIconContainer,
-                          {
-                            backgroundColor: isDarkMode
-                              ? "rgba(255, 255, 255, 0.08)"
-                              : "rgba(0, 0, 0, 0.05)",
-                          },
-                        ]}
-                      >
+                      <View style={styles.emptyHeartContainer}>
                         <Ionicons
-                          name="heart-outline"
-                          size={36}
+                          name="heart"
+                          size={46}
                           color={accentColor}
                         />
                       </View>
@@ -579,7 +579,7 @@ export default function Favorites({ navigation }) {
                         onPress={() => navigation.navigate("Explore")}
                         activeOpacity={0.8}
                       >
-                        <Feather name="compass" size={15} color="#FFFFFF" />
+                        <Feather name="compass" size={13} color="#FFFFFF" />
                         <Text style={styles.emptyActionBtnText}>
                           Explorar destinos
                         </Text>
