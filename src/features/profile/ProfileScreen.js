@@ -966,20 +966,35 @@ export default function ProfileScreen({ navigation }) {
                   style={styles.coverBanner}
                   resizeMode="cover"
                 >
-                  <View style={styles.coverTopBar}>
-                    <TouchableOpacity
-                      style={styles.coverIconButton}
-                      onPress={() => setModalVisible(true)}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    >
-                      <Ionicons
-                        name="settings-sharp"
-                        size={20}
-                        color="#FFFFFF"
-                      />
-                    </TouchableOpacity>
-                  </View>
+                  <LinearGradient
+                    colors={
+                      currentTheme?.colors && currentTheme.colors.length >= 3
+                        ? [
+                            currentTheme.colors[0],
+                            currentTheme.colors[1],
+                            "rgba(0, 0, 0, 0.72)",
+                            "rgba(0, 0, 0, 0.96)",
+                          ]
+                        : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
+                    }
+                    locations={[0, 0.38, 0.72, 1]}
+                    style={[styles.flex1, { width: "100%", height: "100%" }]}
+                  >
+                    <View style={styles.coverTopBar}>
+                      <TouchableOpacity
+                        style={styles.coverIconButton}
+                        onPress={() => setModalVisible(true)}
+                        activeOpacity={0.7}
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                      >
+                        <Ionicons
+                          name="settings-sharp"
+                          size={20}
+                          color="#FFFFFF"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </LinearGradient>
                 </ImageBackground>
               </Animated.View>
 
