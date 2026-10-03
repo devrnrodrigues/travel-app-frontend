@@ -55,6 +55,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
           <Text
             style={[
               styles.categoryText,
+              styles.categoryTextDark,
               { color: isActive ? accentColor : "#FFF" },
               isActive && styles.categoryTextActive,
             ]}
@@ -299,7 +300,10 @@ export default function Home({ navigation }) {
               }
             >
               <View style={styles.header}>
-                <Text style={[styles.headerTitle, { color: "#FFF" }]} numberOfLines={1}>
+                <Text
+                  style={[styles.headerTitle, styles.headerTitleDark, { color: "#FFF" }]}
+                  numberOfLines={1}
+                >
                   {`Olá, ${userName}`}
                 </Text>
                 <View style={styles.headerIcons}>

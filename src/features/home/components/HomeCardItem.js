@@ -86,12 +86,20 @@ const HomeCardItem = React.memo(function HomeCardItem({
           },
         ]}
       >
+        {Platform.OS === "android" && !isDarkMode && cardImgSource && (
+          <Image
+            source={cardImgSource}
+            blurRadius={3}
+            style={styles.cardFullBackground}
+          />
+        )}
+
         <View
           style={[
             StyleSheet.absoluteFill,
             {
               backgroundColor: !isDarkMode
-                ? "rgba(255, 255, 255, 0.88)"
+                ? "rgba(250, 250, 250, 0.30)"
                 : "rgba(12, 12, 12, 0.82)",
               borderRadius: 25,
             },
@@ -100,7 +108,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
 
         {Platform.OS !== "android" && !isDarkMode && (
           <BlurView
-            intensity={25}
+            intensity={20}
             tint="light"
             style={styles.cardOverlayImage}
           />
@@ -109,14 +117,14 @@ const HomeCardItem = React.memo(function HomeCardItem({
         <View style={styles.cardInfoInner}>
           <View style={styles.cardInfoLeft}>
             <Text
-              style={[styles.cardTitle, !isDarkMode && { color: "#111111" }]}
+              style={[styles.cardTitle, !isDarkMode && { color: "#FFFFFF" }]}
               numberOfLines={2}
               ellipsizeMode="tail"
             >
               {item.title}
             </Text>
             <Text
-              style={[styles.cardLocation, !isDarkMode && { color: "rgba(0, 0, 0, 0.65)" }]}
+              style={[styles.cardLocation, !isDarkMode && { color: "rgba(255, 255, 255, 0.85)" }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >

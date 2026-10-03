@@ -17,11 +17,13 @@ export default StyleSheet.create({
   headerTitle: {
     fontSize: 32,
     fontWeight: "800",
+    flex: 1,
+    marginRight: 10,
+  },
+  headerTitleDark: {
     textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
-    flex: 1,
-    marginRight: 10,
   },
   headerIcons: { flexDirection: "row" },
   iconButton: {
@@ -37,12 +39,17 @@ export default StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.70)",
   },
   iconButtonLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.88)",
+    backgroundColor: "rgba(250, 250, 250, 0.30)",
   },
   categoriesSection: { height: 80, justifyContent: "center" },
   categoriesContainer: { paddingHorizontal: 25, alignItems: "center" },
   categoryItem: { marginRight: 30 },
-  categoryText: { fontSize: 17, fontWeight: "600", textShadowColor: 'rgba(0, 0, 0, 0.4)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
+  categoryText: { fontSize: 17, fontWeight: "600" },
+  categoryTextDark: {
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
   categoryTextActive: { fontWeight: "bold" },
   activeLine: { width: "100%", alignSelf: "stretch", height: 3.5, borderRadius: 3, marginTop: 5 },
   contentContainer: { flex: 1, justifyContent: "center", paddingBottom: 105 },
@@ -88,6 +95,9 @@ export default StyleSheet.create({
   blackScreen: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  whiteScreen: {
+    backgroundColor: "#FFFFFF",
   },
   transparentFlex: {
     flex: 1,
@@ -321,7 +331,7 @@ export default StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
   cardInfoLightBg: {
-    backgroundColor: "rgba(0, 0, 0, 0.06)",
+    backgroundColor: "rgba(100, 100, 100, 0.50)",
   },
   filterCategoriesContent: {
     paddingLeft: 20,
