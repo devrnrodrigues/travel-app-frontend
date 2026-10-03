@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -6,6 +6,7 @@ import {
   Easing,
   Platform,
   StyleSheet,
+  DeviceEventEmitter,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,12 +26,49 @@ export default function BottomTabBar({ state, navigation }) {
   const activeAccent = currentTheme?.accent || "#4CAF50";
 
   const currentRouteName = state.routes[state.index]?.name;
-  const isTranslucentTab = currentRouteName === "Home" || currentRouteName === "Explore";
+  const isHome = currentRouteName === "Home";
+  const isExplore = currentRouteName === "Explore";
 
-  const tabBgColor = isTranslucentTab
-    ? isDarkMode
-      ? "rgba(10, 10, 10, 0.85)"
-      : "rgba(250, 250, 250, 0.30)"
+  const exploreRoute = state.routes.find((r) => r.name === "Explore");
+  const [isExploreSearchVisible, setIsExploreSearchVisible] = useState(
+    exploreRoute?.params?.isSearchBarVisible !== false
+  );
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener(
+      "exploreSearchBarVisible",
+      (visible) => {
+        setIsExploreSearchVisible(visible);
+      }
+    );
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (isExplore) {
+      const currentParam = state.routes[state.index]?.params?.isSearchBarVisible;
+      if (typeof currentParam === "boolean") {
+        setIsExploreSearchVisible(currentParam);
+      }
+    }
+  }, [isExplore, state.index]);
+
+  const exploreAnim = useRef(
+    new Animated.Value(exploreRoute?.params?.isSearchBarVisible !== false ? 1 : 0)
+  ).current;
+
+  useEffect(() => {
+    Animated.timing(exploreAnim, {
+      toValue: isExploreSearchVisible ? 1 : 0,
+      duration: 180,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [isExploreSearchVisible]);
+
+  const isCustomTab = isHome || isExplore;
+  const tabBgColor = isCustomTab
+    ? "transparent"
     : isDarkMode
     ? "#000000"
     : "#EAEAEA";
@@ -144,20 +182,14 @@ export default function BottomTabBar({ state, navigation }) {
       style={[
         styles.bottomTab,
         {
-          backgroundColor: isTranslucentTab ? "transparent" : tabBgColor,
+          backgroundColor: tabBgColor,
           height: TAB_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom,
         },
-        !isDarkMode && !isTranslucentTab && styles.bottomTabLight,
-        isTranslucentTab && {
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderColor: isDarkMode
-            ? "rgba(255, 255, 255, 0.12)"
-            : "rgba(255, 255, 255, 0.20)",
-        },
+        !isDarkMode && !isCustomTab && styles.bottomTabLight,
       ]}
     >
-      {isTranslucentTab && (
+      {(isHome || isExplore) && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           {Platform.OS !== "android" && !isDarkMode && (
             <BlurView
@@ -177,6 +209,18 @@ export default function BottomTabBar({ state, navigation }) {
             ]}
           />
         </View>
+      )}
+      {isExplore && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: isDarkMode ? "#000000" : "#FFFFFF",
+              opacity: exploreAnim,
+            },
+          ]}
+        />
       )}
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
@@ -225,8 +269,14 @@ export default function BottomTabBar({ state, navigation }) {
                 color={
                   isFocused
                     ? activeAccent
-                    : isTranslucentTab || isDarkMode
+                    : isDarkMode
                     ? "#FFFFFF"
+                    : isHome
+                    ? "#FFFFFF"
+                    : isExplore
+                    ? isExploreSearchVisible
+                      ? "#8E8E93"
+                      : "#FFFFFF"
                     : "#8E8E93"
                 }
               />

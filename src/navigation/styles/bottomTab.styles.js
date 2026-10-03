@@ -27,8 +27,8 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
   },
   bottomTabLight: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: "#DCDCE0",
+    borderTopWidth: 0,
+    borderColor: "transparent",
   },
   tabItem: {
     width: 42,
