@@ -278,6 +278,7 @@ export default StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
+    backgroundColor: "#2D6A4F",
   },
   emptyActionBtnText: {
     color: "#FFFFFF",

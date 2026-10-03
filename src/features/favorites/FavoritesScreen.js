@@ -33,6 +33,7 @@ import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 
 const foliageImage = require("../../../assets/images/image.png");
 const foliageFooterImage = require("../../../assets/images/image2.png");
+const EMPTY_STATE_GREEN = "#2D6A4F";
 
 const FavoriteCardItem = React.memo(function FavoriteCardItem({
   item,
@@ -554,7 +555,7 @@ export default function Favorites({ navigation }) {
                         <Ionicons
                           name="heart"
                           size={46}
-                          color={accentColor}
+                          color={EMPTY_STATE_GREEN}
                         />
                       </View>
                       <Text
@@ -574,7 +575,7 @@ export default function Favorites({ navigation }) {
                       <TouchableOpacity
                         style={[
                           styles.emptyActionBtn,
-                          { backgroundColor: accentColor },
+                          { backgroundColor: EMPTY_STATE_GREEN },
                         ]}
                         onPress={() => navigation.navigate("Explore")}
                         activeOpacity={0.8}
