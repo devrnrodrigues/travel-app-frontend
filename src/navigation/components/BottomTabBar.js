@@ -5,9 +5,11 @@ import {
   Animated,
   Easing,
   Platform,
+  StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import Feather from "react-native-vector-icons/Feather";
 import { useTheme } from "../../theme/ThemeContext";
 import {
@@ -22,9 +24,16 @@ export default function BottomTabBar({ state, navigation }) {
   const { currentTheme, isDarkMode } = useTheme();
   const activeAccent = currentTheme?.accent || "#4CAF50";
 
-  const isExplore = state.routes[state.index]?.name === "Explore";
+  const currentRouteName = state.routes[state.index]?.name;
+  const isTranslucentTab = currentRouteName === "Home" || currentRouteName === "Explore";
 
-  const tabBgColor = isDarkMode ? "#000000" : "#F5F5F7";
+  const tabBgColor = isTranslucentTab
+    ? isDarkMode
+      ? "rgba(10, 10, 10, 0.85)"
+      : "rgba(250, 250, 250, 0.30)"
+    : isDarkMode
+    ? "#000000"
+    : "#EAEAEA";
 
   const prevIndexRef = useRef(state.index);
   const sweepOpacity = useRef(new Animated.Value(0)).current;
@@ -135,13 +144,40 @@ export default function BottomTabBar({ state, navigation }) {
       style={[
         styles.bottomTab,
         {
-          backgroundColor: tabBgColor,
+          backgroundColor: isTranslucentTab ? "transparent" : tabBgColor,
           height: TAB_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom,
         },
-        !isDarkMode && styles.bottomTabLight,
+        !isDarkMode && !isTranslucentTab && styles.bottomTabLight,
+        isTranslucentTab && {
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderColor: isDarkMode
+            ? "rgba(255, 255, 255, 0.12)"
+            : "rgba(255, 255, 255, 0.20)",
+        },
       ]}
     >
+      {isTranslucentTab && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          {Platform.OS !== "android" && !isDarkMode && (
+            <BlurView
+              intensity={20}
+              tint="light"
+              style={StyleSheet.absoluteFill}
+            />
+          )}
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: isDarkMode
+                  ? "rgba(10, 10, 10, 0.85)"
+                  : "rgba(250, 250, 250, 0.30)",
+              },
+            ]}
+          />
+        </View>
+      )}
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
 
@@ -189,7 +225,7 @@ export default function BottomTabBar({ state, navigation }) {
                 color={
                   isFocused
                     ? activeAccent
-                    : isDarkMode
+                    : isTranslucentTab || isDarkMode
                     ? "#FFFFFF"
                     : "#8E8E93"
                 }
