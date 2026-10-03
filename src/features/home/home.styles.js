@@ -37,7 +37,7 @@ export default StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.70)",
   },
   iconButtonLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.40)",
+    backgroundColor: "rgba(255, 255, 255, 0.88)",
   },
   categoriesSection: { height: 80, justifyContent: "center" },
   categoriesContainer: { paddingHorizontal: 25, alignItems: "center" },
@@ -321,7 +321,7 @@ export default StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
   cardInfoLightBg: {
-    backgroundColor: "rgba(100, 100, 100, 0.50)",
+    backgroundColor: "rgba(0, 0, 0, 0.06)",
   },
   filterCategoriesContent: {
     paddingLeft: 20,
