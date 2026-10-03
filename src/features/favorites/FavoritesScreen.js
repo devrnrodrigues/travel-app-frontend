@@ -2,62 +2,48 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   FlatList,
-  Image,
   ActivityIndicator,
-  ImageBackground,
-  StyleSheet,
   Modal,
   TouchableWithoutFeedback,
-  Dimensions,
-  Animated,
   TextInput,
   Keyboard,
   BackHandler,
-  Easing,
   Platform,
   RefreshControl,
+  Animated,
+  StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import styles, { dialogStyles } from "./favorites.styles";
+import styles, { dialogStyles, getCardDimensions } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
 import { useAuth } from "../auth/context/AuthContext";
-import { FavoritesSkeletonList, SkeletonBox } from "../../shared/components/Skeleton";
-import FadeInView from "../../shared/components/FadeInView";
+import { FavoritesSkeletonList } from "../../shared/components/Skeleton";
 import { getFavoritesApi, removeFavoriteApi } from "./api/favoriteService";
+import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 
-const { width, height: WINDOW_HEIGHT } = Dimensions.get("window");
-
-const SEARCH_BAR_HEIGHT = 64;
-const DEFAULT_LIST_HEIGHT = WINDOW_HEIGHT - 120;
-const BOTTOM_BAR_SPACE = 120;
-const TOP_PADDING = 10;
+const foliageImage = require("../../../assets/images/image.png");
 
 const FavoriteCardItem = React.memo(function FavoriteCardItem({
   item,
-  index,
-  totalItems,
-  scrollY,
-  cardSlot,
-  cardHeight,
-  cardMarginBottom,
+  navigation,
   currentTheme,
   isDarkMode,
-  navigation,
   setItemToDelete,
+  cardWidth,
+  cardHeight,
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imgAnim = useRef(new Animated.Value(0)).current;
-  const itemOffset = index * cardSlot;
-  const count = typeof totalItems === "number" ? totalItems : 0;
 
   const reviewCount = Number(
     item?.reviewCount ??
@@ -83,179 +69,120 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
       useNativeDriver: Platform.OS !== "web",
     }).start();
   };
-  const VISIBLE_CARDS = 5;
-  const canFoldTop = count > VISIBLE_CARDS && index < count - VISIBLE_CARDS;
-  const canFoldBottom = count > VISIBLE_CARDS && index >= VISIBLE_CARDS;
 
-  let rotateX = "0deg";
-  let translateY = 0;
-  let opacity = 1;
-
-  if (canFoldTop && canFoldBottom) {
-    const inputRange = [
-      Math.round(itemOffset - 4.95 * cardSlot),
-      Math.round(itemOffset - 4.45 * cardSlot),
-      Math.round(itemOffset - 4.0 * cardSlot),
-      Math.round(itemOffset),
-      Math.round(itemOffset + 0.45 * cardSlot),
-      Math.round(itemOffset + 0.95 * cardSlot),
-    ];
-    rotateX = scrollY.interpolate({
-      inputRange,
-      outputRange: ["60deg", "28deg", "0deg", "0deg", "-28deg", "-60deg"],
-      extrapolate: "clamp",
+  const handlePress = () => {
+    Keyboard.dismiss();
+    navigation.navigate("Details", {
+      item: {
+        ...item,
+        id: item.item_id || item.id,
+        item_id: item.item_id || item.id,
+      },
+      currentTheme,
     });
-    translateY = scrollY.interpolate({
-      inputRange,
-      outputRange: [20, 8, 0, 0, -8, -20],
-      extrapolate: "clamp",
-    });
-    opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [0, 0.9, 1, 1, 0.9, 0],
-      extrapolate: "clamp",
-    });
-  } else if (canFoldTop) {
-    const inputRange = [
-      Math.round(itemOffset),
-      Math.round(itemOffset + 0.45 * cardSlot),
-      Math.round(itemOffset + 0.95 * cardSlot),
-    ];
-    rotateX = scrollY.interpolate({
-      inputRange,
-      outputRange: ["0deg", "-28deg", "-60deg"],
-      extrapolate: "clamp",
-    });
-    translateY = scrollY.interpolate({
-      inputRange,
-      outputRange: [0, -8, -20],
-      extrapolate: "clamp",
-    });
-    opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [1, 0.9, 0],
-      extrapolate: "clamp",
-    });
-  } else if (canFoldBottom) {
-    const inputRange = [
-      Math.round(itemOffset - 4.95 * cardSlot),
-      Math.round(itemOffset - 4.45 * cardSlot),
-      Math.round(itemOffset - 4.0 * cardSlot),
-    ];
-    rotateX = scrollY.interpolate({
-      inputRange,
-      outputRange: ["60deg", "28deg", "0deg"],
-      extrapolate: "clamp",
-    });
-    translateY = scrollY.interpolate({
-      inputRange,
-      outputRange: [20, 8, 0],
-      extrapolate: "clamp",
-    });
-    opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [0, 0.9, 1],
-      extrapolate: "clamp",
-    });
-  }
-
-  const imageSize = Math.max(48, cardHeight - 20);
+  };
 
   return (
-    <Animated.View
-      style={[{ transform: [{ perspective: 700 }, { translateY }, { rotateX }], opacity }]}
+    <TouchableOpacity
+      activeOpacity={0.88}
+      style={[
+        styles.card,
+        isDarkMode ? styles.cardDark : styles.cardLight,
+        cardWidth && cardHeight ? { width: cardWidth, height: cardHeight } : null,
+      ]}
+      onPress={handlePress}
+      onLongPress={() => setItemToDelete(item)}
+      delayLongPress={450}
     >
-      <TouchableOpacity
-        activeOpacity={0.85}
-        style={[
-          styles.cardBase,
-          !isDarkMode ? styles.cardLight : styles.cardDark,
-          {
-            height: cardHeight,
-            marginBottom: index === totalItems - 1 ? 0 : cardMarginBottom,
-          },
-        ]}
-        onPress={() => {
-          Keyboard.dismiss();
-          navigation.navigate("Details", {
-            item: {
-              ...item,
-              id: item.item_id || item.id,
-              item_id: item.item_id || item.id,
-            },
-            currentTheme,
-          });
-        }}
-        onLongPress={() => setItemToDelete(item)}
-        delayLongPress={450}
-      >
-        <View
-          style={[styles.imageWrapper, { width: imageSize, height: imageSize }]}
-        >
-          {item.image_url ? (
-            <>
-              <Animated.Image
-                source={{ uri: item.image_url }}
-                style={[{ width: imageSize, height: imageSize, borderRadius: 13, opacity: imgAnim }]}
-                onLoad={handleImageLoad}
+      <View style={styles.cardInner}>
+        {item.image_url ? (
+          <>
+            <Animated.Image
+              source={{ uri: getOptimizedImageUrl(item.image_url, 450) }}
+              style={[styles.cardImage, { opacity: imgAnim }]}
+              resizeMode="cover"
+              onLoad={handleImageLoad}
+            />
+            {!imageLoaded && (
+              <View
+                style={[
+                  StyleSheet.absoluteFillObject,
+                  { backgroundColor: isDarkMode ? "#252525" : "#E2E2E2" },
+                ]}
               />
-              {!imageLoaded && (
-                <SkeletonBox
-                  width={imageSize}
-                  height={imageSize}
-                  borderRadius={13}
-                  isDarkMode={isDarkMode}
-                  style={isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight}
-                />
-              )}
-            </>
-          ) : (
-            <View
-              style={{
-                width: imageSize,
-                height: imageSize,
-                borderRadius: 13,
-                backgroundColor: isDarkMode ? "#252525" : "#E2E2E2",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
+            )}
+          </>
+        ) : (
+          <View
+            style={[
+              styles.cardPlaceholder,
+              { backgroundColor: isDarkMode ? "#222222" : "#E5E5EA" },
+            ]}
+          >
+            <Ionicons
+              name="image-outline"
+              size={32}
+              color={isDarkMode ? "#666666" : "#999999"}
+            />
+            <Text
+              style={[
+                styles.cardPlaceholderText,
+                { color: isDarkMode ? "#777777" : "#8E8E93" },
+              ]}
             >
-              <Ionicons name="image-outline" size={Math.round(imageSize * 0.45)} color={isDarkMode ? "#666" : "#999"} />
-            </View>
-          )}
-        </View>
+              Sem imagem
+            </Text>
+          </View>
+        )}
 
-        <View style={styles.cardInfo}>
+        {hasRating && ratingValue ? (
+          <View style={styles.ratingBadge}>
+            <Ionicons name="star" size={10} color="#FFD700" />
+            <Text style={styles.ratingText}>{ratingValue}</Text>
+          </View>
+        ) : null}
+
+
+        <LinearGradient
+          colors={["transparent", "rgba(0, 0, 0, 0.42)", "rgba(0, 0, 0, 0.88)"]}
+          locations={[0, 0.42, 1]}
+          style={styles.cardOverlay}
+        >
           <Text style={styles.cardTitle} numberOfLines={1}>
             {item.title}
           </Text>
-
-          <View style={styles.locationRow}>
-            <Feather name="map-pin" size={12} color={currentTheme.accent} />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {item.location}
-            </Text>
-          </View>
-        </View>
-
-        {hasRating && ratingValue ? (
-          <View style={[styles.ratingBadge, !isDarkMode && styles.ratingBadgeLight]}>
-            <Ionicons name="star" size={11} color="#FFD700" style={styles.ratingStar} />
-            <Text style={[styles.ratingText, !isDarkMode && styles.ratingTextLight]}>
-              {ratingValue}
-            </Text>
-          </View>
-        ) : null}
-      </TouchableOpacity>
-    </Animated.View>
+          {item.location ? (
+            <View style={styles.locationRow}>
+              <Feather
+                name="map-pin"
+                size={11}
+                color={currentTheme.accent || "#007AFF"}
+              />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {item.location}
+              </Text>
+            </View>
+          ) : null}
+        </LinearGradient>
+      </View>
+    </TouchableOpacity>
   );
 });
 
 export default function Favorites({ navigation }) {
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const cardDimensions = useMemo(() => {
+    return getCardDimensions(
+      windowWidth,
+      windowHeight,
+      insets.bottom,
+      insets.top
+    );
+  }, [windowWidth, windowHeight, insets.bottom, insets.top]);
+
   const { currentTheme, isDarkMode } = useTheme();
   const { user } = useAuth();
-  const bgSource = typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
-
   const queryClient = useQueryClient();
   const userId = user?.id || user?._id || "anon";
 
@@ -310,102 +237,28 @@ export default function Favorites({ navigation }) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const loading = isLoading && favorites.length === 0;
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const lastItemTitleRef = useRef("");
   const flatListRef = useRef(null);
-  const scrollOffsetRef = useRef(0);
-
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const insets = useSafeAreaInsets();
-  const estimatedListHeight = useMemo(() => {
-    const safeTop = insets?.top || 0;
-    const safeBottom = insets?.bottom || 0;
-    return Math.max(300, WINDOW_HEIGHT - safeTop - safeBottom - SEARCH_BAR_HEIGHT);
-  }, [insets?.top, insets?.bottom]);
-
-  const [listHeight, setListHeight] = useState(estimatedListHeight);
-
-  useEffect(() => {
-    if (estimatedListHeight > 0 && Math.abs(estimatedListHeight - listHeight) > 15) {
-      setListHeight(estimatedListHeight);
-    }
-  }, [estimatedListHeight]);
-
-  const handleListLayout = useCallback((e) => {
-    const h = e.nativeEvent.layout.height;
-    if (h > 0 && Math.abs(h - listHeight) > 2) {
-      setListHeight(h);
-    }
-  }, [listHeight]);
-
-  const [containerHeight, setContainerHeight] = useState(0);
-
-  const handleContainerLayout = useCallback((e) => {
-    const h = e.nativeEvent.layout.height;
-    if (h > 0 && Math.abs(h - containerHeight) > 2) {
-      setContainerHeight(h);
-    }
-  }, [containerHeight]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const searchInputRef = useRef(null);
-  const searchWidthAnim = useRef(new Animated.Value(0)).current;
-  const titleAnim = useRef(new Animated.Value(0)).current;
+  const isFocusedRef = useRef(isFocused);
+  isFocusedRef.current = isFocused;
 
-  const handleOpenSearch = () => {
-    setIsSearchOpen(true);
-    setIsFocused(true);
-    Animated.parallel([
-      Animated.timing(searchWidthAnim, {
-        toValue: 1,
-        duration: 280,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
-      }),
-      Animated.timing(titleAnim, {
-        toValue: 1,
-        duration: 220,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      searchInputRef.current?.focus();
-    });
-  };
-
-  const handleCloseSearch = () => {
-    Keyboard.dismiss();
-    setSearchQuery("");
+  const handleDeactivateSearch = useCallback(() => {
     setIsFocused(false);
-    Animated.parallel([
-      Animated.timing(searchWidthAnim, {
-        toValue: 0,
-        duration: 240,
-        easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: false,
-      }),
-      Animated.timing(titleAnim, {
-        toValue: 0,
-        duration: 240,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setIsSearchOpen(false);
-    });
-  };
-
-  const isSearchOpenRef = useRef(isSearchOpen);
-  isSearchOpenRef.current = isSearchOpen;
+    searchInputRef.current?.blur();
+  }, []);
 
   useEffect(() => {
     const onHide = () => {
-      if (isSearchOpenRef.current) {
-        handleCloseSearch();
+      if (isFocusedRef.current) {
+        handleDeactivateSearch();
       }
     };
     const didHideSub = Keyboard.addListener("keyboardDidHide", onHide);
@@ -414,19 +267,19 @@ export default function Favorites({ navigation }) {
       didHideSub.remove();
       willHideSub.remove();
     };
-  }, []);
+  }, [handleDeactivateSearch]);
 
   useEffect(() => {
     const onBackPress = () => {
-      if (isSearchOpen) {
-        handleCloseSearch();
+      if (isFocusedRef.current) {
+        handleDeactivateSearch();
         return true;
       }
       return false;
     };
     const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
     return () => sub.remove();
-  }, [isSearchOpen]);
+  }, [handleDeactivateSearch]);
 
   const filteredFavorites = useMemo(() => {
     if (!searchQuery.trim()) return favorites;
@@ -437,36 +290,6 @@ export default function Favorites({ navigation }) {
       return title.includes(q) || location.includes(q);
     });
   }, [favorites, searchQuery]);
-
-  const VISIBLE_CARDS = 5;
-  const count = filteredFavorites.length;
-  const targetCards = Math.min(VISIBLE_CARDS, Math.max(1, count));
-  const innerHeight = containerHeight > 0 ? containerHeight : Math.max(300, listHeight - 126);
-  const basePadding = 12;
-  const cardGap = 8;
-  const totalGaps = (VISIBLE_CARDS - 1) * cardGap;
-  const cardHeight = Math.max(68, Math.floor((innerHeight - (basePadding * 2) - totalGaps) / VISIBLE_CARDS));
-  const cardMarginBottom = cardGap;
-  const cardSlot = cardHeight + cardMarginBottom;
-
-  const totalCardsHeight = (cardHeight * targetCards) + ((targetCards - 1) * cardMarginBottom);
-  const verticalPadding = count >= VISIBLE_CARDS
-    ? Math.max(basePadding, Math.floor((innerHeight - totalCardsHeight) / 2))
-    : basePadding;
-
-  const getItemLayout = useCallback(
-    (_, index) => ({
-      length: cardSlot,
-      offset: verticalPadding + cardSlot * index,
-      index,
-    }),
-    [cardSlot, verticalPadding]
-  );
-
-  const skeletonInnerHeight = Math.max(300, WINDOW_HEIGHT - (insets?.top || 0) - (insets?.bottom || 0) - SEARCH_BAR_HEIGHT - 126);
-  const skeletonCardHeight = Math.max(68, Math.floor((skeletonInnerHeight - (basePadding * 2) - totalGaps) / VISIBLE_CARDS));
-  const skeletonTotalCardsHeight = skeletonCardHeight * VISIBLE_CARDS + (VISIBLE_CARDS - 1) * cardGap;
-  const skeletonVerticalPadding = Math.max(basePadding, Math.floor((skeletonInnerHeight - skeletonTotalCardsHeight) / 2));
 
   if (itemToDelete?.title) {
     lastItemTitleRef.current = itemToDelete.title;
@@ -499,300 +322,277 @@ export default function Favorites({ navigation }) {
     }
   };
 
-  useEffect(() => {
-    if (favorites.length <= VISIBLE_CARDS && scrollOffsetRef.current > 0) {
-      scrollOffsetRef.current = 0;
-      scrollY.setValue(0);
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    }
-  }, [favorites.length]);
-
   useFocusEffect(
     useCallback(() => {
-      scrollY.setValue(scrollOffsetRef.current);
       queryClient.invalidateQueries({ queryKey: ["hideFavorites"] });
       queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
     }, [queryClient, userId])
   );
 
-  return (
-    <View style={styles.root}>
-      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
-        <LinearGradient
-          colors={
-            currentTheme?.colors && currentTheme.colors.length >= 3
-              ? [
-                currentTheme.colors[0],
-                currentTheme.colors[1],
-                "rgba(0, 0, 0, 0.72)",
-                "rgba(0, 0, 0, 0.96)",
-              ]
-              : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
-          }
-          locations={[0, 0.38, 0.72, 1]}
-          style={styles.flex1}
-        >
-          <SafeAreaView edges={["top"]} style={styles.container}>
-            { }
-            <View
-              style={styles.searchBarWrapper}
-            >
-              <Animated.View
-                style={[styles.flex1, { opacity: titleAnim.interpolate({ inputRange: [0, 0.4, 1], outputRange: [1, 0, 0] }), transform: [{ translateX: titleAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -30] }) }] }]}
-                pointerEvents={isSearchOpen ? "none" : "auto"}
-              >
-                <Text style={[styles.headerTitle, { color: "#FFF" }]} numberOfLines={1}>
-                  Favoritos
-                </Text>
-              </Animated.View>
+  const screenBg = isDarkMode ? "#000000" : "#FFFFFF";
+  const primaryTextColor = isDarkMode ? "#FFFFFF" : "#000000";
+  const secondaryTextColor = isDarkMode ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.55)";
+  const accentColor = currentTheme.accent || "#007AFF";
 
-              { }
-              <Animated.View
-                style={[
-                  {
-                    position: "absolute",
-                    right: 20,
-                    width: searchWidthAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [44, width - 40],
-                    }),
-                    height: 44,
-                    borderRadius: 15,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    overflow: "hidden",
-                    backgroundColor: searchWidthAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [
-                        isDarkMode ? "rgba(0, 0, 0, 0.70)" : "rgba(100, 100, 100, 0.40)",
-                        isDarkMode ? "#000000" : "#FFFFFF",
-                      ],
-                    }),
-                    borderWidth: isSearchOpen ? (isFocused ? 1.8 : 1.5) : 0,
-                    borderColor: isSearchOpen ? currentTheme.accent : "transparent",
-                  },
-                ]}
+  return (
+    <View style={[styles.root, { backgroundColor: screenBg }]}>
+      <Image
+        source={foliageImage}
+        style={styles.foliageHeader}
+        resizeMode="cover"
+        pointerEvents="none"
+      />
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <View style={styles.navHeader}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate("Explore")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={26} color={accentColor} />
+            <Text style={[styles.backButtonText, { color: accentColor }]}>
+              Explorar
+            </Text>
+          </TouchableOpacity>
+          {isRefetching && (
+            <ActivityIndicator size="small" color={accentColor} style={{ marginRight: 4 }} />
+          )}
+        </View>
+
+        <View style={styles.titleContainer}>
+          <Text style={[styles.largeTitle, { color: primaryTextColor }]}>
+            Favoritos
+          </Text>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <View
+            style={[
+              styles.searchBox,
+              isDarkMode ? styles.searchBoxDark : styles.searchBoxLight,
+              isFocused && { borderColor: accentColor },
+            ]}
+          >
+            <Feather
+              name="search"
+              size={17}
+              color={
+                isFocused
+                  ? accentColor
+                  : isDarkMode
+                  ? "rgba(255, 255, 255, 0.45)"
+                  : "rgba(0, 0, 0, 0.4)"
+              }
+              style={styles.searchIcon}
+            />
+            <TextInput
+              ref={searchInputRef}
+              style={[
+                styles.searchInput,
+                isDarkMode ? styles.searchInputDark : styles.searchInputLight,
+              ]}
+              placeholder="Buscar"
+              placeholderTextColor={
+                isDarkMode ? "rgba(255, 255, 255, 0.45)" : "rgba(0, 0, 0, 0.4)"
+              }
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              returnKeyType="search"
+              autoCapitalize="none"
+              autoCorrect={false}
+              selectionColor={accentColor}
+            />
+            {searchQuery.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery("");
+                }}
+                style={styles.searchClearBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                {!isSearchOpen ? (
-                  <TouchableOpacity
-                    style={styles.searchIconBtn}
-                    onPress={handleOpenSearch}
-                    activeOpacity={0.75}
-                  >
-                    <Feather name="search" size={20} color={currentTheme.accent} />
-                  </TouchableOpacity>
-                ) : (
-                  <View
-                    style={styles.searchBarInner}
-                  >
-                    <Feather
-                      name="search"
-                      size={18}
-                      color={currentTheme.accent}
-                      style={styles.searchLeadingIcon}
-                    />
-                    <TextInput
-                      ref={searchInputRef}
-                      style={[
-                        styles.searchInput,
-                        !isDarkMode && styles.searchInputLight,
-                      ]}
-                      placeholder="Buscar nos favoritos..."
-                      placeholderTextColor={
-                        isDarkMode
-                          ? "rgba(255, 255, 255, 0.45)"
-                          : "rgba(0, 0, 0, 0.40)"
-                      }
-                      value={searchQuery}
-                      onChangeText={setSearchQuery}
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
-                      returnKeyType="search"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      selectionColor={currentTheme.accent}
-                    />
-                    {searchQuery.length > 0 && (
-                      <TouchableOpacity
-                        onPress={() => setSearchQuery("")}
-                        hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-                        style={styles.searchActionBtn}
+                <Ionicons
+                  name="close-circle"
+                  size={18}
+                  color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.45)"}
+                />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => {
+                  setIsFocused(true);
+                  searchInputRef.current?.focus();
+                }}
+                style={styles.searchClearBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="mic"
+                  size={17}
+                  color={
+                    isFocused
+                      ? accentColor
+                      : isDarkMode
+                      ? "rgba(255, 255, 255, 0.45)"
+                      : "rgba(0, 0, 0, 0.4)"
+                  }
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        <View style={[styles.flex1, { overflow: "visible" }]}>
+          {loading ? (
+            <FavoritesSkeletonList
+              isDarkMode={isDarkMode}
+              count={cardDimensions.isSmallScreen ? 4 : 6}
+            />
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={filteredFavorites}
+              key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
+              numColumns={2}
+              columnWrapperStyle={styles.columnWrapper}
+              contentContainerStyle={[
+                styles.listContent,
+                {
+                  paddingBottom:
+                    filteredFavorites.length > cardDimensions.targetRows * 2
+                      ? cardDimensions.scrollPaddingBottom
+                      : 0,
+                },
+                filteredFavorites.length === 0 && { flexGrow: 1 },
+              ]}
+              onScrollBeginDrag={handleDeactivateSearch}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              keyExtractor={(item) =>
+                (item.destinationId || item.id || item.item_id).toString()
+              }
+              onEndReached={loadNextPage}
+              onEndReachedThreshold={0.5}
+              initialNumToRender={cardDimensions.targetRows * 2}
+              maxToRenderPerBatch={cardDimensions.targetRows * 2}
+              windowSize={7}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefetching}
+                  onRefresh={refetch}
+                  tintColor={accentColor}
+                  colors={[accentColor]}
+                  progressViewOffset={-90}
+                />
+              }
+              renderItem={({ item }) => (
+                <FavoriteCardItem
+                  item={item}
+                  navigation={navigation}
+                  currentTheme={currentTheme}
+                  isDarkMode={isDarkMode}
+                  setItemToDelete={setItemToDelete}
+                  cardWidth={cardDimensions.cardWidth}
+                  cardHeight={cardDimensions.cardHeight}
+                />
+              )}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                    <ActivityIndicator size="small" color={accentColor} />
+                  </View>
+                ) : null
+              }
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  {searchQuery.trim() ? (
+                    <>
+                      <View
+                        style={[
+                          styles.emptyIconContainer,
+                          {
+                            backgroundColor: isDarkMode
+                              ? "rgba(255, 255, 255, 0.08)"
+                              : "rgba(0, 0, 0, 0.05)",
+                          },
+                        ]}
                       >
                         <Feather
-                          name="x-circle"
-                          size={16}
-                          color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)"}
+                          name="search"
+                          size={32}
+                          color={secondaryTextColor}
                         />
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      onPress={handleCloseSearch}
-                      hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-                      style={styles.searchCloseBtn}
-                    >
-                      <Feather name="x" size={19} color={isDarkMode ? "#FFFFFF" : "#000000"} />
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </Animated.View>
-            </View>
-
-            <View style={styles.flex1} onLayout={handleListLayout}>
-              <View
-                style={[
-                  styles.favoritesBlurContainer,
-                  isDarkMode && styles.favoritesBlurContainerDark,
-                  filteredFavorites.length === 0 && styles.favoritesBlurContainerEmpty,
-                ]}
-                onLayout={handleContainerLayout}
-              >
-                {Platform.OS !== "web" && (
-                  <BlurView
-                    intensity={Platform.OS === "android" ? 25 : 20}
-                    tint={isDarkMode ? "dark" : "light"}
-                    experimentalBlurMethod="dimezisBlurView"
-                    style={StyleSheet.absoluteFill}
-                  />
-                )}
-                <View
-                  style={[
-                    styles.emptyBlurCardOverlay,
-                    !isDarkMode && styles.emptyBlurCardOverlayLight,
-                  ]}
-                />
-
-                {loading ? (
-                  <FavoritesSkeletonList
-                    isDarkMode={isDarkMode}
-                    cardHeight={skeletonCardHeight}
-                    cardMarginBottom={cardMarginBottom}
-                    paddingTop={skeletonVerticalPadding}
-                    paddingHorizontal={12}
-                  />
-                ) : (
-                  <FadeInView duration={340} style={styles.flex1}>
-                    <Animated.FlatList
-                      ref={flatListRef}
-                      data={filteredFavorites}
-                      keyboardShouldPersistTaps="handled"
-                      showsVerticalScrollIndicator={false}
-                      keyExtractor={(item) => (item.destinationId || item.id).toString()}
-                      onEndReached={loadNextPage}
-                      onEndReachedThreshold={0.5}
-                      windowSize={5}
-                      maxToRenderPerBatch={10}
-                      initialNumToRender={8}
-                      removeClippedSubviews={Platform.OS === "android"}
-                      getItemLayout={getItemLayout}
-                      refreshControl={
-                        <RefreshControl
-                          refreshing={isRefetching}
-                          onRefresh={refetch}
-                          tintColor={currentTheme.accent || "#4CAF50"}
-                          colors={[currentTheme.accent || "#4CAF50"]}
-                        />
-                      }
-                      contentContainerStyle={[
-                        {
-                          paddingTop: verticalPadding,
-                          paddingHorizontal: 12,
-                          paddingBottom: verticalPadding,
-                        },
-                        filteredFavorites.length === 0 && {
-                          flexGrow: 1,
-                        },
-                      ]}
-                      bounces={true}
-                      overScrollMode="always"
-                      scrollEventThrottle={16}
-                      onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        {
-                          useNativeDriver: true,
-                          listener: (e) => {
-                            scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+                      </View>
+                      <Text
+                        style={[styles.emptyTitle, { color: primaryTextColor }]}
+                      >
+                        Nenhum resultado
+                      </Text>
+                      <Text
+                        style={[
+                          styles.emptySubtitle,
+                          { color: secondaryTextColor },
+                        ]}
+                      >
+                        Nenhum destino salvo corresponde a "{searchQuery}".
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <View
+                        style={[
+                          styles.emptyIconContainer,
+                          {
+                            backgroundColor: isDarkMode
+                              ? "rgba(255, 255, 255, 0.08)"
+                              : "rgba(0, 0, 0, 0.05)",
                           },
-                        }
-                      )}
-                      renderItem={({ item, index }) => (
-                        <FavoriteCardItem
-                          item={item}
-                          index={index}
-                          totalItems={filteredFavorites.length}
-                          scrollY={scrollY}
-                          cardSlot={cardSlot}
-                          cardHeight={cardHeight}
-                          cardMarginBottom={cardMarginBottom}
-                          currentTheme={currentTheme}
-                          isDarkMode={isDarkMode}
-                          navigation={navigation}
-                          setItemToDelete={setItemToDelete}
+                        ]}
+                      >
+                        <Ionicons
+                          name="heart-outline"
+                          size={36}
+                          color={accentColor}
                         />
-                      )}
-                      ListFooterComponent={
-                        isFetchingNextPage ? (
-                          <View style={{ paddingVertical: 16, alignItems: "center" }}>
-                            <ActivityIndicator size="small" color={currentTheme.accent || "#4CAF50"} />
-                          </View>
-                        ) : null
-                      }
-                      ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                          {searchQuery.trim() ? (
-                            <>
-                              <Feather
-                                name="search"
-                                size={32}
-                                color="rgba(248, 248, 252, 0.85)"
-                                style={styles.emptyIcon}
-                              />
-                              <Text style={styles.emptyTitle}>
-                                Nenhum resultado
-                              </Text>
-                              <Text style={styles.emptySubtitle}>
-                                Nenhum destino salvo corresponde a "{searchQuery}".
-                              </Text>
-                            </>
-                          ) : (
-                            <>
-                              <Ionicons
-                                name="heart-outline"
-                                size={36}
-                                color="rgba(255, 255, 255, 0.92)"
-                                style={styles.emptyIcon}
-                              />
-                              <Text style={styles.emptySubtitle}>
-                                Toque no coração nos destinos que você mais gostar para guardá-los aqui.
-                              </Text>
-                              <TouchableOpacity
-                                style={styles.emptyActionBtn}
-                                onPress={() => navigation.navigate("Explore")}
-                                activeOpacity={0.75}
-                              >
-                                <Feather
-                                  name="compass"
-                                  size={14}
-                                  color="rgba(255, 255, 255, 0.94)"
-                                  style={{ marginRight: 6 }}
-                                />
-                                <Text style={styles.emptyActionBtnText}>
-                                  Explorar destinos
-                                </Text>
-                              </TouchableOpacity>
-                            </>
-                          )}
-                        </View>
-                      }
-                    />
-                  </FadeInView>
-                )}
-              </View>
-            </View>
-          </SafeAreaView>
-        </LinearGradient>
-      </ImageBackground>
+                      </View>
+                      <Text
+                        style={[styles.emptyTitle, { color: primaryTextColor }]}
+                      >
+                        Nenhum favorito ainda
+                      </Text>
+                      <Text
+                        style={[
+                          styles.emptySubtitle,
+                          { color: secondaryTextColor },
+                        ]}
+                      >
+                        Toque no coração nos destinos que você mais gostar para
+                        guardá-los aqui.
+                      </Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.emptyActionBtn,
+                          { backgroundColor: accentColor },
+                        ]}
+                        onPress={() => navigation.navigate("Explore")}
+                        activeOpacity={0.8}
+                      >
+                        <Feather name="compass" size={15} color="#FFFFFF" />
+                        <Text style={styles.emptyActionBtnText}>
+                          Explorar destinos
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              }
+            />
+          )}
+        </View>
+      </SafeAreaView>
 
-      { }
       <Modal
         visible={!!itemToDelete}
         transparent={true}
@@ -801,7 +601,9 @@ export default function Favorites({ navigation }) {
         navigationBarTranslucent={true}
         onRequestClose={() => !isDeleting && setItemToDelete(null)}
       >
-        <TouchableWithoutFeedback onPress={() => !isDeleting && setItemToDelete(null)}>
+        <TouchableWithoutFeedback
+          onPress={() => !isDeleting && setItemToDelete(null)}
+        >
           <View style={dialogStyles.overlay}>
             <TouchableWithoutFeedback>
               <View
@@ -811,19 +613,26 @@ export default function Favorites({ navigation }) {
                 ]}
               >
                 <View style={dialogStyles.contentSection}>
-                  <Text style={[dialogStyles.title, !isDarkMode && dialogStyles.titleLight]}>
+                  <Text
+                    style={[
+                      dialogStyles.title,
+                      !isDarkMode && dialogStyles.titleLight,
+                    ]}
+                  >
                     Remover dos favoritos?
                   </Text>
-                  <Text style={[dialogStyles.message, !isDarkMode && dialogStyles.messageLight]}>
-                    Deseja remover{" "}
-                    <Text style={[styles.boldWhiteText, !isDarkMode && { color: "#000000" }]}>
-                      "{itemToDelete?.title || lastItemTitleRef.current}"
-                    </Text>{" "}
-                    da sua lista de destinos salvos?
+                  <Text
+                    style={[
+                      dialogStyles.message,
+                      !isDarkMode && dialogStyles.messageLight,
+                    ]}
+                  >
+                    Deseja remover "
+                    {itemToDelete?.title || lastItemTitleRef.current}
+                    " da sua lista de destinos salvos?
                   </Text>
                 </View>
 
-                { }
                 <TouchableOpacity
                   style={[
                     dialogStyles.actionButton,
@@ -840,7 +649,6 @@ export default function Favorites({ navigation }) {
                   )}
                 </TouchableOpacity>
 
-                { }
                 <TouchableOpacity
                   style={[
                     dialogStyles.actionButton,
@@ -851,7 +659,14 @@ export default function Favorites({ navigation }) {
                   disabled={isDeleting}
                   activeOpacity={0.65}
                 >
-                  <Text style={[dialogStyles.cancelText, !isDarkMode && dialogStyles.cancelTextLight]}>Cancelar</Text>
+                  <Text
+                    style={[
+                      dialogStyles.cancelText,
+                      !isDarkMode && dialogStyles.cancelTextLight,
+                    ]}
+                  >
+                    Cancelar
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>

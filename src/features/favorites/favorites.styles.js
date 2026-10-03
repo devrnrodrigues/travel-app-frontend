@@ -1,11 +1,53 @@
-import { StyleSheet, Dimensions, Platform } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+export const HORIZONTAL_PADDING = 16;
+export const CARD_GAP = 12;
+
+export const getCardDimensions = (
+  windowWidth = width,
+  windowHeight = height,
+  insetsBottom = 0,
+  insetsTop = 0,
+  measuredContainerHeight = 0
+) => {
+  const cardWidth = Math.floor((windowWidth - HORIZONTAL_PADDING * 2 - CARD_GAP) / 2);
+  const bottomInset = insetsBottom || 0;
+  const topInset = insetsTop || 0;
+  const estimatedHeaderHeight = 114;
+  const tabHeight = 54 + bottomInset;
+
+  const visibleHeight =
+    measuredContainerHeight > 0
+      ? measuredContainerHeight - tabHeight
+      : windowHeight - topInset - estimatedHeaderHeight - tabHeight;
+
+  const isSmallScreen = windowHeight < 740 || visibleHeight < 460;
+  const targetRows = isSmallScreen ? 2 : 3;
+
+  const verticalPadding = CARD_GAP;
+  const totalVerticalSpacing = (targetRows + 1) * CARD_GAP;
+  const usableCardsHeight = visibleHeight - totalVerticalSpacing;
+  const cardHeight = Math.max(140, Math.ceil(usableCardsHeight / targetRows));
+
+  return {
+    cardWidth,
+    cardHeight,
+    isSmallScreen,
+    targetRows,
+    tabBarHeight: tabHeight,
+    verticalPadding,
+    scrollPaddingBottom: tabHeight,
+  };
+};
+
+const initialDims = getCardDimensions(width, height);
+export const COLUMN_WIDTH = initialDims.cardWidth;
+export const CARD_HEIGHT = initialDims.cardHeight;
 
 export default StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#000000",
   },
   container: {
     flex: 1,
@@ -13,257 +55,245 @@ export default StyleSheet.create({
   flex1: {
     flex: 1,
   },
-  backgroundImage: {
-    flex: 1,
-  },
-  header: {
+  navHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 25,
-    paddingTop: 20,
+    justifyContent: "space-between",
+    paddingHorizontal: HORIZONTAL_PADDING,
+    marginTop: -6,
+    paddingTop: 0,
+    paddingBottom: 2,
   },
-  headerTitle: {
-    fontSize: 32,
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 2,
+    paddingRight: 12,
+  },
+  backButtonText: {
+    fontSize: 17,
+    fontWeight: "500",
+    marginLeft: 2,
+  },
+  titleContainer: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: 0,
+    paddingBottom: 6,
+  },
+  largeTitle: {
+    fontSize: 34,
     fontWeight: "800",
-    textShadowColor: "rgba(0, 0, 0, 0.4)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 4,
+    letterSpacing: 0.36,
   },
-  headerIcons: {
-    flexDirection: "row",
+  searchContainer: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingBottom: CARD_GAP,
   },
-  iconButton: {
-    padding: 12,
-    borderRadius: 15,
-    marginLeft: 12,
-  },
-  iconButtonDark: {
-    backgroundColor: "rgba(0, 0, 0, 0.70)",
-  },
-  iconButtonLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.40)",
-  },
-  searchBarWrapper: {
-    height: 64,
-    paddingHorizontal: 20,
+  searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    position: "relative",
+    height: 38,
+    borderRadius: 11,
+    paddingHorizontal: 10,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  searchIconBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
+  searchBoxDark: {
+    backgroundColor: "#1C1C1E",
   },
-  searchBarInner: {
-    width: width - 40,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    height: "100%",
+  searchBoxLight: {
+    backgroundColor: "#E5E5EA",
   },
-  searchLeadingIcon: {
-    marginRight: 8,
+  searchIcon: {
+    marginRight: 6,
   },
   searchInput: {
     flex: 1,
     height: "100%",
-    color: "#FFFFFF",
-    fontSize: 15,
+    fontSize: 16,
     paddingVertical: 0,
+  },
+  searchInputDark: {
+    color: "#FFFFFF",
   },
   searchInputLight: {
     color: "#000000",
   },
-  searchActionBtn: {
-    padding: 4,
-    marginRight: 2,
-  },
-  searchCloseBtn: {
+  searchClearBtn: {
     padding: 4,
   },
-  cardBase: {
+  listContent: {
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+  columnWrapper: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    gap: CARD_GAP,
+    marginBottom: CARD_GAP,
+  },
+  card: {
+    width: COLUMN_WIDTH,
+    height: CARD_HEIGHT,
     borderRadius: 18,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 0,
-    shadowColor: "transparent",
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
+    position: "relative",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  cardInner: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 18,
+    overflow: "hidden",
   },
   cardDark: {
-    backgroundColor: "rgba(12, 12, 12, 0.82)",
-    borderWidth: 1,
-    borderColor: "rgba(22, 22, 22, 0.6)"
+    backgroundColor: "#1A1A1A",
   },
   cardLight: {
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.20)",
-    backgroundColor: "rgba(255, 255, 255, 0.40)",
+    backgroundColor: "#E0E0E0",
   },
-  imageWrapper: {
-    borderRadius: 13,
-    overflow: "hidden",
-    backgroundColor: "rgba(255, 255, 255, 0.06)",
+  cardImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
+  cardPlaceholder: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
+    padding: 10,
   },
-  imageSkeletonDark: {
+  cardPlaceholderText: {
+    fontSize: 11,
+    marginTop: 6,
+    textAlign: "center",
+  },
+  moreButton: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    top: 9,
+    right: 9,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
   },
-  imageSkeletonLight: {
+  ratingBadge: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.16)",
+    top: 9,
+    left: 9,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.50)",
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+    zIndex: 2,
   },
-  cardInfo: {
-    marginLeft: 14,
-    flex: 1,
+  ratingText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
+    marginLeft: 3,
+  },
+  cardOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 12,
+    paddingTop: 36,
+    paddingBottom: 10,
+    justifyContent: "flex-end",
   },
   cardTitle: {
-    fontSize: 15,
-    fontWeight: "bold",
     color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 3,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
   },
   locationText: {
+    color: "rgba(255, 255, 255, 0.88)",
     fontSize: 12,
-    marginLeft: 5,
-    color: "#FFFFFF",
-  },
-  ratingBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.38)",
-    paddingVertical: 3,
-    paddingHorizontal: 7,
-    borderRadius: 8,
-    marginLeft: 8,
-  },
-  ratingBadgeLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.22)",
-  },
-  ratingStar: {
-    marginRight: 3,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  ratingTextLight: {
-    color: "#FFFFFF",
-  },
-  favoritesBlurContainer: {
+    fontWeight: "500",
+    marginLeft: 4,
     flex: 1,
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 118,
-    borderRadius: 26,
-    overflow: "hidden",
-    backgroundColor: "transparent",
-    ...(Platform.OS === "web"
-      ? {
-          backdropFilter: "blur(4px)",
-          WebkitBackdropFilter: "blur(4px)",
-        }
-      : {}),
-  },
-  favoritesBlurContainerDark: {
-    backgroundColor: "rgba(10, 10, 10, 0.45)",
-  },
-  favoritesBlurContainerEmpty: {
-    marginTop: 22,
-    marginBottom: 132,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   emptyContainer: {
     flex: 1,
-    width: "100%",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 36,
+    paddingHorizontal: 32,
+    paddingTop: 80,
   },
-  emptyBlurCard: {
-    flex: 1,
-    width: "100%",
-    minHeight: 380,
-    borderRadius: 26,
-    overflow: "hidden",
-    paddingHorizontal: 24,
-    paddingVertical: 36,
+  emptyIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "transparent",
-    ...(Platform.OS === "web"
-      ? {
-          backdropFilter: "blur(4px)",
-          WebkitBackdropFilter: "blur(4px)",
-        }
-      : {}),
-  },
-  emptyBlurCardOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 10, 10, 0.55)",
-  },
-  emptyBlurCardOverlayLight: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
-  },
-  emptyIcon: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   emptyTitle: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 8,
     textAlign: "center",
-    marginBottom: 6,
-    letterSpacing: -0.2,
   },
   emptySubtitle: {
-    fontSize: 13.5,
-    color: "rgba(255, 255, 255, 0.94)",
+    fontSize: 14,
     textAlign: "center",
-    lineHeight: 19,
-    maxWidth: 250,
-    marginBottom: 18,
+    lineHeight: 20,
+    maxWidth: 270,
+    marginBottom: 20,
   },
   emptyActionBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 9,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    borderWidth: 0,
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 22,
   },
   emptyActionBtnText: {
-    color: "rgba(255, 255, 255, 0.95)",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  boldWhiteText: {
-    fontWeight: "700",
     color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 6,
   },
-  searchBarLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.82)",
+  skeletonCard: {
+    width: COLUMN_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  foliageHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: Math.min(270, Math.round(width * 0.62)),
+    zIndex: 0,
   },
 });
 
@@ -280,19 +310,12 @@ export const dialogStyles = StyleSheet.create({
   dialogCard: {
     width: "100%",
     maxWidth: 275,
-    backgroundColor: "#000000",
-    borderRadius: 22,
+    backgroundColor: "#1C1C1E",
+    borderRadius: 20,
     overflow: "hidden",
-    borderWidth: 0,
-    borderColor: "transparent",
   },
   dialogCardLight: {
     backgroundColor: "#FFFFFF",
-    borderWidth: 0,
-    shadowColor: "transparent",
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
   },
   contentSection: {
     paddingTop: 24,
@@ -325,15 +348,15 @@ export const dialogStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
+    borderTopColor: "rgba(255, 255, 255, 0.12)",
     backgroundColor: "transparent",
   },
   actionButtonLight: {
     borderTopColor: "rgba(0, 0, 0, 0.08)",
   },
   lastButton: {
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   deleteText: {
     fontSize: 15,
