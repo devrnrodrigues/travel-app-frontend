@@ -24,7 +24,7 @@ export default function BottomTabBar({ state, navigation }) {
 
   const isExplore = state.routes[state.index]?.name === "Explore";
 
-  const tabBgColor = isDarkMode ? "#000000" : "#FFFFFF";
+  const tabBgColor = isDarkMode ? "#000000" : "#F5F5F7";
 
   const prevIndexRef = useRef(state.index);
   const sweepOpacity = useRef(new Animated.Value(0)).current;
