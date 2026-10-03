@@ -385,10 +385,6 @@ export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 
 }
 
 export function FavoriteCardSkeleton({
-  cardHeight = 84,
-  cardMarginBottom = 12,
-  titleWidth = "60%",
-  locationWidth = "38%",
   isDarkMode = true,
   animatedValue,
 }) {
@@ -396,46 +392,25 @@ export function FavoriteCardSkeleton({
   const anim = animatedValue || localAnim;
 
   const placeholderBg1 = isDarkMode
-    ? "rgba(255, 255, 255, 0.09)"
-    : "rgba(255, 255, 255, 0.45)";
+    ? "rgba(255, 255, 255, 0.12)"
+    : "rgba(0, 0, 0, 0.10)";
   const placeholderBg2 = isDarkMode
-    ? "rgba(255, 255, 255, 0.05)"
-    : "rgba(255, 255, 255, 0.28)";
-
-  const imageSize = Math.max(48, cardHeight - 20);
-  const cardWidth = width - 40;
+    ? "rgba(255, 255, 255, 0.06)"
+    : "rgba(0, 0, 0, 0.05)";
 
   return (
     <View
       style={[
-        favoritesStyles.cardBase,
-        !isDarkMode ? favoritesStyles.cardLight : favoritesStyles.cardDark,
-        {
-          height: cardHeight,
-          marginBottom: cardMarginBottom,
-          overflow: "hidden",
-          position: "relative",
-        },
+        favoritesStyles.card,
+        isDarkMode ? favoritesStyles.cardDark : favoritesStyles.cardLight,
       ]}
     >
-      <View
-        style={[
-          favoritesStyles.imageWrapper,
-          {
-            width: imageSize,
-            height: imageSize,
-            backgroundColor: isDarkMode
-              ? "rgba(255, 255, 255, 0.08)"
-              : "rgba(255, 255, 255, 0.35)",
-          },
-        ]}
-      />
-
-      <View style={[favoritesStyles.cardInfo, { justifyContent: "center" }]}>
+      <View style={{ flex: 1 }} />
+      <View style={favoritesStyles.cardOverlay}>
         <View
           style={{
-            height: 15,
-            width: titleWidth,
+            height: 14,
+            width: "70%",
             borderRadius: 4,
             backgroundColor: placeholderBg1,
             marginBottom: 6,
@@ -443,18 +418,17 @@ export function FavoriteCardSkeleton({
         />
         <View
           style={{
-            height: 12,
-            width: locationWidth,
+            height: 10,
+            width: "45%",
             borderRadius: 3,
             backgroundColor: placeholderBg2,
           }}
         />
       </View>
-
       <ShimmerOverlay
         animatedValue={anim}
-        width={cardWidth}
-        height={cardHeight}
+        width={favoritesStyles.card?.width || 170}
+        height={favoritesStyles.card?.height || 200}
         isDarkMode={isDarkMode}
       />
     </View>
@@ -463,38 +437,27 @@ export function FavoriteCardSkeleton({
 
 export function FavoritesSkeletonList({
   isDarkMode = true,
-  cardHeight = 78,
-  cardMarginBottom = 8,
-  count = 5,
-  paddingTop = 14,
-  paddingHorizontal = 12,
+  count = 6,
 }) {
   const anim = useShimmerAnimation();
-  const variations = [
-    { title: "65%", loc: "42%" },
-    { title: "52%", loc: "35%" },
-    { title: "70%", loc: "48%" },
-    { title: "58%", loc: "32%" },
-    { title: "62%", loc: "40%" },
-    { title: "50%", loc: "36%" },
-  ];
 
   return (
-    <View style={{ paddingHorizontal, paddingTop }}>
-      {Array.from({ length: count }).map((_, i) => {
-        const v = variations[i % variations.length];
-        return (
-          <FavoriteCardSkeleton
-            key={`fav-skel-${i}`}
-            cardHeight={cardHeight}
-            cardMarginBottom={i === count - 1 ? 0 : cardMarginBottom}
-            titleWidth={v.title}
-            locationWidth={v.loc}
-            isDarkMode={isDarkMode}
-            animatedValue={anim}
-          />
-        );
-      })}
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 12,
+        paddingHorizontal: 16,
+        paddingTop: 4,
+      }}
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <FavoriteCardSkeleton
+          key={`fav-skel-${i}`}
+          isDarkMode={isDarkMode}
+          animatedValue={anim}
+        />
+      ))}
     </View>
   );
 }
