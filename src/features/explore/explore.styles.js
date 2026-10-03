@@ -19,28 +19,37 @@ export default StyleSheet.create({
     paddingBottom: 8,
     backgroundColor: "transparent",
   },
-  searchBarContainer: {
+  headerBar: {
     position: "absolute",
-    left: 16,
-    right: 16,
+    top: 0,
+    left: 0,
+    right: 0,
+    width: "100%",
+    paddingHorizontal: 12,
+    paddingBottom: 8,
     zIndex: 9999,
+    elevation: 10,
+  },
+  searchBarRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(10, 10, 10, 0.85)",
-    borderRadius: 25,
-    height: 50,
-    paddingHorizontal: 16,
+  },
+  searchBarInputWrapper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    height: 38,
+    borderRadius: 10,
+    paddingHorizontal: 10,
     borderWidth: 1.5,
     borderColor: "transparent",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 20,
   },
-  searchBarLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
-    shadowOpacity: 0.18,
+  searchBarInputDark: {
+    backgroundColor: "#262626",
+  },
+  searchBarInputLight: {
+    backgroundColor: "#EFEFEF",
+    shadowOpacity: 0.08,
   },
   searchIcon: {
     marginRight: 8,
@@ -48,13 +57,25 @@ export default StyleSheet.create({
   searchInput: {
     flex: 1,
     height: "100%",
-    color: "#FFFFFF",
     fontSize: 15,
     paddingVertical: 0,
     outlineStyle: "none",
   },
+  searchInputDark: {
+    color: "#FFFFFF",
+  },
+  searchInputLight: {
+    color: "#000000",
+  },
   clearButton: {
     padding: 4,
+  },
+  photoIconButton: {
+    marginLeft: 12,
+    width: 38,
+    height: 38,
+    justifyContent: "center",
+    alignItems: "center",
   },
   columnWrapper: {
     gap: GAP,
@@ -180,22 +201,18 @@ export default StyleSheet.create({
   imageSkeletonLight: {
     backgroundColor: "rgba(0, 0, 0, 0.08)",
   },
-  searchBarFocusedBase: {
-    borderWidth: 1.5,
+  searchBarInputFocusedDark: {
+    backgroundColor: "#1F1F1F",
   },
-  searchBarFocusedDark: {
-    backgroundColor: "#000000",
-  },
-  searchBarFocusedLight: {
+  searchBarInputFocusedLight: {
     backgroundColor: "#FFFFFF",
   },
-  searchInputLight: {
-    color: "#000000",
-  },
   loadingMoreContainer: {
-    paddingVertical: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 56,
   },
 });
 export const categoryThemes = {

@@ -195,7 +195,8 @@ export default function Explore({ navigation }) {
 
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === "android" ? 38 : 20);
-  const searchBarTop = topInset + 30;
+  const headerHeight = (insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10)) + 46;
+  const bottomPadding = (insets.bottom || 0) + 85;
 
   const dismissSearchFocus = useCallback(() => {
     Keyboard.dismiss();
@@ -208,66 +209,39 @@ export default function Explore({ navigation }) {
   const isSearchBarVisibleRef = useRef(true);
   const lastScrollY = useRef(0);
   const isSearchFocusedRef = useRef(false);
-  const autoHideTimerRef = useRef(null);
 
   const hideSearchBar = useCallback(() => {
     if (isSearchFocusedRef.current || !isSearchBarVisibleRef.current) return;
-    if (autoHideTimerRef.current) {
-      clearTimeout(autoHideTimerRef.current);
-      autoHideTimerRef.current = null;
-    }
+    if (lastScrollY.current <= 20) return;
     isSearchBarVisibleRef.current = false;
     setIsSearchBarVisible(false);
     Animated.timing(searchBarAnim, {
       toValue: 1,
-      duration: 120,
+      duration: 140,
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start();
   }, [searchBarAnim]);
 
-  const scheduleAutoHide = useCallback(() => {
-    if (autoHideTimerRef.current) {
-      clearTimeout(autoHideTimerRef.current);
-      autoHideTimerRef.current = null;
-    }
-    if (!isSearchFocusedRef.current && isSearchBarVisibleRef.current) {
-      autoHideTimerRef.current = setTimeout(() => {
-        hideSearchBar();
-      }, 3000);
-    }
-  }, [hideSearchBar]);
-
   const showSearchBar = useCallback(() => {
-    if (autoHideTimerRef.current) {
-      clearTimeout(autoHideTimerRef.current);
-      autoHideTimerRef.current = null;
-    }
     if (!isSearchBarVisibleRef.current) {
       isSearchBarVisibleRef.current = true;
       setIsSearchBarVisible(true);
       Animated.timing(searchBarAnim, {
         toValue: 0,
-        duration: 120,
+        duration: 140,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start();
     }
-    scheduleAutoHide();
-  }, [searchBarAnim, scheduleAutoHide]);
+  }, [searchBarAnim]);
 
   useEffect(() => {
     isSearchFocusedRef.current = isSearchFocused;
     if (isSearchFocused) {
-      if (autoHideTimerRef.current) {
-        clearTimeout(autoHideTimerRef.current);
-        autoHideTimerRef.current = null;
-      }
       showSearchBar();
-    } else {
-      scheduleAutoHide();
     }
-  }, [isSearchFocused, showSearchBar, scheduleAutoHide]);
+  }, [isSearchFocused, showSearchBar]);
 
   useEffect(() => {
     const handleKeyboardHide = () => {
@@ -279,10 +253,6 @@ export default function Explore({ navigation }) {
     return () => {
       didHideSub.remove();
       willHideSub.remove();
-      if (autoHideTimerRef.current) {
-        clearTimeout(autoHideTimerRef.current);
-        autoHideTimerRef.current = null;
-      }
     };
   }, []);
 
@@ -302,11 +272,11 @@ export default function Explore({ navigation }) {
       if (!isSearchBarVisibleRef.current) {
         showSearchBar();
       }
-    } else if (diff > 18 && currentY > 50) {
+    } else if (diff > 12 && currentY > 60) {
       if (!isSearchFocusedRef.current && isSearchBarVisibleRef.current) {
         hideSearchBar();
       }
-    } else if (diff < -55) {
+    } else if (diff < -15) {
       if (!isSearchBarVisibleRef.current) {
         showSearchBar();
       }
@@ -317,7 +287,7 @@ export default function Explore({ navigation }) {
 
   const searchTranslateY = searchBarAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -(searchBarTop + 75)],
+    outputRange: [0, -headerHeight],
   });
 
   const searchOpacity = searchBarAnim.interpolate({
@@ -330,10 +300,6 @@ export default function Explore({ navigation }) {
       showSearchBar();
       return () => {
         dismissSearchFocus();
-        if (autoHideTimerRef.current) {
-          clearTimeout(autoHideTimerRef.current);
-          autoHideTimerRef.current = null;
-        }
       };
     }, [showSearchBar, dismissSearchFocus])
   );
@@ -394,13 +360,103 @@ export default function Explore({ navigation }) {
         style={styles.flex1}
       >
         <View style={styles.container}>
-          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+          <StatusBar
+            barStyle={isDarkMode ? "light-content" : "dark-content"}
+            backgroundColor="transparent"
+            translucent
+          />
+
+          <Animated.View
+            pointerEvents={isSearchBarVisible || isSearchFocused ? "auto" : "none"}
+            style={[
+              styles.headerBar,
+              {
+                paddingTop: insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10),
+                backgroundColor: isDarkMode ? "#000000" : "#FFFFFF",
+                transform: [{ translateY: searchTranslateY }],
+                opacity: searchOpacity,
+              },
+            ]}
+          >
+            <View style={styles.searchBarRow}>
+              <Pressable
+                style={[
+                  styles.searchBarInputWrapper,
+                  isDarkMode ? styles.searchBarInputDark : styles.searchBarInputLight,
+                  isSearchFocused && [
+                    { borderColor: currentTheme?.accent || "#4CAF50" },
+                    isDarkMode
+                      ? styles.searchBarInputFocusedDark
+                      : styles.searchBarInputFocusedLight,
+                  ],
+                ]}
+                onPress={() => searchInputRef.current?.focus()}
+              >
+                <Feather
+                  name="search"
+                  size={18}
+                  color={
+                    isSearchFocused
+                      ? currentTheme?.accent || "#4CAF50"
+                      : isDarkMode
+                      ? "#8E8E93"
+                      : "#767676"
+                  }
+                  style={styles.searchIcon}
+                />
+                <TextInput
+                  ref={searchInputRef}
+                  style={[
+                    styles.searchInput,
+                    isDarkMode ? styles.searchInputDark : styles.searchInputLight,
+                  ]}
+                  placeholder="Pesquisar"
+                  placeholderTextColor={isDarkMode ? "#8E8E93" : "#767676"}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  autoCorrect={false}
+                  selectionColor={currentTheme?.accent || "#4CAF50"}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => setSearchQuery("")}
+                    style={styles.clearButton}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={17}
+                      color={isDarkMode ? "#8E8E93" : "#767676"}
+                    />
+                  </TouchableOpacity>
+                )}
+              </Pressable>
+
+              <TouchableOpacity
+                style={styles.photoIconButton}
+                activeOpacity={0.7}
+                onPress={() => {}}
+              >
+                <Ionicons
+                  name="images-outline"
+                  size={25}
+                  color={isDarkMode ? "#FFFFFF" : "#000000"}
+                />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
 
           {loading ? (
             <ScrollView
               contentContainerStyle={[
                 styles.flatListContent,
-                { backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" },
+                {
+                  paddingTop: headerHeight,
+                  paddingBottom: bottomPadding,
+                  backgroundColor: isDarkMode ? "#000000" : "#E5E7EB",
+                },
               ]}
               showsVerticalScrollIndicator={false}
               scrollEnabled={false}
@@ -418,7 +474,11 @@ export default function Explore({ navigation }) {
                 columnWrapperStyle={styles.columnWrapper}
                 contentContainerStyle={[
                   styles.flatListContent,
-                  { backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" },
+                  {
+                    paddingTop: headerHeight,
+                    paddingBottom: bottomPadding,
+                    backgroundColor: isDarkMode ? "#000000" : "#E5E7EB",
+                  },
                 ]}
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
@@ -427,7 +487,7 @@ export default function Explore({ navigation }) {
                 keyboardShouldPersistTaps="handled"
                 scrollEventThrottle={16}
                 onEndReached={loadNextPage}
-                onEndReachedThreshold={0.3}
+                onEndReachedThreshold={0.5}
                 windowSize={7}
                 maxToRenderPerBatch={12}
                 initialNumToRender={12}
@@ -438,6 +498,7 @@ export default function Explore({ navigation }) {
                     onRefresh={handleRefresh}
                     tintColor={currentTheme?.accent || "#4CAF50"}
                     colors={[currentTheme?.accent || "#4CAF50"]}
+                    progressViewOffset={headerHeight}
                   />
                 }
                 ListEmptyComponent={
@@ -453,64 +514,17 @@ export default function Explore({ navigation }) {
                   </View>
                 }
                 ListFooterComponent={
-                  <View style={styles.loadingMoreContainer}>
-                    {loadingMore && (
+                  loadingMore ? (
+                    <View style={styles.loadingMoreContainer}>
                       <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
-                    )}
-                  </View>
+                    </View>
+                  ) : null
                 }
               />
             </FadeInView>
           )}
 
-          { }
-          <Animated.View
-            pointerEvents={isSearchBarVisible || isSearchFocused ? "auto" : "none"}
-            style={[
-              styles.searchBarContainer,
-              {
-                top: searchBarTop,
-                transform: [{ translateY: searchTranslateY }],
-                opacity: searchOpacity,
-                zIndex: 9999,
-                elevation: 20,
-              },
-              !isDarkMode && styles.searchBarLight,
-              isSearchFocused && [styles.searchBarFocusedBase, { borderColor: currentTheme?.accent || "#4CAF50" }, !isDarkMode ? styles.searchBarFocusedLight : styles.searchBarFocusedDark],
-            ]}
-          >
-            <Pressable
-              style={styles.searchBarInner}
-              onPress={() => searchInputRef.current?.focus()}
-            >
-              <Feather
-                name="search"
-                size={18}
-                color={isSearchFocused ? (currentTheme?.accent || "#4CAF50") : (isDarkMode ? "#FFFFFF" : "#000000")}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                ref={searchInputRef}
-                style={[styles.searchInput, !isDarkMode && styles.searchInputLight]}
-                placeholder="Pesquisar destinos, locais..."
-                placeholderTextColor={isDarkMode ? "rgba(255, 255, 255, 0.65)" : "rgba(0, 0, 0, 0.50)"}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                autoCorrect={false}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setSearchQuery("")}
-                  style={styles.clearButton}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                >
-                  <Feather name="x" size={16} color={isDarkMode ? "#FFFFFF" : "#000000"} />
-                </TouchableOpacity>
-              )}
-            </Pressable>
-          </Animated.View>
+
         </View>
       </LinearGradient>
     </ImageBackground>
