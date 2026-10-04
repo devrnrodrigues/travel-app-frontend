@@ -85,6 +85,11 @@ export default StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.36,
   },
+  backgroundImage: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
   searchContainer: {
     paddingHorizontal: HORIZONTAL_PADDING,
     paddingBottom: CARD_GAP,
@@ -92,25 +97,25 @@ export default StyleSheet.create({
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    height: 38,
-    borderRadius: 11,
-    paddingHorizontal: 10,
+    height: 44,
+    borderRadius: 12,
+    paddingHorizontal: 12,
     borderWidth: 1.5,
     borderColor: "transparent",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   searchBoxDark: {
-    backgroundColor: "#1C1C1E",
+    backgroundColor: "rgba(28, 28, 30, 0.75)",
   },
   searchBoxLight: {
-    backgroundColor: "#E5E5EA",
+    backgroundColor: "rgba(255, 255, 255, 0.80)",
   },
   searchIcon: {
-    marginRight: 6,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,

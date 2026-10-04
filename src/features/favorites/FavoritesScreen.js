@@ -3,6 +3,8 @@ import {
   View,
   Text,
   Image,
+  ImageBackground,
+  StatusBar,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
@@ -31,8 +33,6 @@ import { FavoritesSkeletonList } from "../../shared/components/Skeleton";
 import { getFavoritesApi, removeFavoriteApi } from "./api/favoriteService";
 import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 
-const foliageImage = require("../../../assets/images/image.png");
-const foliageFooterImage = require("../../../assets/images/image2.png");
 const EMPTY_STATE_GREEN = "#529A78";
 
 const FavoriteCardItem = React.memo(function FavoriteCardItem({
@@ -332,30 +332,30 @@ export default function Favorites({ navigation }) {
     }, [queryClient, userId])
   );
 
-  const screenBg = isDarkMode ? "#000000" : "#FFFFFF";
-  const primaryTextColor = isDarkMode ? "#FFFFFF" : "#000000";
-  const secondaryTextColor = isDarkMode ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.55)";
+  const primaryTextColor = "#FFFFFF";
+  const secondaryTextColor = "rgba(255, 255, 255, 0.70)";
   const accentColor = currentTheme.accent || "#007AFF";
+  const bgSource = typeof currentTheme?.bg === "string" ? { uri: currentTheme.bg } : currentTheme?.bg;
 
   return (
-    <View style={[styles.root, { backgroundColor: screenBg }]}>
-      <Image
-        source={foliageImage}
-        style={styles.foliageHeader}
-        resizeMode="cover"
-        pointerEvents="none"
-      />
-      <View style={styles.foliageFooterContainer} pointerEvents="none">
-        <Image
-          source={foliageFooterImage}
-          style={[
-            styles.foliageFooter,
-            !isDarkMode && styles.foliageFooterLight,
-          ]}
-          resizeMode="cover"
-        />
-      </View>
-      <SafeAreaView edges={["top"]} style={styles.container}>
+    <View style={styles.root}>
+      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
+        <LinearGradient
+          colors={
+            currentTheme?.colors && currentTheme.colors.length >= 3
+              ? [
+                  currentTheme.colors[0],
+                  currentTheme.colors[1],
+                  "rgba(0, 0, 0, 0.72)",
+                  "rgba(0, 0, 0, 0.96)",
+                ]
+              : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)", "rgba(0, 0, 0, 0.98)"]
+          }
+          locations={[0, 0.38, 0.72, 1]}
+          style={styles.flex1}
+        >
+          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+          <SafeAreaView edges={["top"]} style={styles.container}>
         <View style={styles.navHeader}>
           <TouchableOpacity
             style={styles.backButton}
@@ -388,13 +388,13 @@ export default function Favorites({ navigation }) {
           >
             <Feather
               name="search"
-              size={17}
+              size={18}
               color={
                 isFocused
                   ? accentColor
                   : isDarkMode
                   ? "rgba(255, 255, 255, 0.45)"
-                  : "rgba(0, 0, 0, 0.4)"
+                  : "rgba(0, 0, 0, 0.55)"
               }
               style={styles.searchIcon}
             />
@@ -406,7 +406,7 @@ export default function Favorites({ navigation }) {
               ]}
               placeholder="Buscar"
               placeholderTextColor={
-                isDarkMode ? "rgba(255, 255, 255, 0.45)" : "rgba(0, 0, 0, 0.4)"
+                isDarkMode ? "rgba(255, 255, 255, 0.45)" : "rgba(0, 0, 0, 0.50)"
               }
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -428,7 +428,7 @@ export default function Favorites({ navigation }) {
                 <Ionicons
                   name="close-circle"
                   size={18}
-                  color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.45)"}
+                  color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.55)"}
                 />
               </TouchableOpacity>
             ) : (
@@ -443,13 +443,13 @@ export default function Favorites({ navigation }) {
               >
                 <Ionicons
                   name="mic"
-                  size={17}
+                  size={18}
                   color={
                     isFocused
                       ? accentColor
                       : isDarkMode
                       ? "rgba(255, 255, 255, 0.45)"
-                      : "rgba(0, 0, 0, 0.4)"
+                      : "rgba(0, 0, 0, 0.55)"
                   }
                 />
               </TouchableOpacity>
@@ -602,6 +602,8 @@ export default function Favorites({ navigation }) {
           )}
         </View>
       </SafeAreaView>
+        </LinearGradient>
+      </ImageBackground>
 
       <Modal
         visible={!!itemToDelete}
