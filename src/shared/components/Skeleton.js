@@ -403,10 +403,10 @@ export function TopDestinationCardSkeleton({
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "#1A1A1A" : "#EFEFEF";
-  const imgBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.07)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.10)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.06)";
+  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
+  const imgBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.16)";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.20)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.10)";
 
   const actualWidth = cardWidth || 270;
   const actualHeight = cardHeight || 98;
