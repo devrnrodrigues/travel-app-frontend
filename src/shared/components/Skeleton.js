@@ -153,6 +153,8 @@ export function HomeCardSkeleton({
   isDarkMode = true,
   currentTheme,
   animatedValue,
+  cardWidth,
+  cardHeight,
 }) {
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
@@ -163,10 +165,15 @@ export function HomeCardSkeleton({
   const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.18)";
   const badgeBg = !isDarkMode ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.04)";
 
+  const actualWidth = cardWidth || CARD_WIDTH;
+  const actualHeight = cardHeight || CARD_HEIGHT;
+
   return (
     <View
       style={[
         homeStyles.card,
+        cardWidth ? { width: cardWidth } : null,
+        cardHeight ? { height: cardHeight } : null,
         {
           backgroundColor: cardBg,
           borderRadius: 40,
@@ -181,13 +188,15 @@ export function HomeCardSkeleton({
         },
       ]}
     >
-      { }
       <View style={{ flex: 1 }} />
 
-      { }
       <View
         style={[
           homeStyles.cardInfo,
+          cardHeight ? {
+            bottom: Math.round(Math.max(14, cardHeight * 0.055)),
+            height: Math.round(Math.min(104, Math.max(86, cardHeight * 0.25))),
+          } : null,
           {
             backgroundColor: infoBg,
             borderWidth: 0,
@@ -201,7 +210,6 @@ export function HomeCardSkeleton({
         ]}
       >
         <View style={{ flex: 1, justifyContent: "center", marginRight: 10 }}>
-          { }
           <View
             style={{
               height: 18,
@@ -211,7 +219,6 @@ export function HomeCardSkeleton({
               marginBottom: 8,
             }}
           />
-          { }
           <View
             style={{
               height: 12,
@@ -222,7 +229,6 @@ export function HomeCardSkeleton({
           />
         </View>
 
-        { }
         <View
           style={[
             homeStyles.ratingContainer,
@@ -250,18 +256,22 @@ export function HomeCardSkeleton({
         </View>
       </View>
 
-      { }
       <ShimmerOverlay
         animatedValue={anim}
-        width={CARD_WIDTH}
-        height={CARD_HEIGHT}
+        width={actualWidth}
+        height={actualHeight}
         isDarkMode={isDarkMode}
       />
     </View>
   );
 }
 
-export function HomeSkeletonList({ isDarkMode = true, currentTheme }) {
+export function HomeSkeletonList({
+  isDarkMode = true,
+  currentTheme,
+  cardWidth,
+  cardHeight,
+}) {
   const anim = useShimmerAnimation();
 
   return (
@@ -276,16 +286,22 @@ export function HomeSkeletonList({ isDarkMode = true, currentTheme }) {
         isDarkMode={isDarkMode}
         currentTheme={currentTheme}
         animatedValue={anim}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
       />
       <HomeCardSkeleton
         isDarkMode={isDarkMode}
         currentTheme={currentTheme}
         animatedValue={anim}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
       />
       <HomeCardSkeleton
         isDarkMode={isDarkMode}
         currentTheme={currentTheme}
         animatedValue={anim}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
       />
     </ScrollView>
   );

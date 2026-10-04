@@ -1,21 +1,126 @@
 import { StyleSheet, Dimensions } from "react-native";
 
-const { width } = Dimensions.get("window");
-const CARD_WIDTH = width * 0.75;
+const { width, height } = Dimensions.get("window");
+
+export const getHomeDimensions = (
+  windowWidth = width,
+  windowHeight = height,
+  insetsTop = 0,
+  insetsBottom = 0
+) => {
+  const topInset = insetsTop || 0;
+  const bottomInset = insetsBottom || 0;
+  const bottomBarHeight = 54 + bottomInset;
+  const availableHeight = windowHeight - topInset - bottomBarHeight;
+
+  const isSmallScreen = availableHeight < 640;
+  const isTallScreen = availableHeight > 780;
+
+  const headerPaddingTop = isSmallScreen ? 8 : isTallScreen ? 16 : 12;
+  const headerTitleSize = isSmallScreen ? 26 : isTallScreen ? 32 : 30;
+  const iconPadding = isSmallScreen ? 10 : 12;
+  const headerHeight = headerPaddingTop + (isSmallScreen ? 34 : 42);
+
+  const categoriesHeight = isSmallScreen ? 44 : isTallScreen ? 54 : 48;
+  const topCardHeight = isSmallScreen ? 82 : isTallScreen ? 98 : 90;
+  const topCardWidth = isSmallScreen ? 236 : isTallScreen ? 275 : 258;
+  const topCardImageSize = isSmallScreen ? 64 : isTallScreen ? 78 : 72;
+  const topDestTitleSize = isSmallScreen ? 19 : 22;
+  const topDestHeaderMarginBottom = isSmallScreen ? 8 : 12;
+  const topDestSectionHeight = topDestTitleSize + topDestHeaderMarginBottom + topCardHeight;
+
+  const bottomSpacing = isSmallScreen ? 10 : isTallScreen ? 16 : 12;
+
+  const totalFixedHeights = headerHeight + categoriesHeight + topDestSectionHeight;
+  const availableForCard = availableHeight - bottomSpacing - totalFixedHeights;
+
+  const rawCardHeight = Math.round(availableForCard * 0.94);
+  const cardHeight = Math.round(Math.max(290, Math.min(rawCardHeight, 520)));
+  const cardWidth = Math.round(Math.min(windowWidth * 0.76, 360, cardHeight * 0.74));
+
+  const cardInfoBottom = Math.round(Math.max(14, Math.min(25, cardHeight * 0.055)));
+  const cardInfoHeight = Math.round(Math.min(104, Math.max(86, cardHeight * 0.25)));
+
+  return {
+    windowWidth,
+    windowHeight,
+    availableHeight,
+    isSmallScreen,
+    isTallScreen,
+    headerPaddingTop,
+    headerTitleSize,
+    iconPadding,
+    categoriesHeight,
+    cardHeight,
+    cardWidth,
+    cardInfoBottom,
+    cardInfoHeight,
+    topCardHeight,
+    topCardWidth,
+    topCardImageSize,
+    topDestTitleSize,
+    topDestHeaderMarginBottom,
+    bottomBarHeight,
+    bottomSpacing,
+  };
+};
+
+const initialDims = getHomeDimensions(width, height);
+export const CARD_WIDTH = initialDims.cardWidth;
+export const CARD_HEIGHT = initialDims.cardHeight;
 const SPACING = 10;
 
 export default StyleSheet.create({
   container: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  homeContentWrapper: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  topSection: {
+    width: "100%",
+  },
   backgroundImage: { position: 'absolute', width: '100%', height: '100%' },
+  foliageHeader: {
+    position: "absolute",
+    top: -12,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: Math.min(270, Math.round(width * 0.62)),
+    zIndex: 0,
+    transform: [{ rotate: "-13deg" }, { scale: 1.1 }],
+  },
+  foliageHeaderLight: {
+    opacity: 0.75,
+  },
+  foliageFooterContainer: {
+    position: "absolute",
+    bottom: 28,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: Math.min(220, Math.round(width * 0.44)),
+    zIndex: 0,
+  },
+  foliageFooter: {
+    width: "100%",
+    height: "100%",
+  },
+  foliageFooterLight: {
+    opacity: 0.75,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 25,
-    paddingTop: 20,
+    paddingTop: initialDims.headerPaddingTop,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: initialDims.headerTitleSize,
     fontWeight: "800",
     flex: 1,
     marginRight: 10,
@@ -25,9 +130,14 @@ export default StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
   },
+  headerTitleLight: {
+    textShadowColor: "rgba(255, 255, 255, 1)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
   headerIcons: { flexDirection: "row" },
   iconButton: {
-    padding: 12,
+    padding: initialDims.iconPadding,
     borderRadius: 15,
     marginLeft: 12,
     shadowColor: "transparent",
@@ -39,28 +149,24 @@ export default StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.70)",
   },
   iconButtonLight: {
-    backgroundColor: "rgba(250, 250, 250, 0.30)",
+    backgroundColor: "rgba(230, 230, 230, 0.70)",
   },
-  categoriesSection: { height: 80, justifyContent: "center" },
+  categoriesSection: { height: initialDims.categoriesHeight, justifyContent: "center" },
   categoriesContainer: { paddingHorizontal: 25, alignItems: "center" },
-  categoryItem: { marginRight: 30 },
-  categoryText: { fontSize: 17, fontWeight: "600" },
-  categoryTextDark: {
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  categoryTextActive: { fontWeight: "bold" },
+  categoryItem: { marginRight: 26 },
+  categoryText: { fontSize: 17, fontWeight: "700", letterSpacing: -0.2 },
+  categoryTextActive: { fontWeight: "800" },
   activeLine: { width: "100%", alignSelf: "stretch", height: 3.5, borderRadius: 3, marginTop: 5 },
-  contentContainer: { flex: 1, justifyContent: "center", paddingBottom: 105 },
+  contentContainer: { width: "100%", justifyContent: "center" },
   cardsList: { paddingHorizontal: 15, alignItems: 'center' },
   card: {
     width: CARD_WIDTH,
-    height: 500,
+    height: CARD_HEIGHT,
     marginHorizontal: SPACING,
     borderRadius: 40,
     overflow: "hidden",
     backgroundColor: "#121212",
+    flexShrink: 0,
     elevation: 0,
     shadowColor: "transparent",
     shadowOpacity: 0,
@@ -70,10 +176,10 @@ export default StyleSheet.create({
   cardImage: { width: "100%", height: "100%", position: 'absolute', opacity: 0.9 },
   cardInfo: {
     position: "absolute",
-    bottom: 25,
+    bottom: initialDims.cardInfoBottom,
     alignSelf: 'center',
     width: '88%',
-    height: 104,
+    height: initialDims.cardInfoHeight,
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -89,6 +195,35 @@ export default StyleSheet.create({
   cardLocation: { fontSize: 13, color: "#FFF", marginTop: 3 },
   ratingContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
   ratingText: { marginLeft: 5, fontSize: 14, fontWeight: "bold" },
+  topDestinationsSection: {
+    width: "100%",
+    paddingBottom: 0,
+  },
+  topDestinationsHeader: {
+    paddingHorizontal: 25,
+    marginBottom: initialDims.topDestHeaderMarginBottom,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  topDestinationsTitle: {
+    fontSize: initialDims.topDestTitleSize,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  topDestinationsTitleDark: {
+    color: "#FFFFFF",
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  topDestinationsTitleLight: {
+    color: "#1A1A1A",
+  },
+  topDestinationsList: {
+    paddingHorizontal: 25,
+    paddingBottom: 0,
+  },
   flex1: {
     flex: 1,
   },

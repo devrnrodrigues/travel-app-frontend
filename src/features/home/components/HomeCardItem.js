@@ -10,6 +10,10 @@ const HomeCardItem = React.memo(function HomeCardItem({
   currentTheme,
   isDarkMode,
   navigation,
+  cardWidth,
+  cardHeight,
+  cardInfoBottom,
+  cardInfoHeight,
 }) {
   const hasImage = Boolean(item.image_url && typeof item.image_url === "string" && item.image_url.startsWith("http"));
   const isLocal = !hasImage && Boolean(item.isLocalSource && item.image_url);
@@ -36,7 +40,12 @@ const HomeCardItem = React.memo(function HomeCardItem({
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      style={[styles.card, item.avgColor ? { backgroundColor: item.avgColor } : null]}
+      style={[
+        styles.card,
+        cardWidth ? { width: cardWidth } : null,
+        cardHeight ? { height: cardHeight } : null,
+        item.avgColor ? { backgroundColor: item.avgColor } : null,
+      ]}
       onPress={() => navigation.navigate("Details", { item, currentTheme })}
     >
       {cardImgSource ? (
@@ -73,6 +82,8 @@ const HomeCardItem = React.memo(function HomeCardItem({
       <View
         style={[
           styles.cardInfo,
+          cardInfoBottom !== undefined ? { bottom: cardInfoBottom } : null,
+          cardInfoHeight !== undefined ? { height: cardInfoHeight } : null,
           {
             backgroundColor: "transparent",
             borderWidth: 0,
@@ -86,45 +97,51 @@ const HomeCardItem = React.memo(function HomeCardItem({
           },
         ]}
       >
-        {Platform.OS === "android" && !isDarkMode && cardImgSource && (
-          <Image
-            source={cardImgSource}
-            blurRadius={3}
-            style={styles.cardFullBackground}
-          />
-        )}
-
         <View
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: !isDarkMode
-                ? "rgba(250, 250, 250, 0.30)"
-                : "rgba(12, 12, 12, 0.82)",
+              backgroundColor: isDarkMode
+                ? "rgba(12, 12, 12, 0.82)"
+                : "#FFFFFF",
               borderRadius: 25,
             },
           ]}
         />
 
-        {Platform.OS !== "android" && !isDarkMode && (
-          <BlurView
-            intensity={20}
-            tint="light"
-            style={styles.cardOverlayImage}
-          />
-        )}
-
         <View style={styles.cardInfoInner}>
           <View style={styles.cardInfoLeft}>
             <Text
-              style={[styles.cardTitle, !isDarkMode && { color: "#FFFFFF" }]}
+              style={[
+                styles.cardTitle,
+                cardInfoHeight && cardInfoHeight < 96
+                  ? { fontSize: 17, lineHeight: 21 }
+                  : null,
+                {
+                  color: isDarkMode ? "#FFFFFF" : "#111111",
+                  textShadowColor: "transparent",
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 0,
+                },
+              ]}
               numberOfLines={2}
               ellipsizeMode="tail"
             >
               {item.title}
             </Text>
             <Text
-              style={[styles.cardLocation, !isDarkMode && { color: "rgba(255, 255, 255, 0.85)" }]}
+              style={[
+                styles.cardLocation,
+                cardInfoHeight && cardInfoHeight < 96
+                  ? { fontSize: 11.5 }
+                  : null,
+                {
+                  color: isDarkMode ? "rgba(255, 255, 255, 0.85)" : "#555555",
+                  textShadowColor: "transparent",
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 0,
+                },
+              ]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -135,11 +152,22 @@ const HomeCardItem = React.memo(function HomeCardItem({
             <View
               style={[
                 styles.ratingContainer,
-                !isDarkMode && styles.cardInfoLightBg,
+                !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
               ]}
             >
-              <Ionicons name="star" size={14} color={currentTheme.accent} />
-              <Text style={[styles.ratingText, { color: currentTheme.accent, fontWeight: "700" }]}>
+              <Ionicons name="star" size={14} color={currentTheme.accent || "#FFD700"} />
+              <Text
+                style={[
+                  styles.ratingText,
+                  {
+                    color: currentTheme.accent || (isDarkMode ? "#FFF" : "#111111"),
+                    fontWeight: "700",
+                    textShadowColor: "transparent",
+                    textShadowOffset: { width: 0, height: 0 },
+                    textShadowRadius: 0,
+                  },
+                ]}
+              >
                 {item.realRating}
               </Text>
             </View>

@@ -1,17 +1,21 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing, ActivityIndicator, Platform, Dimensions, RefreshControl } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing, ActivityIndicator, Platform, Dimensions, RefreshControl, Image, useWindowDimensions } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
-import styles from "./home.styles";
+import styles, { getHomeDimensions } from "./home.styles";
 import { useTheme } from "../../theme/ThemeContext";
 import { useAuth } from "../auth/context/AuthContext";
 import { HomeSkeletonList } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import HomeCardItem from "./components/HomeCardItem";
+import TopDestinationCard from "./components/TopDestinationCard";
 import SearchModal from "./components/SearchModal";
 import { getDestinations } from "../destinations/api/destinationService";
+
+const foliageImage = require("../../../assets/images/image.png");
+const foliageFooterImage = require("../../../assets/images/image2.png");
 
 
 
@@ -20,6 +24,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
   index,
   isActive,
   accentColor,
+  isDarkMode = true,
   onPress,
   onLayout,
 }) {
@@ -33,7 +38,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
         damping: 15,
         stiffness: 200,
         mass: 0.6,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== "web",
       }).start();
     }
   }, [isActive]);
@@ -55,8 +60,11 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
           <Text
             style={[
               styles.categoryText,
-              styles.categoryTextDark,
-              { color: isActive ? accentColor : "#FFF" },
+              {
+                color: isActive
+                  ? accentColor
+                  : (isDarkMode ? "#FFFFFF" : "#666666"),
+              },
               isActive && styles.categoryTextActive,
             ]}
           >
@@ -86,6 +94,13 @@ export default function Home({ navigation }) {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const dims = useMemo(
+    () => getHomeDimensions(windowWidth, windowHeight, insets.top, insets.bottom),
+    [windowWidth, windowHeight, insets.top, insets.bottom]
+  );
+
   const userName = useMemo(() => {
     const raw = user?.fullName || user?.name || user?.username || "";
     const first = raw.trim().split(" ")[0];
@@ -106,7 +121,7 @@ export default function Home({ navigation }) {
     const layout = itemLayouts.current[index];
     if (layout && categoryScrollRef.current && scrollWidth > 0) {
       const targetX = layout.x - (scrollWidth / 2) + (layout.width / 2);
-      const maxScroll = Math.max(0, contentWidth - scrollWidth);
+      const maxScroll = contentWidth > scrollWidth ? contentWidth - scrollWidth : Infinity;
       const clampedX = Math.max(0, Math.min(targetX, maxScroll));
       categoryScrollRef.current.scrollTo({ x: clampedX, animated: true });
     }
@@ -114,8 +129,7 @@ export default function Home({ navigation }) {
 
   const handleCategoryPress = useCallback((index) => {
     setActiveCat(index);
-    centerCategory(index);
-  }, [setActiveCat, centerCategory]);
+  }, [setActiveCat]);
 
   useEffect(() => {
     centerCategory(activeCat);
@@ -191,11 +205,72 @@ export default function Home({ navigation }) {
 
   const keyExtractor = useCallback((item) => (item?.id ? String(item.id) : String(Math.random())), []);
 
+  const TOP_PAGE_SIZE = 6;
+
+  const {
+    data: topDestinationsData,
+    isLoading: loadingTopDestinations,
+    isFetchingNextPage: isFetchingNextTopPage,
+    hasNextPage: hasNextTopPage,
+    fetchNextPage: fetchNextTopPage,
+    refetch: refetchTopDestinations,
+  } = useInfiniteQuery({
+    queryKey: ["destinations", "recommendations"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const result = await getDestinations({
+        page: pageParam,
+        size: TOP_PAGE_SIZE,
+      });
+      return (result || []).map((destination) => ({
+        ...destination,
+        isLocalSource: false,
+      }));
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      if (!lastPage || lastPage.length < TOP_PAGE_SIZE) {
+        return undefined;
+      }
+      return lastPageParam + 1;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const topDestinations = useMemo(() => {
+    if (!topDestinationsData?.pages) return [];
+    const flat = topDestinationsData.pages.flat();
+    const seen = new Set();
+    return flat.filter((item) => {
+      const key = item?.id;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [topDestinationsData]);
+
+  const isFetchingNextTopPageRef = useRef(false);
+
+  useEffect(() => {
+    isFetchingNextTopPageRef.current = isFetchingNextTopPage;
+  }, [isFetchingNextTopPage]);
+
+  const loadNextTopPage = useCallback(async () => {
+    if (hasNextTopPage && !isFetchingNextTopPage && !isFetchingNextTopPageRef.current) {
+      isFetchingNextTopPageRef.current = true;
+      try {
+        await fetchNextTopPage({ cancelRefetch: false });
+      } finally {
+        isFetchingNextTopPageRef.current = false;
+      }
+    }
+  }, [hasNextTopPage, isFetchingNextTopPage, fetchNextTopPage]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await Promise.all([
         refetch(),
+        refetchTopDestinations(),
         queryClient.invalidateQueries({ queryKey: ["categories"] }),
       ]);
     } catch (e) {
@@ -203,7 +278,7 @@ export default function Home({ navigation }) {
     } finally {
       setRefreshing(false);
     }
-  }, [refetch, queryClient]);
+  }, [refetch, refetchTopDestinations, queryClient]);
 
   const bgSource = useMemo(() => {
     return typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
@@ -243,7 +318,7 @@ export default function Home({ navigation }) {
   }, []);
 
   return (
-    <View style={styles.blackScreen}>
+    <View style={[styles.blackScreen, !isDarkMode && styles.whiteScreen]}>
       <SearchModal
         visible={isSearchVisible}
         onClose={handleCloseSearch}
@@ -255,53 +330,61 @@ export default function Home({ navigation }) {
         bgSource={bgSource}
       />
 
-      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
-        <LinearGradient
-          colors={
-            currentTheme?.colors && currentTheme.colors.length >= 3
-              ? [
-                currentTheme.colors[0],
-                currentTheme.colors[1],
-                "rgba(0, 0, 0, 0.72)",
-                "rgba(0, 0, 0, 0.96)",
-              ]
-              : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"]
-          }
-          locations={[0, 0.38, 0.72, 1]}
+      <Image
+        source={foliageImage}
+        style={[
+          styles.foliageHeader,
+          !isDarkMode && styles.foliageHeaderLight,
+        ]}
+        resizeMode="cover"
+        pointerEvents="none"
+      />
+
+      <View style={styles.foliageFooterContainer} pointerEvents="none">
+        <Image
+          source={foliageFooterImage}
+          style={[
+            styles.foliageFooter,
+            !isDarkMode && styles.foliageFooterLight,
+          ]}
+          resizeMode="cover"
+        />
+      </View>
+
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <ScrollView
           style={styles.flex1}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: dims.bottomBarHeight + dims.bottomSpacing },
+          ]}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          alwaysBounceVertical={true}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing || isRefetching}
+              onRefresh={handleRefresh}
+              tintColor={currentTheme?.accent || "#4CAF50"}
+              colors={[currentTheme?.accent || "#4CAF50"]}
+            />
+          }
         >
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              {
-                backgroundColor: "#000",
-                opacity: bgDimAnim,
-              },
-            ]}
-          />
-          <StatusBar barStyle="light-content" />
-          <SafeAreaView style={styles.container}>
-            <ScrollView
-              style={styles.flex1}
-              contentContainerStyle={{ flexGrow: 1 }}
-              showsVerticalScrollIndicator={false}
-              bounces={true}
-              alwaysBounceVertical={true}
-              nestedScrollEnabled={true}
-              keyboardShouldPersistTaps="handled"
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing || isRefetching}
-                  onRefresh={handleRefresh}
-                  tintColor={currentTheme?.accent || "#4CAF50"}
-                  colors={[currentTheme?.accent || "#4CAF50"]}
-                />
-              }
-            >
-              <View style={styles.header}>
+          <View style={styles.homeContentWrapper}>
+            <View style={styles.topSection}>
+              <View style={[styles.header, { paddingTop: dims.headerPaddingTop }]}>
                 <Text
-                  style={[styles.headerTitle, styles.headerTitleDark, { color: "#FFF" }]}
+                  style={[
+                    styles.headerTitle,
+                    isDarkMode ? styles.headerTitleDark : styles.headerTitleLight,
+                    {
+                      color: isDarkMode ? "#FFF" : "#000000",
+                      fontSize: dims.headerTitleSize,
+                    },
+                  ]}
                   numberOfLines={1}
                 >
                   {`Olá, ${userName}`}
@@ -311,15 +394,20 @@ export default function Home({ navigation }) {
                     style={[
                       styles.iconButton,
                       isDarkMode ? styles.iconButtonDark : styles.iconButtonLight,
+                      { padding: dims.iconPadding },
                     ]}
                     onPress={handleOpenSearch}
                   >
-                    <Feather name="search" size={20} color={currentTheme.accent} />
+                    <Feather
+                      name="search"
+                      size={20}
+                      color={isDarkMode ? currentTheme.accent : "#000000"}
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <View style={styles.categoriesSection}>
+              <View style={[styles.categoriesSection, { height: dims.categoriesHeight }]}>
                 <ScrollView
                   ref={categoryScrollRef}
                   horizontal
@@ -338,6 +426,7 @@ export default function Home({ navigation }) {
                         index={index}
                         isActive={activeCat === index}
                         accentColor={theme.accent}
+                        isDarkMode={isDarkMode}
                         onLayout={(e) => {
                           itemLayouts.current[index] = e.nativeEvent.layout;
                         }}
@@ -347,49 +436,129 @@ export default function Home({ navigation }) {
                   })}
                 </ScrollView>
               </View>
+            </View>
 
-              <View style={styles.contentContainer}>
-                {loading ? (
-                  <HomeSkeletonList isDarkMode={isDarkMode} currentTheme={currentTheme} />
-                ) : (
-                  <FadeInView key={selectedCategory} duration={280} style={styles.flex1}>
-                    <FlatList
-                      ref={flatListRef}
-                      data={destinations}
-                      keyExtractor={keyExtractor}
-                      horizontal
-                      nestedScrollEnabled={true}
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.cardsList}
-                      onEndReached={loadNextPage}
-                      onEndReachedThreshold={0.3}
-                      windowSize={11}
-                      maxToRenderPerBatch={8}
-                      initialNumToRender={8}
-                      removeClippedSubviews={false}
-                      renderItem={({ item }) => (
-                        <HomeCardItem
-                          item={item}
-                          currentTheme={currentTheme}
-                          isDarkMode={isDarkMode}
-                          navigation={navigation}
-                        />
-                      )}
-                      ListFooterComponent={
-                        isFetchingNextPage ? (
-                          <View style={{ justifyContent: "center", alignItems: "center", width: 80 }}>
-                            <ActivityIndicator size="small" color={currentTheme.accent || "#4CAF50"} />
-                          </View>
-                        ) : null
-                      }
-                    />
-                  </FadeInView>
-                )}
+            <View style={styles.contentContainer}>
+              {loading ? (
+                <HomeSkeletonList
+                  isDarkMode={isDarkMode}
+                  currentTheme={currentTheme}
+                  cardWidth={dims.cardWidth}
+                  cardHeight={dims.cardHeight}
+                />
+              ) : (
+                <FadeInView key={selectedCategory} duration={280} style={{ width: "100%" }}>
+                  <FlatList
+                    ref={flatListRef}
+                    data={destinations}
+                    keyExtractor={keyExtractor}
+                    horizontal
+                    nestedScrollEnabled={true}
+                    showsHorizontalScrollIndicator={false}
+                    style={{ width: "100%" }}
+                    contentContainerStyle={styles.cardsList}
+                    onEndReached={loadNextPage}
+                    onEndReachedThreshold={0.3}
+                    windowSize={11}
+                    maxToRenderPerBatch={8}
+                    initialNumToRender={8}
+                    removeClippedSubviews={false}
+                    renderItem={({ item }) => (
+                      <HomeCardItem
+                        item={item}
+                        currentTheme={currentTheme}
+                        isDarkMode={isDarkMode}
+                        navigation={navigation}
+                        cardWidth={dims.cardWidth}
+                        cardHeight={dims.cardHeight}
+                        cardInfoBottom={dims.cardInfoBottom}
+                        cardInfoHeight={dims.cardInfoHeight}
+                      />
+                    )}
+                    ListFooterComponent={
+                      isFetchingNextPage ? (
+                        <View style={{ justifyContent: "center", alignItems: "center", width: 80 }}>
+                          <ActivityIndicator size="small" color={currentTheme.accent || "#4CAF50"} />
+                        </View>
+                      ) : null
+                    }
+                  />
+                </FadeInView>
+              )}
+            </View>
+
+            <View style={styles.topDestinationsSection}>
+              <View
+                style={[
+                  styles.topDestinationsHeader,
+                  { marginBottom: dims.topDestHeaderMarginBottom },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.topDestinationsTitle,
+                    isDarkMode && styles.topDestinationsTitleDark,
+                    {
+                      color: isDarkMode ? "#FFF" : "#000000",
+                      fontSize: dims.topDestTitleSize,
+                    },
+                  ]}
+                >
+                  Recomendações
+                </Text>
               </View>
-            </ScrollView>
-          </SafeAreaView>
-        </LinearGradient>
-      </ImageBackground>
+
+              {loadingTopDestinations && topDestinations.length === 0 ? (
+                <View
+                  style={{
+                    paddingHorizontal: 25,
+                    height: dims.topCardHeight,
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
+                </View>
+              ) : (
+                <FlatList
+                  data={topDestinations}
+                  keyExtractor={keyExtractor}
+                  horizontal
+                  nestedScrollEnabled={true}
+                  showsHorizontalScrollIndicator={false}
+                  style={{ width: "100%" }}
+                  contentContainerStyle={styles.topDestinationsList}
+                  onEndReached={loadNextTopPage}
+                  onEndReachedThreshold={0.3}
+                  windowSize={11}
+                  maxToRenderPerBatch={8}
+                  initialNumToRender={8}
+                  removeClippedSubviews={false}
+                  renderItem={({ item }) => (
+                    <TopDestinationCard
+                      item={item}
+                      currentTheme={currentTheme}
+                      isDarkMode={isDarkMode}
+                      navigation={navigation}
+                      cardWidth={dims.topCardWidth}
+                      cardHeight={dims.topCardHeight}
+                      imageSize={dims.topCardImageSize}
+                      titleSize={dims.isSmallScreen ? 14 : 16}
+                      locationSize={dims.isSmallScreen ? 11.5 : 13}
+                    />
+                  )}
+                  ListFooterComponent={
+                    isFetchingNextTopPage ? (
+                      <View style={{ justifyContent: "center", alignItems: "center", width: 60, height: dims.topCardHeight }}>
+                        <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
+                      </View>
+                    ) : null
+                  }
+                />
+              )}
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
