@@ -36,18 +36,6 @@ import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 const foliageImage = require("../../../assets/images/image.png");
 
 const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode }) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const imgAnim = useRef(new Animated.Value(0)).current;
-
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
-    Animated.timing(imgAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: Platform.OS !== "web",
-    }).start();
-  }, [imgAnim]);
-
   const handlePress = useCallback(() => {
     if (onPress) {
       onPress(item);
@@ -79,18 +67,12 @@ const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode 
       onPress={handlePress}
     >
       {item.image_url ? (
-        <>
-          <Animated.Image
-            source={{ uri: getOptimizedImageUrl(item.image_url, 350) }}
-            style={[styles.gridImage, { opacity: imgAnim }]}
-            resizeMode="cover"
-            onLoad={handleImageLoad}
-            accessibilityLabel={item.alt || item.name || item.title}
-          />
-          {!imageLoaded && (
-            <View style={[styles.imageSkeletonOverlay, isDarkMode ? styles.imageSkeletonDark : styles.imageSkeletonLight, item.avgColor ? { backgroundColor: item.avgColor } : null]} />
-          )}
-        </>
+        <Image
+          source={{ uri: getOptimizedImageUrl(item.image_url, 350) }}
+          style={styles.gridImage}
+          resizeMode="cover"
+          accessibilityLabel={item.alt || item.name || item.title}
+        />
       ) : (
         <View
           style={[
@@ -192,6 +174,7 @@ export default function Explore({ navigation }) {
   }, [data]);
 
   const loading = isLoading && destinations.length === 0;
+  const isShowingSkeleton = loading;
   const loadingMore = isFetchingNextPage;
   const isLoadingMoreRef = useRef(false);
   isLoadingMoreRef.current = isFetchingNextPage;
@@ -199,7 +182,7 @@ export default function Explore({ navigation }) {
 
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === "android" ? 38 : 20);
-  const headerHeight = (insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10)) + 54;
+  const headerHeight = (insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10)) + 50;
   const bottomPadding = (insets.bottom || 0) + 85;
 
   const dismissSearchFocus = useCallback(() => {
@@ -541,14 +524,14 @@ export default function Explore({ navigation }) {
               >
                 <Ionicons
                   name="images-outline"
-                  size={22}
+                  size={20}
                   color={isDarkMode ? "#FFFFFF" : "#000000"}
                 />
               </TouchableOpacity>
             </View>
           </Animated.View>
 
-          {loading ? (
+          {isShowingSkeleton ? (
             <ScrollView
               contentContainerStyle={[
                 styles.flatListContent,
@@ -564,7 +547,7 @@ export default function Explore({ navigation }) {
               <ExploreSkeletonGrid isDarkMode={isDarkMode} currentTheme={currentTheme} />
             </ScrollView>
           ) : (
-            <FadeInView duration={280} style={styles.flex1}>
+            <FadeInView duration={350} style={styles.flex1}>
               <FlatList
                 style={styles.flex1}
                 data={filteredDestinations}
