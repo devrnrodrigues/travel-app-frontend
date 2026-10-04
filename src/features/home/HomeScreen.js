@@ -7,7 +7,7 @@ import Feather from "react-native-vector-icons/Feather";
 import styles, { getHomeDimensions } from "./home.styles";
 import { useTheme } from "../../theme/ThemeContext";
 import { useAuth } from "../auth/context/AuthContext";
-import { HomeSkeletonList } from "../../shared/components/Skeleton";
+import { HomeSkeletonList, HomeCategoriesSkeleton, TopDestinationsSkeletonList } from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import HomeCardItem from "./components/HomeCardItem";
 import TopDestinationCard from "./components/TopDestinationCard";
@@ -185,6 +185,7 @@ export default function Home({ navigation }) {
   }, [data]);
 
   const loading = isLoading && destinations.length === 0;
+  const isShowingSkeleton = loading;
 
   const isFetchingNextPageRef = useRef(false);
 
@@ -247,6 +248,8 @@ export default function Home({ navigation }) {
       return true;
     });
   }, [topDestinationsData]);
+
+  const isShowingTopSkeleton = loadingTopDestinations && topDestinations.length === 0;
 
   const isFetchingNextTopPageRef = useRef(false);
 
@@ -408,43 +411,49 @@ export default function Home({ navigation }) {
               </View>
 
               <View style={[styles.categoriesSection, { height: dims.categoriesHeight }]}>
-                <ScrollView
-                  ref={categoryScrollRef}
-                  horizontal
-                  nestedScrollEnabled={true}
-                  showsHorizontalScrollIndicator={false}
-                  onLayout={(e) => setScrollWidth(e.nativeEvent.layout.width)}
-                  onContentSizeChange={(w) => setContentWidth(w)}
-                  contentContainerStyle={styles.categoriesContainer}
-                >
-                  {categories.map((catItem, index) => {
-                    const theme = themesByCat[index] || currentTheme;
-                    return (
-                      <CategoryTabItem
-                        key={catItem.id || catItem.slug || catItem.name || String(index)}
-                        cat={catItem.name}
-                        index={index}
-                        isActive={activeCat === index}
-                        accentColor={theme.accent}
-                        isDarkMode={isDarkMode}
-                        onLayout={(e) => {
-                          itemLayouts.current[index] = e.nativeEvent.layout;
-                        }}
-                        onPress={() => handleCategoryPress(index)}
-                      />
-                    );
-                  })}
-                </ScrollView>
+                {isShowingSkeleton ? (
+                  <HomeCategoriesSkeleton isDarkMode={isDarkMode} />
+                ) : (
+                  <ScrollView
+                    ref={categoryScrollRef}
+                    horizontal
+                    nestedScrollEnabled={true}
+                    showsHorizontalScrollIndicator={false}
+                    onLayout={(e) => setScrollWidth(e.nativeEvent.layout.width)}
+                    onContentSizeChange={(w) => setContentWidth(w)}
+                    contentContainerStyle={styles.categoriesContainer}
+                  >
+                    {categories.map((catItem, index) => {
+                      const theme = themesByCat[index] || currentTheme;
+                      return (
+                        <CategoryTabItem
+                          key={catItem.id || catItem.slug || catItem.name || String(index)}
+                          cat={catItem.name}
+                          index={index}
+                          isActive={activeCat === index}
+                          accentColor={theme.accent}
+                          isDarkMode={isDarkMode}
+                          onLayout={(e) => {
+                            itemLayouts.current[index] = e.nativeEvent.layout;
+                          }}
+                          onPress={() => handleCategoryPress(index)}
+                        />
+                      );
+                    })}
+                  </ScrollView>
+                )}
               </View>
             </View>
 
             <View style={styles.contentContainer}>
-              {loading ? (
+              {isShowingSkeleton ? (
                 <HomeSkeletonList
                   isDarkMode={isDarkMode}
                   currentTheme={currentTheme}
                   cardWidth={dims.cardWidth}
                   cardHeight={dims.cardHeight}
+                  cardInfoBottom={dims.cardInfoBottom}
+                  cardInfoHeight={dims.cardInfoHeight}
                 />
               ) : (
                 <FadeInView key={selectedCategory} duration={280} style={{ width: "100%" }}>
@@ -508,16 +517,15 @@ export default function Home({ navigation }) {
                 </Text>
               </View>
 
-              {loadingTopDestinations && topDestinations.length === 0 ? (
-                <View
-                  style={{
-                    paddingHorizontal: 25,
-                    height: dims.topCardHeight,
-                    justifyContent: "center",
-                  }}
-                >
-                  <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
-                </View>
+              {isShowingTopSkeleton ? (
+                <TopDestinationsSkeletonList
+                  isDarkMode={isDarkMode}
+                  cardWidth={dims.topCardWidth}
+                  cardHeight={dims.topCardHeight}
+                  imageSize={dims.topCardImageSize}
+                  titleSize={dims.isSmallScreen ? 14 : 16}
+                  locationSize={dims.isSmallScreen ? 11.5 : 13}
+                />
               ) : (
                 <FlatList
                   data={topDestinations}

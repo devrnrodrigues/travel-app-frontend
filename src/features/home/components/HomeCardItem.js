@@ -103,7 +103,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
             {
               backgroundColor: isDarkMode
                 ? "rgba(12, 12, 12, 0.82)"
-                : "#FFFFFF",
+                : "rgba(255, 255, 255, 0.85)",
               borderRadius: 25,
             },
           ]}
