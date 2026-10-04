@@ -239,6 +239,7 @@ export const styles = StyleSheet.create({
   },
   newUserName: {
     fontSize: 21,
+    lineHeight: 27,
     fontWeight: "800",
     letterSpacing: -0.3,
     textAlign: "center",
@@ -251,6 +252,7 @@ export const styles = StyleSheet.create({
   },
   newNationalityText: {
     fontSize: 13.5,
+    lineHeight: 18,
     fontWeight: "600",
     marginTop: 4,
     marginBottom: 8,
@@ -295,6 +297,7 @@ export const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 22,
+    lineHeight: 27,
     fontWeight: "800",
     letterSpacing: -0.3,
   },
@@ -306,6 +309,7 @@ export const styles = StyleSheet.create({
   },
   statLabelText: {
     fontSize: 11,
+    lineHeight: 14,
     fontWeight: "700",
     letterSpacing: 0.8,
     marginTop: 4,
@@ -331,6 +335,7 @@ export const styles = StyleSheet.create({
   },
   collectionsHeading: {
     fontSize: 17,
+    lineHeight: 22,
     fontWeight: "700",
     letterSpacing: -0.2,
   },

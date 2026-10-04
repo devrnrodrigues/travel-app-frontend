@@ -37,7 +37,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTheme } from "../../theme/ThemeContext";
-import { ProfileSkeleton } from "../../shared/components/Skeleton";
+import {
+  ProfileAvatarSkeleton,
+  ProfileSkeletonBar,
+  ProfileCollectionsSkeletonList,
+} from "../../shared/components/Skeleton";
 import FadeInView from "../../shared/components/FadeInView";
 import AnimatedProfileInput from "./components/AnimatedProfileInput";
 import { styles, dialogStyles } from "./profile.styles";
@@ -67,35 +71,10 @@ export default function ProfileScreen({ navigation }) {
     currentTheme?.icon === "leaf";
 
   const [loading, setLoading] = useState(true);
-  const [showSkeleton, setShowSkeleton] = useState(loading);
-  const transitionAnim = useRef(new Animated.Value(loading ? 0 : 1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (loading) {
-      setShowSkeleton(true);
-      transitionAnim.setValue(0);
-    } else {
-      Animated.timing(transitionAnim, {
-        toValue: 1,
-        duration: 460,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: Platform.OS !== "web",
-      }).start(({ finished }) => {
-        if (finished) {
-          setShowSkeleton(false);
-        }
-      });
-    }
-  }, [loading]);
-
-  const cardOpacity = transitionAnim;
-  const galleryOpacity = transitionAnim;
-
-  const skeletonOpacity = transitionAnim.interpolate({
-    inputRange: [0, 0.75, 1],
-    outputRange: [1, 0.25, 0],
-  });
+  const cardOpacity = 1;
+  const galleryOpacity = 1;
 
   const [loadingData, setLoadingData] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -793,7 +772,9 @@ export default function ProfileScreen({ navigation }) {
   const avatarIconSize = Math.round(42 * scale);
 
   const userNameFontSize = Math.round(21 * scale);
+  const userNameLineHeight = Math.round(27 * scale);
   const nationalityFontSize = Math.round(13.5 * scale);
+  const nationalityLineHeight = Math.round(18 * scale);
   const nationalityMarginTop = Math.round(4 * scale);
   const nationalityMarginBottom = Math.round(8 * scale);
 
@@ -804,12 +785,15 @@ export default function ProfileScreen({ navigation }) {
   const statsPaddingVertical = Math.round(18 * scale);
   const statsMarginBottom = Math.round(24 * scale);
   const statValueFontSize = Math.round(22 * scale);
+  const statValueLineHeight = Math.round(27 * scale);
   const statLabelFontSize = Math.round(11 * scale);
+  const statLabelLineHeight = Math.round(14 * scale);
   const statDividerHeight = Math.round(32 * scale);
 
   const collectionsSectionMarginTop = Math.round(8 * scale);
   const collectionsHeaderMarginBottom = Math.round(12 * scale);
   const collectionsHeadingFontSize = Math.round(17 * scale);
+  const collectionsHeadingLineHeight = Math.round(22 * scale);
 
   const cardWidth = Math.round(180 * scale);
   const cardHeight = Math.round(260 * scale);
@@ -883,7 +867,7 @@ export default function ProfileScreen({ navigation }) {
             showsVerticalScrollIndicator={canScroll}
             bounces={canScroll}
             alwaysBounceVertical={canScroll}
-            pointerEvents={loading ? "none" : "auto"}
+            pointerEvents="auto"
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { y: scrollY } } }],
               { useNativeDriver: Platform.OS !== "web" }
@@ -1000,9 +984,9 @@ export default function ProfileScreen({ navigation }) {
                   >
                     <TouchableOpacity
                       activeOpacity={0.85}
-                      onPress={() => setAvatarModalVisible(true)}
+                      onPress={() => !loading && setAvatarModalVisible(true)}
                       delayLongPress={300}
-                      onLongPress={() => setAvatarModalVisible(true)}
+                      onLongPress={() => !loading && setAvatarModalVisible(true)}
                     >
                       <View
                         style={[
@@ -1010,6 +994,7 @@ export default function ProfileScreen({ navigation }) {
                           {
                             borderColor: isDarkMode ? "#0C0C0E" : "#FFFFFF",
                             backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
+                            overflow: "hidden",
                           },
                           scale < 1 && {
                             width: avatarSize,
@@ -1019,72 +1004,147 @@ export default function ProfileScreen({ navigation }) {
                           },
                         ]}
                       >
-                        {user?.avatarUrl ? (
-                          <Image
-                            key={`avatar_${refreshKey}`}
-                            source={{
-                              uri: user.avatarUrl.includes("?")
-                                ? `${user.avatarUrl}&t=${refreshKey}`
-                                : `${user.avatarUrl}?t=${refreshKey}`,
-                            }}
-                            style={[
-                              styles.avatarImageBig,
-                              scale < 1 && {
-                                width: avatarSize,
-                                height: avatarSize,
-                                borderRadius: avatarSize / 2,
-                              },
-                            ]}
-                            resizeMode="cover"
-                          />
+                        {loading ? (
+                          <ProfileAvatarSkeleton size={avatarSize} isDarkMode={isDarkMode} />
                         ) : (
-                          <Ionicons
-                            name="person"
-                            size={avatarIconSize}
-                            color={currentTheme.accent}
-                          />
+                          <FadeInView
+                            duration={350}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            {user?.avatarUrl ? (
+                              <Image
+                                key={`avatar_${refreshKey}`}
+                                source={{
+                                  uri: user.avatarUrl.includes("?")
+                                    ? `${user.avatarUrl}&t=${refreshKey}`
+                                    : `${user.avatarUrl}?t=${refreshKey}`,
+                                }}
+                                style={[
+                                  styles.avatarImageBig,
+                                  scale < 1 && {
+                                    width: avatarSize,
+                                    height: avatarSize,
+                                    borderRadius: avatarSize / 2,
+                                  },
+                                ]}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <Ionicons
+                                name="person"
+                                size={avatarIconSize}
+                                color={currentTheme.accent}
+                              />
+                            )}
+                          </FadeInView>
                         )}
                       </View>
                     </TouchableOpacity>
                   </View>
 
-                  <Text
-                    style={[
-                      styles.newUserName,
-                      isDarkMode ? styles.newUserNameDark : styles.newUserNameLight,
-                      scale < 1 && { fontSize: userNameFontSize },
-                    ]}
-                  >
-                    {name || "Usuário"}
-                  </Text>
+                  {loading ? (
+                    <View
+                      style={{
+                        height: userNameLineHeight,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <ProfileSkeletonBar
+                        width={Math.round(150 * scale)}
+                        height={Math.round(userNameFontSize * 0.82)}
+                        borderRadius={6}
+                        isDarkMode={isDarkMode}
+                      />
+                    </View>
+                  ) : (
+                    <FadeInView duration={350}>
+                      <Text
+                        style={[
+                          styles.newUserName,
+                          isDarkMode ? styles.newUserNameDark : styles.newUserNameLight,
+                          scale < 1 && { fontSize: userNameFontSize, lineHeight: userNameLineHeight },
+                        ]}
+                      >
+                        {name || "Usuário"}
+                      </Text>
+                    </FadeInView>
+                  )}
 
-                  <Text
-                    style={[
-                      styles.newNationalityText,
-                      { color: currentTheme.accent },
-                      scale < 1 && {
-                        fontSize: nationalityFontSize,
+                  {loading ? (
+                    <View
+                      style={{
+                        height: nationalityLineHeight,
                         marginTop: nationalityMarginTop,
                         marginBottom: nationalityMarginBottom,
-                      },
-                    ]}
-                  >
-                    {nationality || "Brasileiro"}
-                  </Text>
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <ProfileSkeletonBar
+                        width={Math.round(90 * scale)}
+                        height={Math.round(nationalityFontSize * 0.82)}
+                        borderRadius={4}
+                        isDarkMode={isDarkMode}
+                      />
+                    </View>
+                  ) : (
+                    <FadeInView duration={350}>
+                      <Text
+                        style={[
+                          styles.newNationalityText,
+                          { color: currentTheme.accent },
+                          scale < 1 && {
+                            fontSize: nationalityFontSize,
+                            lineHeight: nationalityLineHeight,
+                            marginTop: nationalityMarginTop,
+                            marginBottom: nationalityMarginBottom,
+                          },
+                        ]}
+                      >
+                        {nationality || "Brasileiro"}
+                      </Text>
+                    </FadeInView>
+                  )}
 
-                  <Text
-                    style={[
-                      styles.newBioText,
-                      isDarkMode ? styles.newBioTextDark : styles.newBioTextLight,
-                      scale < 1 && {
-                        fontSize: bioFontSize,
-                        lineHeight: bioLineHeight,
+                  {loading ? (
+                    <View
+                      style={{
+                        height: bioLineHeight,
                         marginBottom: bioMarginBottom,
-                      },
-                    ]}
-                  >
-                    {bio || "Sem bio definida."}
-                  </Text>
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <ProfileSkeletonBar
+                        width={Math.round(210 * scale)}
+                        height={Math.round(bioFontSize * 0.82)}
+                        borderRadius={4}
+                        isDarkMode={isDarkMode}
+                      />
+                    </View>
+                  ) : (
+                    <FadeInView duration={350}>
+                      <Text
+                        style={[
+                          styles.newBioText,
+                          isDarkMode ? styles.newBioTextDark : styles.newBioTextLight,
+                          scale < 1 && {
+                            fontSize: bioFontSize,
+                            lineHeight: bioLineHeight,
+                            marginBottom: bioMarginBottom,
+                          },
+                        ]}
+                      >
+                        {bio || "Sem bio definida."}
+                      </Text>
+                    </FadeInView>
+                  )}
 
                   <View
                     style={[
@@ -1097,20 +1157,39 @@ export default function ProfileScreen({ navigation }) {
                     ]}
                   >
                     <View style={styles.statItem}>
-                      <Text
-                        style={[
-                          styles.statValue,
-                          isDarkMode ? styles.statValueDark : styles.statValueLight,
-                          scale < 1 && { fontSize: statValueFontSize },
-                        ]}
-                      >
-                        0
-                      </Text>
+                      {loading ? (
+                        <View
+                          style={{
+                            height: statValueLineHeight,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <ProfileSkeletonBar
+                            width={Math.round(24 * scale)}
+                            height={Math.round(statValueFontSize * 0.8)}
+                            borderRadius={5}
+                            isDarkMode={isDarkMode}
+                          />
+                        </View>
+                      ) : (
+                        <FadeInView duration={350}>
+                          <Text
+                            style={[
+                              styles.statValue,
+                              isDarkMode ? styles.statValueDark : styles.statValueLight,
+                              scale < 1 && { fontSize: statValueFontSize, lineHeight: statValueLineHeight },
+                            ]}
+                          >
+                            0
+                          </Text>
+                        </FadeInView>
+                      )}
                       <Text
                         style={[
                           styles.statLabelText,
                           isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
-                          scale < 1 && { fontSize: statLabelFontSize },
+                          scale < 1 && { fontSize: statLabelFontSize, lineHeight: statLabelLineHeight },
                         ]}
                       >
                         COMENTÁRIOS
@@ -1130,20 +1209,39 @@ export default function ProfileScreen({ navigation }) {
                     />
 
                     <View style={styles.statItem}>
-                      <Text
-                        style={[
-                          styles.statValue,
-                          isDarkMode ? styles.statValueDark : styles.statValueLight,
-                          scale < 1 && { fontSize: statValueFontSize },
-                        ]}
-                      >
-                        {displayedCollections.length}
-                      </Text>
+                      {loading ? (
+                        <View
+                          style={{
+                            height: statValueLineHeight,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <ProfileSkeletonBar
+                            width={Math.round(24 * scale)}
+                            height={Math.round(statValueFontSize * 0.8)}
+                            borderRadius={5}
+                            isDarkMode={isDarkMode}
+                          />
+                        </View>
+                      ) : (
+                        <FadeInView duration={350}>
+                          <Text
+                            style={[
+                              styles.statValue,
+                              isDarkMode ? styles.statValueDark : styles.statValueLight,
+                              scale < 1 && { fontSize: statValueFontSize, lineHeight: statValueLineHeight },
+                            ]}
+                          >
+                            {displayedCollections.length}
+                          </Text>
+                        </FadeInView>
+                      )}
                       <Text
                         style={[
                           styles.statLabelText,
                           isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
-                          scale < 1 && { fontSize: statLabelFontSize },
+                          scale < 1 && { fontSize: statLabelFontSize, lineHeight: statLabelLineHeight },
                         ]}
                       >
                         COLEÇÕES
@@ -1163,20 +1261,39 @@ export default function ProfileScreen({ navigation }) {
                     />
 
                     <View style={styles.statItem}>
-                      <Text
-                        style={[
-                          styles.statValue,
-                          isDarkMode ? styles.statValueDark : styles.statValueLight,
-                          scale < 1 && { fontSize: statValueFontSize },
-                        ]}
-                      >
-                        {favoritesCount}
-                      </Text>
+                      {loading ? (
+                        <View
+                          style={{
+                            height: statValueLineHeight,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <ProfileSkeletonBar
+                            width={Math.round(28 * scale)}
+                            height={Math.round(statValueFontSize * 0.8)}
+                            borderRadius={5}
+                            isDarkMode={isDarkMode}
+                          />
+                        </View>
+                      ) : (
+                        <FadeInView duration={350}>
+                          <Text
+                            style={[
+                              styles.statValue,
+                              isDarkMode ? styles.statValueDark : styles.statValueLight,
+                              scale < 1 && { fontSize: statValueFontSize, lineHeight: statValueLineHeight },
+                            ]}
+                          >
+                            {favoritesCount}
+                          </Text>
+                        </FadeInView>
+                      )}
                       <Text
                         style={[
                           styles.statLabelText,
                           isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
-                          scale < 1 && { fontSize: statLabelFontSize },
+                          scale < 1 && { fontSize: statLabelFontSize, lineHeight: statLabelLineHeight },
                         ]}
                       >
                         FAVORITOS
@@ -1201,7 +1318,7 @@ export default function ProfileScreen({ navigation }) {
                       style={[
                         styles.collectionsHeading,
                         isDarkMode ? styles.collectionsHeadingDark : styles.collectionsHeadingLight,
-                        scale < 1 && { fontSize: collectionsHeadingFontSize },
+                        scale < 1 && { fontSize: collectionsHeadingFontSize, lineHeight: collectionsHeadingLineHeight },
                       ]}
                     >
                       Minhas coleções
@@ -1268,64 +1385,82 @@ export default function ProfileScreen({ navigation }) {
                       </LinearGradient>
                     </TouchableOpacity>
 
-                    {displayedCollections.map((col, idx) => {
-                      const coverUri =
-                        col.photos?.[0]?.url ||
-                        col.coverUrl ||
-                        "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80";
+                    {loading ? (
+                      <ProfileCollectionsSkeletonList
+                        isDarkMode={isDarkMode}
+                        scale={scale}
+                        cardWidth={cardWidth}
+                        cardHeight={cardHeight}
+                        cardBorderRadius={cardBorderRadius}
+                        cardGradientHeight={cardGradientHeight}
+                        cardGradientPadding={cardGradientPadding}
+                        cardTitleFontSize={cardTitleFontSize}
+                        cardSubFontSize={cardSubFontSize}
+                      />
+                    ) : (
+                      displayedCollections.map((col, idx) => {
+                        const coverUri =
+                          col.photos?.[0]?.url ||
+                          col.coverUrl ||
+                          "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80";
 
-                      return (
-                        <TouchableOpacity
-                          key={col.id ? `${col.id}_${idx}` : `col_${idx}`}
-                          style={[
-                            styles.collectionCardItem,
-                            scale < 1 && {
-                              width: cardWidth,
-                              height: cardHeight,
-                              borderRadius: cardBorderRadius,
-                            },
-                          ]}
-                          activeOpacity={0.85}
-                          onPress={() =>
-                            navigation.navigate("CollectionGallery", { collection: col })
-                          }
-                        >
-                          <Image
-                            source={{ uri: coverUri }}
-                            style={styles.collectionCardImage}
-                            resizeMode="cover"
-                          />
-                          <LinearGradient
-                            colors={["transparent", "rgba(0, 0, 0, 0.88)"]}
-                            style={[
-                              styles.collectionCardGradient,
-                              scale < 1 && {
-                                height: cardGradientHeight,
-                                padding: cardGradientPadding,
-                              },
-                            ]}
+                        return (
+                          <FadeInView
+                            key={col.id ? `${col.id}_${idx}` : `col_${idx}`}
+                            duration={350}
                           >
-                            <Text
-                              numberOfLines={1}
+                            <TouchableOpacity
                               style={[
-                                styles.collectionCardTitle,
-                                scale < 1 && { fontSize: cardTitleFontSize },
+                                styles.collectionCardItem,
+                                scale < 1 && {
+                                  width: cardWidth,
+                                  height: cardHeight,
+                                  borderRadius: cardBorderRadius,
+                                },
                               ]}
+                              activeOpacity={0.85}
+                              onPress={() =>
+                                navigation.navigate("CollectionGallery", { collection: col })
+                              }
                             >
-                              {col.title}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.collectionCardSub,
-                                scale < 1 && { fontSize: cardSubFontSize },
-                              ]}
-                            >
-                              {col.photos?.length || 0} {col.photos?.length === 1 ? "foto" : "fotos"}
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      );
-                    })}
+                              <Image
+                                source={{ uri: coverUri }}
+                                style={styles.collectionCardImage}
+                                resizeMode="cover"
+                              />
+                              <LinearGradient
+                                colors={["transparent", "rgba(0, 0, 0, 0.88)"]}
+                                style={[
+                                  styles.collectionCardGradient,
+                                  scale < 1 && {
+                                    height: cardGradientHeight,
+                                    padding: cardGradientPadding,
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  numberOfLines={1}
+                                  style={[
+                                    styles.collectionCardTitle,
+                                    scale < 1 && { fontSize: cardTitleFontSize },
+                                  ]}
+                                >
+                                  {col.title}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.collectionCardSub,
+                                    scale < 1 && { fontSize: cardSubFontSize },
+                                  ]}
+                                >
+                                  {col.photos?.length || 0} {col.photos?.length === 1 ? "foto" : "fotos"}
+                                </Text>
+                              </LinearGradient>
+                            </TouchableOpacity>
+                          </FadeInView>
+                        );
+                      })
+                    )}
                   </ScrollView>
                 </View>
 
@@ -1341,15 +1476,6 @@ export default function ProfileScreen({ navigation }) {
               </Animated.View>
             </View>
           </Animated.ScrollView>
-
-          {showSkeleton && (
-            <Animated.View
-              style={[StyleSheet.absoluteFill, { opacity: skeletonOpacity }]}
-              pointerEvents={loading ? "auto" : "none"}
-            >
-              <ProfileSkeleton isDarkMode={isDarkMode} />
-            </Animated.View>
-          )}
         </View>
 
             <Modal
