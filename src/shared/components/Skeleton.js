@@ -11,8 +11,11 @@ import {
   Easing,
   ScrollView,
   Platform,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+
+const foliageImage = require("../../../assets/images/image.png");
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.75;
@@ -49,36 +52,39 @@ export function ShimmerOverlay({
   isDarkMode = true,
   customColors,
 }) {
-  const shimmerWidth = compWidth * 1.6;
+  const shimmerWidth =
+    compWidth < 80
+      ? Math.max(48, Math.round(compWidth * 2.2))
+      : Math.max(160, compWidth * 1.6);
 
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [-shimmerWidth, compWidth + 20],
+    outputRange: [-shimmerWidth, compWidth + shimmerWidth * 0.25],
   });
 
   const defaultColors = isDarkMode
     ? [
-      "rgba(255, 255, 255, 0)",
-      "rgba(255, 255, 255, 0.005)",
-      "rgba(255, 255, 255, 0.02)",
-      "rgba(255, 255, 255, 0.05)",
-      "rgba(255, 255, 255, 0.08)",
-      "rgba(255, 255, 255, 0.05)",
-      "rgba(255, 255, 255, 0.02)",
-      "rgba(255, 255, 255, 0.005)",
-      "rgba(255, 255, 255, 0)",
-    ]
+        "rgba(255, 255, 255, 0)",
+        "rgba(255, 255, 255, 0.01)",
+        "rgba(255, 255, 255, 0.04)",
+        "rgba(255, 255, 255, 0.08)",
+        "rgba(255, 255, 255, 0.18)",
+        "rgba(255, 255, 255, 0.08)",
+        "rgba(255, 255, 255, 0.04)",
+        "rgba(255, 255, 255, 0.01)",
+        "rgba(255, 255, 255, 0)",
+      ]
     : [
-      "rgba(255, 255, 255, 0)",
-      "rgba(255, 255, 255, 0.02)",
-      "rgba(255, 255, 255, 0.06)",
-      "rgba(255, 255, 255, 0.14)",
-      "rgba(255, 255, 255, 0.22)",
-      "rgba(255, 255, 255, 0.14)",
-      "rgba(255, 255, 255, 0.06)",
-      "rgba(255, 255, 255, 0.02)",
-      "rgba(255, 255, 255, 0)",
-    ];
+        "rgba(0, 0, 0, 0)",
+        "rgba(0, 0, 0, 0.01)",
+        "rgba(0, 0, 0, 0.03)",
+        "rgba(0, 0, 0, 0.07)",
+        "rgba(0, 0, 0, 0.11)",
+        "rgba(0, 0, 0, 0.07)",
+        "rgba(0, 0, 0, 0.03)",
+        "rgba(0, 0, 0, 0.01)",
+        "rgba(0, 0, 0, 0)",
+      ];
 
   const locations = [0, 0.15, 0.3, 0.42, 0.5, 0.58, 0.7, 0.85, 1];
   const colors = customColors || defaultColors;
@@ -155,18 +161,41 @@ export function HomeCardSkeleton({
   animatedValue,
   cardWidth,
   cardHeight,
+  cardInfoBottom,
+  cardInfoHeight,
 }) {
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "rgba(20, 20, 20, 0.95)" : "rgba(230, 230, 230, 0.25)";
-  const infoBg = !isDarkMode ? "rgba(100, 100, 100, 0.40)" : "rgba(12, 12, 12, 0.85)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.30)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.18)";
-  const badgeBg = !isDarkMode ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.04)";
+  const cardBg = isDarkMode ? "#181818" : "#E2E2E2";
+  const placeholderBg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.12)"
+    : "rgba(0, 0, 0, 0.12)";
+  const placeholderBg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.06)"
+    : "rgba(0, 0, 0, 0.06)";
 
   const actualWidth = cardWidth || CARD_WIDTH;
   const actualHeight = cardHeight || CARD_HEIGHT;
+
+  const titleLineHeight = cardInfoHeight && cardInfoHeight < 96 ? 21 : 24;
+  const titleBarHeight = cardInfoHeight && cardInfoHeight < 96 ? 16 : 18;
+  const locationLineHeight = cardInfoHeight && cardInfoHeight < 96 ? 14 : 16;
+  const locationBarHeight = cardInfoHeight && cardInfoHeight < 96 ? 10 : 11;
+
+  const resolvedBottom =
+    cardInfoBottom !== undefined
+      ? cardInfoBottom
+      : cardHeight
+      ? Math.round(Math.max(14, cardHeight * 0.055))
+      : undefined;
+
+  const resolvedHeight =
+    cardInfoHeight !== undefined
+      ? cardInfoHeight
+      : cardHeight
+      ? Math.round(Math.min(104, Math.max(86, cardHeight * 0.25)))
+      : undefined;
 
   return (
     <View
@@ -193,66 +222,67 @@ export function HomeCardSkeleton({
       <View
         style={[
           homeStyles.cardInfo,
-          cardHeight ? {
-            bottom: Math.round(Math.max(14, cardHeight * 0.055)),
-            height: Math.round(Math.min(104, Math.max(86, cardHeight * 0.25))),
-          } : null,
+          resolvedBottom !== undefined ? { bottom: resolvedBottom } : null,
+          resolvedHeight !== undefined ? { height: resolvedHeight } : null,
           {
-            backgroundColor: infoBg,
+            backgroundColor: "transparent",
             borderWidth: 0,
-            borderColor: "transparent",
             shadowColor: "transparent",
             shadowOpacity: 0,
             shadowRadius: 0,
-            shadowOffset: { width: 0, height: 0 },
             elevation: 0,
+            overflow: "hidden",
+            paddingHorizontal: 0,
+            paddingVertical: 0,
           },
         ]}
       >
-        <View style={{ flex: 1, justifyContent: "center", marginRight: 10 }}>
-          <View
-            style={{
-              height: 18,
-              width: "75%",
-              borderRadius: 6,
-              backgroundColor: placeholderBg1,
-              marginBottom: 8,
-            }}
-          />
-          <View
-            style={{
-              height: 12,
-              width: "45%",
-              borderRadius: 4,
-              backgroundColor: placeholderBg2,
-            }}
-          />
-        </View>
-
         <View
           style={[
-            homeStyles.ratingContainer,
+            StyleSheet.absoluteFill,
             {
-              backgroundColor: badgeBg,
-              justifyContent: "center",
-              alignItems: "center",
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 12,
-              elevation: 0,
-              shadowOpacity: 0,
-              shadowColor: "transparent",
+              backgroundColor: isDarkMode
+                ? "rgba(12, 12, 12, 0.82)"
+                : "rgba(255, 255, 255, 0.85)",
+              borderRadius: 25,
             },
           ]}
-        >
-          <View
-            style={{
-              width: 26,
-              height: 12,
-              borderRadius: 4,
-              backgroundColor: placeholderBg1,
-            }}
-          />
+        />
+
+        <View style={homeStyles.cardInfoInner}>
+          <View style={homeStyles.cardInfoLeft}>
+            <View
+              style={{
+                height: titleLineHeight,
+                justifyContent: "center",
+              }}
+            >
+              <View
+                style={{
+                  height: titleBarHeight,
+                  width: "75%",
+                  borderRadius: 5,
+                  backgroundColor: placeholderBg1,
+                }}
+              />
+            </View>
+            <View
+              style={{
+                height: locationLineHeight,
+                justifyContent: "center",
+                marginTop: 3,
+              }}
+            >
+              <View
+                style={{
+                  height: locationBarHeight,
+                  width: "45%",
+                  borderRadius: 4,
+                  backgroundColor: placeholderBg2,
+                }}
+              />
+            </View>
+          </View>
         </View>
       </View>
 
@@ -271,6 +301,8 @@ export function HomeSkeletonList({
   currentTheme,
   cardWidth,
   cardHeight,
+  cardInfoBottom,
+  cardInfoHeight,
 }) {
   const anim = useShimmerAnimation();
 
@@ -278,9 +310,9 @@ export function HomeSkeletonList({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={homeStyles.flex1}
+      style={{ width: "100%" }}
       contentContainerStyle={homeStyles.cardsList}
-      scrollEnabled={true}
+      scrollEnabled={false}
     >
       <HomeCardSkeleton
         isDarkMode={isDarkMode}
@@ -288,6 +320,8 @@ export function HomeSkeletonList({
         animatedValue={anim}
         cardWidth={cardWidth}
         cardHeight={cardHeight}
+        cardInfoBottom={cardInfoBottom}
+        cardInfoHeight={cardInfoHeight}
       />
       <HomeCardSkeleton
         isDarkMode={isDarkMode}
@@ -295,6 +329,8 @@ export function HomeSkeletonList({
         animatedValue={anim}
         cardWidth={cardWidth}
         cardHeight={cardHeight}
+        cardInfoBottom={cardInfoBottom}
+        cardInfoHeight={cardInfoHeight}
       />
       <HomeCardSkeleton
         isDarkMode={isDarkMode}
@@ -302,7 +338,190 @@ export function HomeSkeletonList({
         animatedValue={anim}
         cardWidth={cardWidth}
         cardHeight={cardHeight}
+        cardInfoBottom={cardInfoBottom}
+        cardInfoHeight={cardInfoHeight}
       />
+    </ScrollView>
+  );
+}
+
+export function HomeCategoriesSkeleton({
+  isDarkMode = true,
+  animatedValue,
+}) {
+  const localAnim = useShimmerAnimation();
+  const anim = animatedValue || localAnim;
+
+  const bg = isDarkMode ? "rgba(255, 255, 255, 0.10)" : "rgba(0, 0, 0, 0.08)";
+
+  const tabWidths = [74, 88, 66, 92, 78];
+
+  return (
+    <View style={{ overflow: "hidden", position: "relative" }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        scrollEnabled={false}
+        contentContainerStyle={homeStyles.categoriesContainer}
+      >
+        {tabWidths.map((w, index) => (
+          <View key={`cat-skel-${index}`} style={homeStyles.categoryItem}>
+            <View style={homeStyles.centerAligned}>
+              <View style={homeStyles.rowCenter}>
+                <View
+                  style={{
+                    width: w,
+                    height: 16,
+                    borderRadius: 5,
+                    backgroundColor: bg,
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+      <ShimmerOverlay
+        animatedValue={anim}
+        width={width}
+        height={32}
+        isDarkMode={isDarkMode}
+      />
+    </View>
+  );
+}
+
+export function TopDestinationCardSkeleton({
+  isDarkMode = true,
+  animatedValue,
+  cardWidth = 270,
+  cardHeight = 98,
+  imageSize = 78,
+  titleSize = 16,
+  locationSize = 13,
+}) {
+  const localAnim = useShimmerAnimation();
+  const anim = animatedValue || localAnim;
+
+  const cardBg = isDarkMode ? "#1A1A1A" : "#EFEFEF";
+  const imgBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.07)";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.10)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.06)";
+
+  const actualWidth = cardWidth || 270;
+  const actualHeight = cardHeight || 98;
+  const actualImgSize = imageSize || 78;
+  const imgRadius = Math.round(actualImgSize * 0.25);
+  const cardRadius = Math.round(actualHeight * 0.26);
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        width: actualWidth,
+        height: actualHeight,
+        borderRadius: cardRadius,
+        backgroundColor: cardBg,
+        padding: 10,
+        marginRight: 14,
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      <View
+        style={{
+          width: actualImgSize,
+          height: actualImgSize,
+          borderRadius: imgRadius,
+          backgroundColor: imgBg,
+          overflow: "hidden",
+        }}
+      />
+
+      <View
+        style={{
+          flex: 1,
+          marginLeft: 14,
+          marginRight: 10,
+          justifyContent: "center",
+        }}
+      >
+        <View
+          style={{
+            height: titleSize ? Math.round(titleSize * 1.25) : 20,
+            justifyContent: "center",
+            marginBottom: 4,
+          }}
+        >
+          <View
+            style={{
+              height: Math.round((titleSize || 16) * 0.8),
+              width: "72%",
+              borderRadius: 4,
+              backgroundColor: placeholderBg1,
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            height: locationSize ? Math.round(locationSize * 1.2) : 16,
+            justifyContent: "center",
+          }}
+        >
+          <View
+            style={{
+              height: Math.round((locationSize || 13) * 0.75),
+              width: "48%",
+              borderRadius: 3,
+              backgroundColor: placeholderBg2,
+            }}
+          />
+        </View>
+      </View>
+
+      <ShimmerOverlay
+        animatedValue={anim}
+        width={actualWidth}
+        height={actualHeight}
+        isDarkMode={isDarkMode}
+      />
+    </View>
+  );
+}
+
+export function TopDestinationsSkeletonList({
+  isDarkMode = true,
+  cardWidth,
+  cardHeight,
+  imageSize,
+  titleSize,
+  locationSize,
+  count = 3,
+}) {
+  const anim = useShimmerAnimation();
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      scrollEnabled={false}
+      style={{ width: "100%" }}
+      contentContainerStyle={homeStyles.topDestinationsList}
+    >
+      {Array.from({ length: count }).map((_, index) => (
+        <TopDestinationCardSkeleton
+          key={`top-dest-skel-${index}`}
+          isDarkMode={isDarkMode}
+          animatedValue={anim}
+          cardWidth={cardWidth}
+          cardHeight={cardHeight}
+          imageSize={imageSize}
+          titleSize={titleSize}
+          locationSize={locationSize}
+        />
+      ))}
     </ScrollView>
   );
 }
@@ -403,50 +622,92 @@ export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 
 export function FavoriteCardSkeleton({
   isDarkMode = true,
   animatedValue,
+  cardWidth,
+  cardHeight,
 }) {
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
+
+  const actualWidth = cardWidth || favoritesStyles.card?.width || 170;
+  const actualHeight = cardHeight || favoritesStyles.card?.height || 200;
 
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
     : "rgba(0, 0, 0, 0.10)";
   const placeholderBg2 = isDarkMode
     ? "rgba(255, 255, 255, 0.06)"
-    : "rgba(0, 0, 0, 0.05)";
+    : "rgba(0, 0, 0, 0.06)";
 
   return (
     <View
       style={[
         favoritesStyles.card,
         isDarkMode ? favoritesStyles.cardDark : favoritesStyles.cardLight,
+        cardWidth && cardHeight ? { width: cardWidth, height: cardHeight } : null,
       ]}
     >
-      <View style={{ flex: 1 }} />
-      <View style={favoritesStyles.cardOverlay}>
-        <View
-          style={{
-            height: 14,
-            width: "70%",
-            borderRadius: 4,
-            backgroundColor: placeholderBg1,
-            marginBottom: 6,
-          }}
-        />
-        <View
-          style={{
-            height: 10,
-            width: "45%",
-            borderRadius: 3,
-            backgroundColor: placeholderBg2,
-          }}
+      <View style={favoritesStyles.cardInner}>
+        <LinearGradient
+          colors={
+            isDarkMode
+              ? ["transparent", "rgba(0, 0, 0, 0.35)", "rgba(0, 0, 0, 0.75)"]
+              : ["transparent", "rgba(0, 0, 0, 0.08)", "rgba(0, 0, 0, 0.20)"]
+          }
+          locations={[0, 0.42, 1]}
+          style={favoritesStyles.cardOverlay}
+        >
+          <View
+            style={{
+              height: 18,
+              justifyContent: "center",
+              marginBottom: 3,
+            }}
+          >
+            <View
+              style={{
+                height: 13,
+                width: "72%",
+                borderRadius: 4,
+                backgroundColor: placeholderBg1,
+              }}
+            />
+          </View>
+          <View style={favoritesStyles.locationRow}>
+            <View
+              style={{
+                width: 11,
+                height: 11,
+                borderRadius: 3,
+                backgroundColor: placeholderBg2,
+              }}
+            />
+            <View
+              style={{
+                height: 15,
+                justifyContent: "center",
+                marginLeft: 4,
+                width: "48%",
+              }}
+            >
+              <View
+                style={{
+                  height: 10,
+                  width: "100%",
+                  borderRadius: 3,
+                  backgroundColor: placeholderBg2,
+                }}
+              />
+            </View>
+          </View>
+        </LinearGradient>
+
+        <ShimmerOverlay
+          animatedValue={anim}
+          width={actualWidth}
+          height={actualHeight}
+          isDarkMode={isDarkMode}
         />
       </View>
-      <ShimmerOverlay
-        animatedValue={anim}
-        width={favoritesStyles.card?.width || 170}
-        height={favoritesStyles.card?.height || 200}
-        isDarkMode={isDarkMode}
-      />
     </View>
   );
 }
@@ -454,25 +715,40 @@ export function FavoriteCardSkeleton({
 export function FavoritesSkeletonList({
   isDarkMode = true,
   count = 6,
+  cardWidth,
+  cardHeight,
 }) {
   const anim = useShimmerAnimation();
 
+  const pairs = [];
+  for (let i = 0; i < count; i += 2) {
+    pairs.push([i, i + 1 < count ? i + 1 : null]);
+  }
+
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 12,
-        paddingHorizontal: 16,
-        paddingTop: 4,
-      }}
-    >
-      {Array.from({ length: count }).map((_, i) => (
-        <FavoriteCardSkeleton
-          key={`fav-skel-${i}`}
-          isDarkMode={isDarkMode}
-          animatedValue={anim}
-        />
+    <View style={favoritesStyles.listContent}>
+      {pairs.map(([first, second], rowIndex) => (
+        <View
+          key={`fav-row-${rowIndex}`}
+          style={[favoritesStyles.columnWrapper, { flexDirection: "row" }]}
+        >
+          <FavoriteCardSkeleton
+            key={`fav-card-${first}`}
+            isDarkMode={isDarkMode}
+            animatedValue={anim}
+            cardWidth={cardWidth}
+            cardHeight={cardHeight}
+          />
+          {second !== null && (
+            <FavoriteCardSkeleton
+              key={`fav-card-${second}`}
+              isDarkMode={isDarkMode}
+              animatedValue={anim}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
+            />
+          )}
+        </View>
       ))}
     </View>
   );
@@ -608,224 +884,762 @@ export function SearchSkeletonList({
   );
 }
 
-function PolaroidStackCardSkeleton({
-  isDarkMode,
-  anim,
-  placeholderBg1,
-  placeholderBg2,
-  rowHeight,
-}) {
-  const backCardBg = isDarkMode ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.15)";
-  const frontCardBg = isDarkMode ? "rgba(255, 255, 255, 0.07)" : "rgba(255, 255, 255, 0.22)";
-  const photoBg = isDarkMode ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.12)";
+export function ProfileAvatarSkeleton({ size = 102, isDarkMode = true }) {
+  const anim = useShimmerAnimation();
 
   return (
     <View
-      style={[
-        profileStyles.galleryCard,
-        !isDarkMode && profileStyles.galleryCardLight,
-        { overflow: "hidden", position: "relative" },
-      ]}
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: size / 2,
+        backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
+        overflow: "hidden",
+        position: "relative",
+      }}
     >
-      <View style={profileStyles.galleryCardTouch}>
-        <View style={profileStyles.stackContainer}>
-          <View
-            style={[
-              profileStyles.stackPhoto,
-              {
-                position: "absolute",
-                transform: [
-                  { translateX: 6 },
-                  { translateY: -4 },
-                  { rotate: "5.5deg" },
-                  { scale: 0.94 },
-                ],
-                opacity: isDarkMode ? 0.35 : 0.6,
-                backgroundColor: backCardBg,
-                shadowOpacity: 0,
-                elevation: 0,
-              },
-            ]}
-          />
-          <View
-            style={[
-              profileStyles.stackPhoto,
-              {
-                backgroundColor: frontCardBg,
-                shadowOpacity: 0,
-                elevation: 0,
-              },
-            ]}
-          >
-            <View
-              style={[
-                profileStyles.photoMediaBox,
-                { backgroundColor: photoBg },
-              ]}
-            />
-            <View style={profileStyles.photoCaptionBox}>
-              <View
-                style={{
-                  height: 10,
-                  width: "60%",
-                  borderRadius: 3,
-                  backgroundColor: placeholderBg2,
-                }}
-              />
-            </View>
-          </View>
-        </View>
-
-        <View style={profileStyles.cardInfo}>
-          <View
-            style={{
-              height: 12,
-              width: "50%",
-              borderRadius: 4,
-              backgroundColor: placeholderBg1,
-            }}
-          />
-          <View
-            style={[
-              profileStyles.cardCounter,
-              !isDarkMode && profileStyles.cardCounterLight,
-            ]}
-          >
-            <View
-              style={{
-                height: 10,
-                width: 26,
-                borderRadius: 3,
-                backgroundColor: placeholderBg2,
-              }}
-            />
-          </View>
-        </View>
-      </View>
-
       <ShimmerOverlay
         animatedValue={anim}
-        width={(width - 44) / 2}
-        height={rowHeight}
+        width={size}
+        height={size}
         isDarkMode={isDarkMode}
       />
     </View>
   );
 }
 
-export function ProfileSkeleton({ isDarkMode = true }) {
-  const anim = useShimmerAnimation();
+export function ProfileSkeletonBar({
+  width: barW,
+  height: barH,
+  borderRadius = 4,
+  bg,
+  isDarkMode = true,
+  anim: externalAnim,
+  style,
+}) {
+  const localAnim = useShimmerAnimation();
+  const anim = externalAnim || localAnim;
+  const defaultBg = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "#E5E7EB";
 
-  const screenH = Dimensions.get("window").height;
-  const galleryH = Math.max(340, screenH - 350);
-  const rowH = Math.max(160, Math.floor((galleryH - 12) / 2));
-
-  const avatarBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.35)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.35)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.20)";
+  const numW = typeof barW === "number" ? barW : 150;
+  const numH = typeof barH === "number" ? barH : 20;
 
   return (
-    <View style={profileStyles.flex1}>
+    <View
+      style={[
+        {
+          width: barW,
+          height: barH,
+          borderRadius,
+          backgroundColor: bg || defaultBg,
+          overflow: "hidden",
+          position: "relative",
+        },
+        style,
+      ]}
+    >
+      <ShimmerOverlay
+        animatedValue={anim}
+        width={numW}
+        height={numH}
+        isDarkMode={isDarkMode}
+      />
+    </View>
+  );
+}
+
+export function ProfileCollectionCardSkeleton({
+  isDarkMode = true,
+  anim: externalAnim,
+  scale = 1,
+  cardWidth = 180,
+  cardHeight = 260,
+  cardBorderRadius = 22,
+  cardGradientHeight = 95,
+  cardGradientPadding = 14,
+  cardTitleFontSize = 15,
+  cardSubFontSize = 12,
+}) {
+  const localAnim = useShimmerAnimation();
+  const anim = externalAnim || localAnim;
+
+  const cardBg = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "#E2E2E2";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(0, 0, 0, 0.12)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
+
+  return (
+    <View
+      style={[
+        profileStyles.collectionCardItem,
+        scale < 1 && {
+          width: cardWidth,
+          height: cardHeight,
+          borderRadius: cardBorderRadius,
+        },
+        { backgroundColor: cardBg, overflow: "hidden", position: "relative" },
+      ]}
+    >
       <View
         style={[
-          profileStyles.profileCard,
-          !isDarkMode && profileStyles.profileCardLight,
-          { overflow: "hidden", position: "relative" },
+          profileStyles.collectionCardGradient,
+          scale < 1 && {
+            height: cardGradientHeight,
+            padding: cardGradientPadding,
+          },
         ]}
       >
-        <View style={profileStyles.settingsButton}>
+        <View style={{ height: scale < 1 ? Math.round(19 * scale) : 19, justifyContent: "center" }}>
           <View
             style={{
-              width: 22,
-              height: 22,
-              borderRadius: 11,
+              height: Math.round(cardTitleFontSize * 0.8),
+              width: "70%",
+              borderRadius: 4,
+              backgroundColor: placeholderBg1,
+            }}
+          />
+        </View>
+        <View style={{ height: scale < 1 ? Math.round(15 * scale) : 15, marginTop: 3, justifyContent: "center" }}>
+          <View
+            style={{
+              height: Math.round(cardSubFontSize * 0.8),
+              width: "40%",
+              borderRadius: 3,
               backgroundColor: placeholderBg2,
             }}
           />
         </View>
+      </View>
+      <ShimmerOverlay
+        animatedValue={anim}
+        width={cardWidth}
+        height={cardHeight}
+        isDarkMode={isDarkMode}
+      />
+    </View>
+  );
+}
 
-        <View style={[profileStyles.avatar, !isDarkMode && profileStyles.avatarLight]}>
-          <View
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 36,
-              backgroundColor: avatarBg,
-            }}
-          />
+export function ProfileCollectionsSkeletonList({
+  isDarkMode = true,
+  scale = 1,
+  cardWidth = 180,
+  cardHeight = 260,
+  cardBorderRadius = 22,
+  cardGradientHeight = 95,
+  cardGradientPadding = 14,
+  cardTitleFontSize = 15,
+  cardSubFontSize = 12,
+}) {
+  const anim = useShimmerAnimation();
+
+  return (
+    <View style={{ flexDirection: "row", gap: Math.round(14 * scale) }}>
+      <ProfileCollectionCardSkeleton
+        isDarkMode={isDarkMode}
+        anim={anim}
+        scale={scale}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
+        cardBorderRadius={cardBorderRadius}
+        cardGradientHeight={cardGradientHeight}
+        cardGradientPadding={cardGradientPadding}
+        cardTitleFontSize={cardTitleFontSize}
+        cardSubFontSize={cardSubFontSize}
+      />
+      <ProfileCollectionCardSkeleton
+        isDarkMode={isDarkMode}
+        anim={anim}
+        scale={scale}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
+        cardBorderRadius={cardBorderRadius}
+        cardGradientHeight={cardGradientHeight}
+        cardGradientPadding={cardGradientPadding}
+        cardTitleFontSize={cardTitleFontSize}
+        cardSubFontSize={cardSubFontSize}
+      />
+    </View>
+  );
+}
+
+
+export function ProfileSkeleton({ isDarkMode = true, scale: customScale }) {
+  const anim = useShimmerAnimation();
+
+  const screenH = Dimensions.get("window").height;
+  const screenW = Dimensions.get("window").width;
+  const BASE_HEIGHT = 680;
+  const scale = customScale !== undefined ? customScale : Math.min(1, Math.max(0.65, screenH / BASE_HEIGHT));
+
+  const bannerHeight = Math.round(230 * scale);
+  const bodyOverlap = Math.round(24 * scale);
+  const avatarSize = Math.round(102 * scale);
+  const avatarMarginTop = -Math.round(52 * scale);
+  const avatarMarginBottom = Math.round(12 * scale);
+  const avatarBorderWidth = Math.round(4 * scale);
+
+  const userNameFontSize = Math.round(21 * scale);
+  const userNameLineHeight = Math.round(27 * scale);
+  const nationalityFontSize = Math.round(13.5 * scale);
+  const nationalityLineHeight = Math.round(18 * scale);
+  const nationalityMarginTop = Math.round(4 * scale);
+  const nationalityMarginBottom = Math.round(8 * scale);
+
+  const bioFontSize = Math.round(13 * scale);
+  const bioLineHeight = Math.round(19 * scale);
+  const bioMarginBottom = Math.round(20 * scale);
+
+  const statsPaddingVertical = Math.round(18 * scale);
+  const statsMarginBottom = Math.round(24 * scale);
+  const statValueFontSize = Math.round(22 * scale);
+  const statValueLineHeight = Math.round(27 * scale);
+  const statLabelFontSize = Math.round(11 * scale);
+  const statLabelLineHeight = Math.round(14 * scale);
+  const statDividerHeight = Math.round(32 * scale);
+
+  const collectionsSectionMarginTop = Math.round(8 * scale);
+  const collectionsHeaderMarginBottom = Math.round(12 * scale);
+  const collectionsHeadingFontSize = Math.round(17 * scale);
+  const collectionsHeadingLineHeight = Math.round(22 * scale);
+
+  const cardWidth = Math.round(180 * scale);
+  const cardHeight = Math.round(260 * scale);
+  const cardBorderRadius = Math.round(22 * scale);
+
+  const cardTitleFontSize = Math.round(15 * scale);
+  const cardSubFontSize = Math.round(12 * scale);
+  const addCircleSize = Math.round(58 * scale);
+  const cardGradientHeight = Math.round(95 * scale);
+  const cardGradientPadding = Math.round(14 * scale);
+
+  const bgColor = isDarkMode ? "#0C0C0E" : "#FFFFFF";
+  const bannerBg = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
+  const avatarBorderColor = isDarkMode ? "#0C0C0E" : "#FFFFFF";
+  const avatarBg = isDarkMode ? "#1A1A1E" : "#E5E7EB";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(0, 0, 0, 0.09)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
+  const dividerBg = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)";
+  const cardBg = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)";
+  const iconBtnBg = isDarkMode ? "rgba(0, 0, 0, 0.42)" : "rgba(0, 0, 0, 0.25)";
+
+  const SkeletonBar = ({ width: barW, height: barH, borderRadius = 4, bg = placeholderBg1, style }) => (
+    <View
+      style={[
+        {
+          width: barW,
+          height: barH,
+          borderRadius,
+          backgroundColor: bg,
+          overflow: "hidden",
+          position: "relative",
+        },
+        style,
+      ]}
+    >
+      <ShimmerOverlay
+        animatedValue={anim}
+        width={typeof barW === "number" ? barW : 150}
+        height={typeof barH === "number" ? barH : 20}
+        isDarkMode={isDarkMode}
+      />
+    </View>
+  );
+
+  return (
+    <View style={[profileStyles.flex1, { backgroundColor: bgColor, overflow: "hidden" }]}>
+      <View
+        style={[
+          profileStyles.coverBanner,
+          scale < 1 && { height: bannerHeight },
+          { backgroundColor: bannerBg, overflow: "hidden", position: "relative" },
+        ]}
+      >
+        <View style={profileStyles.coverTopBar}>
+          <View style={[profileStyles.coverIconButton, { backgroundColor: iconBtnBg }]} />
         </View>
-
-        <View
-          style={{
-            height: 22,
-            width: 150,
-            borderRadius: 6,
-            backgroundColor: placeholderBg1,
-            marginTop: 8,
-          }}
-        />
-
-        <View
-          style={{
-            height: 14,
-            width: 90,
-            borderRadius: 4,
-            backgroundColor: placeholderBg2,
-            marginTop: 3,
-          }}
-        />
-
-        <View
-          style={{
-            height: 16,
-            width: "65%",
-            borderRadius: 4,
-            backgroundColor: placeholderBg2,
-            marginTop: 13,
-            marginBottom: 8,
-          }}
-        />
-
         <ShimmerOverlay
           animatedValue={anim}
-          width={width - 40}
-          height={240}
+          width={screenW}
+          height={bannerHeight}
           isDarkMode={isDarkMode}
         />
       </View>
 
-      <View style={[profileStyles.galleryContainer, { gap: 12 }]}>
-        <View style={[profileStyles.galleryRow, { height: rowH }]}>
-          <PolaroidStackCardSkeleton
-            isDarkMode={isDarkMode}
-            anim={anim}
-            placeholderBg1={placeholderBg1}
-            placeholderBg2={placeholderBg2}
-            rowHeight={rowH}
+      <View
+        style={[
+          profileStyles.newProfileBody,
+          isDarkMode ? profileStyles.newProfileBodyDark : profileStyles.newProfileBodyLight,
+          {
+            flex: 1,
+            paddingBottom: 0,
+          },
+          scale < 1 && { marginTop: -bodyOverlap },
+        ]}
+      >
+        <View pointerEvents="none" style={profileStyles.profileFoliageWrapper}>
+          <Image
+            source={foliageImage}
+            style={[
+              profileStyles.profileFoliage,
+              isDarkMode ? profileStyles.profileFoliageDark : profileStyles.profileFoliageLight,
+            ]}
+            resizeMode="cover"
           />
-          <PolaroidStackCardSkeleton
-            isDarkMode={isDarkMode}
-            anim={anim}
-            placeholderBg1={placeholderBg1}
-            placeholderBg2={placeholderBg2}
-            rowHeight={rowH}
+          <LinearGradient
+            colors={
+              isDarkMode
+                ? [
+                    "rgba(12, 12, 14, 0)",
+                    "rgba(12, 12, 14, 0.35)",
+                    "rgba(12, 12, 14, 0.85)",
+                    "#0C0C0E",
+                    "#0C0C0E",
+                  ]
+                : [
+                    "rgba(255, 255, 255, 0)",
+                    "rgba(255, 255, 255, 0.35)",
+                    "rgba(255, 255, 255, 0.85)",
+                    "#FFFFFF",
+                    "#FFFFFF",
+                  ]
+            }
+            locations={[0, 0.35, 0.7, 0.95, 1]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={profileStyles.profileFoliageGradient}
           />
         </View>
-        <View style={[profileStyles.galleryRow, { height: rowH }]}>
-          <PolaroidStackCardSkeleton
-            isDarkMode={isDarkMode}
-            anim={anim}
-            placeholderBg1={placeholderBg1}
-            placeholderBg2={placeholderBg2}
-            rowHeight={rowH}
-          />
-          <PolaroidStackCardSkeleton
-            isDarkMode={isDarkMode}
-            anim={anim}
-            placeholderBg1={placeholderBg1}
-            placeholderBg2={placeholderBg2}
-            rowHeight={rowH}
-          />
+
+        <View style={profileStyles.profileInfoGroup}>
+          <View
+            style={[
+              profileStyles.avatarContainer,
+              scale < 1 && {
+                width: avatarSize,
+                height: avatarSize,
+                marginTop: avatarMarginTop,
+                marginBottom: avatarMarginBottom,
+              },
+            ]}
+          >
+            <View
+              style={[
+                profileStyles.avatarBordered,
+                {
+                  borderColor: avatarBorderColor,
+                  backgroundColor: avatarBg,
+                  overflow: "hidden",
+                  position: "relative",
+                },
+                scale < 1 && {
+                  width: avatarSize,
+                  height: avatarSize,
+                  borderRadius: avatarSize / 2,
+                  borderWidth: avatarBorderWidth,
+                },
+              ]}
+            >
+              <ShimmerOverlay
+                animatedValue={anim}
+                width={avatarSize}
+                height={avatarSize}
+                isDarkMode={isDarkMode}
+              />
+            </View>
+          </View>
+
+          <View
+            style={{
+              height: scale < 1 ? userNameLineHeight : 27,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <SkeletonBar
+              width={Math.round(140 * scale)}
+              height={Math.round(userNameFontSize * 0.82)}
+              borderRadius={6}
+              bg={placeholderBg1}
+            />
+          </View>
+
+          <View
+            style={{
+              height: scale < 1 ? nationalityLineHeight : 18,
+              marginTop: scale < 1 ? nationalityMarginTop : 4,
+              marginBottom: scale < 1 ? nationalityMarginBottom : 8,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <SkeletonBar
+              width={Math.round(90 * scale)}
+              height={Math.round(nationalityFontSize * 0.82)}
+              borderRadius={4}
+              bg={placeholderBg2}
+            />
+          </View>
+
+          <View
+            style={{
+              height: scale < 1 ? bioLineHeight : 19,
+              marginBottom: scale < 1 ? bioMarginBottom : 20,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <SkeletonBar
+              width={Math.round(210 * scale)}
+              height={Math.round(bioFontSize * 0.82)}
+              borderRadius={4}
+              bg={placeholderBg2}
+            />
+          </View>
+
+          <View
+            style={[
+              profileStyles.statsContainer,
+              isDarkMode ? profileStyles.statsContainerDark : profileStyles.statsContainerLight,
+              scale < 1 && {
+                paddingVertical: statsPaddingVertical,
+                marginBottom: statsMarginBottom,
+              },
+            ]}
+          >
+            <View style={profileStyles.statItem}>
+              <View
+                style={{
+                  height: scale < 1 ? statValueLineHeight : 27,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <SkeletonBar
+                  width={Math.round(32 * scale)}
+                  height={Math.round(statValueFontSize * 0.8)}
+                  borderRadius={5}
+                  bg={placeholderBg1}
+                />
+              </View>
+              <View
+                style={{
+                  height: scale < 1 ? statLabelLineHeight : 14,
+                  marginTop: 4,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <SkeletonBar
+                  width={Math.round(72 * scale)}
+                  height={Math.round(statLabelFontSize * 0.8)}
+                  borderRadius={3}
+                  bg={placeholderBg2}
+                />
+              </View>
+            </View>
+
+            <View
+              style={[
+                profileStyles.statDividerLine,
+                {
+                  backgroundColor: dividerBg,
+                },
+                scale < 1 && { height: statDividerHeight },
+              ]}
+            />
+
+            <View style={profileStyles.statItem}>
+              <View
+                style={{
+                  height: scale < 1 ? statValueLineHeight : 27,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <SkeletonBar
+                  width={Math.round(28 * scale)}
+                  height={Math.round(statValueFontSize * 0.8)}
+                  borderRadius={5}
+                  bg={placeholderBg1}
+                />
+              </View>
+              <View
+                style={{
+                  height: scale < 1 ? statLabelLineHeight : 14,
+                  marginTop: 4,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <SkeletonBar
+                  width={Math.round(58 * scale)}
+                  height={Math.round(statLabelFontSize * 0.8)}
+                  borderRadius={3}
+                  bg={placeholderBg2}
+                />
+              </View>
+            </View>
+
+            <View
+              style={[
+                profileStyles.statDividerLine,
+                {
+                  backgroundColor: dividerBg,
+                },
+                scale < 1 && { height: statDividerHeight },
+              ]}
+            />
+
+            <View style={profileStyles.statItem}>
+              <View
+                style={{
+                  height: scale < 1 ? statValueLineHeight : 27,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <SkeletonBar
+                  width={Math.round(28 * scale)}
+                  height={Math.round(statValueFontSize * 0.8)}
+                  borderRadius={5}
+                  bg={placeholderBg1}
+                />
+              </View>
+              <View
+                style={{
+                  height: scale < 1 ? statLabelLineHeight : 14,
+                  marginTop: 4,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <SkeletonBar
+                  width={Math.round(64 * scale)}
+                  height={Math.round(statLabelFontSize * 0.8)}
+                  borderRadius={3}
+                  bg={placeholderBg2}
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View
+          style={[
+            profileStyles.collectionsSection,
+            scale < 1 && { marginTop: collectionsSectionMarginTop },
+          ]}
+        >
+          <View
+            style={[
+              profileStyles.collectionsHeader,
+              scale < 1 && { marginBottom: collectionsHeaderMarginBottom },
+            ]}
+          >
+            <View
+              style={{
+                height: scale < 1 ? collectionsHeadingLineHeight : 22,
+                justifyContent: "center",
+              }}
+            >
+              <SkeletonBar
+                width={Math.round(130 * scale)}
+                height={Math.round(collectionsHeadingFontSize * 0.8)}
+                borderRadius={5}
+                bg={placeholderBg1}
+              />
+            </View>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEnabled={false}
+            contentContainerStyle={[
+              profileStyles.collectionsScrollContent,
+              scale < 1 && {
+                gap: Math.round(14 * scale),
+                paddingTop: Math.round(6 * scale),
+                paddingBottom: Math.round(14 * scale),
+              },
+            ]}
+          >
+            <View
+              style={[
+                profileStyles.addCardItem,
+                scale < 1 && {
+                  width: cardWidth,
+                  height: cardHeight,
+                  borderRadius: cardBorderRadius,
+                },
+                { backgroundColor: cardBg, overflow: "hidden", position: "relative" },
+              ]}
+            >
+              <View
+                style={[
+                  profileStyles.addCardCircle,
+                  scale < 1 && {
+                    width: addCircleSize,
+                    height: addCircleSize,
+                    borderRadius: addCircleSize / 2,
+                    marginBottom: Math.round(14 * scale),
+                  },
+                  { backgroundColor: placeholderBg2 },
+                ]}
+              />
+              <View
+                style={{
+                  height: scale < 1 ? Math.round(40 * scale) : 40,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <View
+                  style={{
+                    height: Math.round(13 * scale),
+                    width: Math.round(75 * scale),
+                    borderRadius: 4,
+                    backgroundColor: placeholderBg2,
+                    marginBottom: 4,
+                  }}
+                />
+                <View
+                  style={{
+                    height: Math.round(13 * scale),
+                    width: Math.round(55 * scale),
+                    borderRadius: 4,
+                    backgroundColor: placeholderBg2,
+                  }}
+                />
+              </View>
+              <ShimmerOverlay
+                animatedValue={anim}
+                width={cardWidth}
+                height={cardHeight}
+                isDarkMode={isDarkMode}
+              />
+            </View>
+
+            <View
+              style={[
+                profileStyles.collectionCardItem,
+                scale < 1 && {
+                  width: cardWidth,
+                  height: cardHeight,
+                  borderRadius: cardBorderRadius,
+                },
+                { backgroundColor: cardBg, overflow: "hidden", position: "relative" },
+              ]}
+            >
+              <View
+                style={[
+                  profileStyles.collectionCardGradient,
+                  scale < 1 && {
+                    height: cardGradientHeight,
+                    padding: cardGradientPadding,
+                  },
+                ]}
+              >
+                <View
+                  style={{
+                    height: scale < 1 ? Math.round(19 * scale) : 19,
+                    justifyContent: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      height: Math.round(cardTitleFontSize * 0.8),
+                      width: "70%",
+                      borderRadius: 4,
+                      backgroundColor: placeholderBg1,
+                    }}
+                  />
+                </View>
+                <View
+                  style={{
+                    height: scale < 1 ? Math.round(15 * scale) : 15,
+                    marginTop: 3,
+                    justifyContent: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      height: Math.round(cardSubFontSize * 0.8),
+                      width: "40%",
+                      borderRadius: 3,
+                      backgroundColor: placeholderBg2,
+                    }}
+                  />
+                </View>
+              </View>
+              <ShimmerOverlay
+                animatedValue={anim}
+                width={cardWidth}
+                height={cardHeight}
+                isDarkMode={isDarkMode}
+              />
+            </View>
+
+            <View
+              style={[
+                profileStyles.collectionCardItem,
+                scale < 1 && {
+                  width: cardWidth,
+                  height: cardHeight,
+                  borderRadius: cardBorderRadius,
+                },
+                { backgroundColor: cardBg, overflow: "hidden", position: "relative" },
+              ]}
+            >
+              <View
+                style={[
+                  profileStyles.collectionCardGradient,
+                  scale < 1 && {
+                    height: cardGradientHeight,
+                    padding: cardGradientPadding,
+                  },
+                ]}
+              >
+                <View
+                  style={{
+                    height: scale < 1 ? Math.round(19 * scale) : 19,
+                    justifyContent: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      height: Math.round(cardTitleFontSize * 0.8),
+                      width: "60%",
+                      borderRadius: 4,
+                      backgroundColor: placeholderBg1,
+                    }}
+                  />
+                </View>
+                <View
+                  style={{
+                    height: scale < 1 ? Math.round(15 * scale) : 15,
+                    marginTop: 3,
+                    justifyContent: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      height: Math.round(cardSubFontSize * 0.8),
+                      width: "35%",
+                      borderRadius: 3,
+                      backgroundColor: placeholderBg2,
+                    }}
+                  />
+                </View>
+              </View>
+              <ShimmerOverlay
+                animatedValue={anim}
+                width={cardWidth}
+                height={cardHeight}
+                isDarkMode={isDarkMode}
+              />
+            </View>
+          </ScrollView>
         </View>
       </View>
     </View>
@@ -902,6 +1716,9 @@ export default {
   SkeletonBox,
   HomeCardSkeleton,
   HomeSkeletonList,
+  HomeCategoriesSkeleton,
+  TopDestinationCardSkeleton,
+  TopDestinationsSkeletonList,
   ExploreCardSkeleton,
   ExploreSkeletonGrid,
   FavoriteCardSkeleton,
@@ -909,6 +1726,10 @@ export default {
   SearchCardSkeleton,
   SearchSkeletonList,
   ProfileSkeleton,
+  ProfileAvatarSkeleton,
+  ProfileSkeletonBar,
+  ProfileCollectionCardSkeleton,
+  ProfileCollectionsSkeletonList,
   DetailsDescriptionSkeleton,
   DetailsReviewsSkeleton,
 };
