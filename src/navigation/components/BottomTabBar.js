@@ -28,6 +28,8 @@ export default function BottomTabBar({ state, navigation }) {
   const currentRouteName = state.routes[state.index]?.name;
   const isHome = currentRouteName === "Home";
   const isExplore = currentRouteName === "Explore";
+  const isFavorites = currentRouteName === "Favorites";
+  const isTranslucentTab = isHome || isExplore;
 
   const exploreRoute = state.routes.find((r) => r.name === "Explore");
   const [isExploreSearchVisible, setIsExploreSearchVisible] = useState(
@@ -177,21 +179,25 @@ export default function BottomTabBar({ state, navigation }) {
       style={[
         styles.bottomTab,
         {
-          backgroundColor: isExplore
+          backgroundColor: isTranslucentTab
             ? "transparent"
+            : isFavorites
+            ? isDarkMode
+              ? "#000000"
+              : "rgba(100, 100, 100, 1)"
             : isDarkMode
-            ? "#161618"
+            ? "#000000"
             : "#FFFFFF",
           height: TAB_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom,
-          borderTopWidth: 1,
-          borderTopColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+          borderTopWidth: 0,
+          borderTopColor: "transparent",
         },
       ]}
     >
-      {isExplore && (
+      {isTranslucentTab && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          {Platform.OS !== "android" && !isDarkMode && (
+          {Platform.OS !== "android" && !isDarkMode && isExplore && (
             <BlurView
               intensity={20}
               tint="light"
@@ -203,8 +209,8 @@ export default function BottomTabBar({ state, navigation }) {
               StyleSheet.absoluteFill,
               {
                 backgroundColor: isDarkMode
-                  ? "rgba(22, 22, 24, 0.85)"
-                  : "rgba(250, 250, 250, 0.30)",
+                  ? "rgba(0, 0, 0, 0.82)"
+                  : "rgba(100, 100, 100, 0.80)",
               },
             ]}
           />
@@ -216,7 +222,7 @@ export default function BottomTabBar({ state, navigation }) {
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isDarkMode ? "#161618" : "#FFFFFF",
+              backgroundColor: isDarkMode ? "#000000" : "rgba(100, 100, 100, 1)",
               opacity: exploreAnim,
             },
           ]}
@@ -275,12 +281,8 @@ export default function BottomTabBar({ state, navigation }) {
                 color={
                   isFocused
                     ? "#FFFFFF"
-                    : isDarkMode
+                    : isDarkMode || isHome || isFavorites || isExplore
                     ? "#FFFFFF"
-                    : isExplore
-                    ? isExploreSearchVisible
-                      ? "#000000"
-                      : "#FFFFFF"
                     : "#000000"
                 }
               />
