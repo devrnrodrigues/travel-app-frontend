@@ -17,6 +17,7 @@ import {
   FlatList,
   Easing,
   DeviceEventEmitter,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,6 +32,8 @@ import FadeInView from "../../shared/components/FadeInView";
 import styles, { GAP, COLUMN_WIDTH, CARD_HEIGHT, categoryThemes, defaultTheme } from "./explore.styles";
 import { getDestinations } from "../destinations/api/destinationService";
 import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
+
+const foliageImage = require("../../../assets/images/image.png");
 
 const ExploreCard = React.memo(function ExploreCard({ item, onPress, isDarkMode }) {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -196,7 +199,7 @@ export default function Explore({ navigation }) {
 
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === "android" ? 38 : 20);
-  const headerHeight = (insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10)) + 46;
+  const headerHeight = (insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10)) + 54;
   const bottomPadding = (insets.bottom || 0) + 85;
 
   const dismissSearchFocus = useCallback(() => {
@@ -395,6 +398,8 @@ export default function Explore({ navigation }) {
 
   const keyExtractor = useCallback((item) => (item?.id ? String(item.id) : String(Math.random())), []);
 
+  const headerPaddingTop = insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10);
+
   return (
     <ImageBackground source={bgSource} style={styles.screenDarkBg} resizeMode="cover">
       <LinearGradient
@@ -423,13 +428,53 @@ export default function Explore({ navigation }) {
             style={[
               styles.headerBar,
               {
-                paddingTop: insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10),
+                paddingTop: headerPaddingTop,
                 backgroundColor: isDarkMode ? "#000000" : "#FFFFFF",
                 transform: [{ translateY: searchTranslateY }],
                 opacity: searchOpacity,
               },
             ]}
           >
+            <View
+              pointerEvents="none"
+              style={[
+                styles.headerFoliageWrapper,
+                { top: Math.max(0, headerPaddingTop - 10) },
+              ]}
+            >
+              <Image
+                source={foliageImage}
+                style={[
+                  styles.headerFoliage,
+                  isDarkMode ? styles.headerFoliageDark : styles.headerFoliageLight,
+                ]}
+                resizeMode="cover"
+              />
+              <LinearGradient
+                colors={
+                  isDarkMode
+                    ? [
+                        "#000000",
+                        "rgba(0, 0, 0, 0)",
+                        "rgba(0, 0, 0, 0)",
+                        "rgba(0, 0, 0, 0.45)",
+                        "#000000",
+                      ]
+                    : [
+                        "#FFFFFF",
+                        "rgba(255, 255, 255, 0)",
+                        "rgba(255, 255, 255, 0)",
+                        "rgba(255, 255, 255, 0.45)",
+                        "#FFFFFF",
+                      ]
+                }
+                locations={[0, 0.16, 0.6, 0.88, 1]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.headerFoliageGradient}
+              />
+            </View>
+
             <View style={styles.searchBarRow}>
               <Pressable
                 style={[
@@ -487,13 +532,16 @@ export default function Explore({ navigation }) {
               </Pressable>
 
               <TouchableOpacity
-                style={styles.photoIconButton}
+                style={[
+                  styles.photoIconButton,
+                  isDarkMode ? styles.photoIconButtonDark : styles.photoIconButtonLight,
+                ]}
                 activeOpacity={0.7}
                 onPress={() => {}}
               >
                 <Ionicons
                   name="images-outline"
-                  size={25}
+                  size={22}
                   color={isDarkMode ? "#FFFFFF" : "#000000"}
                 />
               </TouchableOpacity>
