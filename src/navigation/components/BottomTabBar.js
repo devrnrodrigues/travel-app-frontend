@@ -66,12 +66,7 @@ export default function BottomTabBar({ state, navigation }) {
     }).start();
   }, [isExploreSearchVisible]);
 
-  const isCustomTab = isHome || isExplore;
-  const tabBgColor = isCustomTab
-    ? "transparent"
-    : isDarkMode
-    ? "#000000"
-    : "#EAEAEA";
+
 
   const prevIndexRef = useRef(state.index);
   const sweepOpacity = useRef(new Animated.Value(0)).current;
@@ -182,14 +177,19 @@ export default function BottomTabBar({ state, navigation }) {
       style={[
         styles.bottomTab,
         {
-          backgroundColor: tabBgColor,
+          backgroundColor: isExplore
+            ? "transparent"
+            : isDarkMode
+            ? "#161618"
+            : "#FFFFFF",
           height: TAB_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom,
+          borderTopWidth: 1,
+          borderTopColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
         },
-        !isDarkMode && !isCustomTab && styles.bottomTabLight,
       ]}
     >
-      {(isHome || isExplore) && (
+      {isExplore && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           {Platform.OS !== "android" && !isDarkMode && (
             <BlurView
@@ -203,7 +203,7 @@ export default function BottomTabBar({ state, navigation }) {
               StyleSheet.absoluteFill,
               {
                 backgroundColor: isDarkMode
-                  ? "rgba(10, 10, 10, 0.85)"
+                  ? "rgba(22, 22, 24, 0.85)"
                   : "rgba(250, 250, 250, 0.30)",
               },
             ]}
@@ -216,7 +216,7 @@ export default function BottomTabBar({ state, navigation }) {
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isDarkMode ? "#000000" : "#FFFFFF",
+              backgroundColor: isDarkMode ? "#161618" : "#FFFFFF",
               opacity: exploreAnim,
             },
           ]}
@@ -253,7 +253,13 @@ export default function BottomTabBar({ state, navigation }) {
             activeOpacity={0.8}
             style={[
               styles.tabItem,
-              isFocused && [styles.activeTab, { borderColor: activeAccent }],
+              isFocused && [
+                styles.activeTab,
+                {
+                  borderColor: activeAccent,
+                  backgroundColor: activeAccent,
+                },
+              ],
             ]}
           >
             <Animated.View
@@ -268,16 +274,14 @@ export default function BottomTabBar({ state, navigation }) {
                 size={24}
                 color={
                   isFocused
-                    ? activeAccent
-                    : isDarkMode
                     ? "#FFFFFF"
-                    : isHome
+                    : isDarkMode
                     ? "#FFFFFF"
                     : isExplore
                     ? isExploreSearchVisible
-                      ? "#8E8E93"
+                      ? "#000000"
                       : "#FFFFFF"
-                    : "#8E8E93"
+                    : "#000000"
                 }
               />
             </Animated.View>
