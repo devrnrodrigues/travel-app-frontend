@@ -14,11 +14,6 @@ import TopDestinationCard from "./components/TopDestinationCard";
 import SearchModal from "./components/SearchModal";
 import { getDestinations } from "../destinations/api/destinationService";
 
-const foliageImage = require("../../../assets/images/image.png");
-const foliageFooterImage = require("../../../assets/images/image2.png");
-
-
-
 const CategoryTabItem = React.memo(function CategoryTabItem({
   cat,
   index,
@@ -63,7 +58,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
               {
                 color: isActive
                   ? accentColor
-                  : (isDarkMode ? "#FFFFFF" : "#666666"),
+                  : "#FFFFFF",
               },
               isActive && styles.categoryTextActive,
             ]}
@@ -114,26 +109,38 @@ export default function Home({ navigation }) {
   const categoryScrollRef = useRef(null);
   const flatListRef = useRef(null);
   const itemLayouts = useRef({});
+  const scrollWidthRef = useRef(Dimensions.get("window").width);
+  const contentWidthRef = useRef(0);
   const [scrollWidth, setScrollWidth] = useState(Dimensions.get("window").width);
   const [contentWidth, setContentWidth] = useState(0);
 
-  const centerCategory = useCallback((index) => {
+  const centerCategory = useCallback((index, animated = true) => {
+    if (index === undefined || index === null) return;
     const layout = itemLayouts.current[index];
-    if (layout && categoryScrollRef.current && scrollWidth > 0) {
-      const targetX = layout.x - (scrollWidth / 2) + (layout.width / 2);
-      const maxScroll = contentWidth > scrollWidth ? contentWidth - scrollWidth : Infinity;
+    const sWidth = scrollWidthRef.current || Dimensions.get("window").width;
+    const cWidth = contentWidthRef.current;
+    if (layout && categoryScrollRef.current && sWidth > 0) {
+      const targetX = layout.x - (sWidth / 2) + (layout.width / 2);
+      const maxScroll = cWidth > 0 ? Math.max(0, cWidth - sWidth) : Math.max(0, targetX);
       const clampedX = Math.max(0, Math.min(targetX, maxScroll));
-      categoryScrollRef.current.scrollTo({ x: clampedX, animated: true });
+      categoryScrollRef.current.scrollTo({ x: clampedX, animated });
     }
-  }, [scrollWidth, contentWidth]);
+  }, []);
 
   const handleCategoryPress = useCallback((index) => {
     setActiveCat(index);
-  }, [setActiveCat]);
+    centerCategory(index, true);
+  }, [setActiveCat, centerCategory]);
 
   useEffect(() => {
-    centerCategory(activeCat);
+    centerCategory(activeCat, true);
   }, [activeCat, centerCategory]);
+
+  useEffect(() => {
+    scrollWidthRef.current = windowWidth;
+    setScrollWidth(windowWidth);
+    centerCategory(activeCat, false);
+  }, [windowWidth, activeCat, centerCategory]);
 
   useEffect(() => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -321,7 +328,7 @@ export default function Home({ navigation }) {
   }, []);
 
   return (
-    <View style={[styles.blackScreen, !isDarkMode && styles.whiteScreen]}>
+    <View style={styles.blackScreen}>
       <SearchModal
         visible={isSearchVisible}
         onClose={handleCloseSearch}
@@ -333,85 +340,89 @@ export default function Home({ navigation }) {
         bgSource={bgSource}
       />
 
-      <Image
-        source={foliageImage}
-        style={[
-          styles.foliageHeader,
-          !isDarkMode && styles.foliageHeaderLight,
-        ]}
-        resizeMode="cover"
-        pointerEvents="none"
-      />
-
-      <View style={styles.foliageFooterContainer} pointerEvents="none">
-        <Image
-          source={foliageFooterImage}
-          style={[
-            styles.foliageFooter,
-            !isDarkMode && styles.foliageFooterLight,
-          ]}
-          resizeMode="cover"
-        />
-      </View>
-
-      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
-      <SafeAreaView edges={["top"]} style={styles.container}>
-        <ScrollView
-          style={styles.flex1}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: dims.bottomBarHeight + dims.bottomSpacing },
-          ]}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-          alwaysBounceVertical={true}
-          nestedScrollEnabled={true}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing || isRefetching}
-              onRefresh={handleRefresh}
-              tintColor={currentTheme?.accent || "#4CAF50"}
-              colors={[currentTheme?.accent || "#4CAF50"]}
-            />
+      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
+        <LinearGradient
+          colors={
+            currentTheme?.colors && currentTheme.colors.length >= 3
+              ? [
+                  currentTheme.colors[0],
+                  "rgba(0, 0, 0, 0.15)",
+                  "rgba(0, 0, 0, 0.65)",
+                ]
+              : ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.15)", "rgba(0, 0, 0, 0.65)"]
           }
+          locations={[0, 0.40, 1]}
+          style={styles.flex1}
         >
-          <View style={styles.homeContentWrapper}>
-            <View style={styles.topSection}>
-              <View style={[styles.header, { paddingTop: dims.headerPaddingTop }]}>
-                <Text
-                  style={[
-                    styles.headerTitle,
-                    isDarkMode ? styles.headerTitleDark : styles.headerTitleLight,
-                    {
-                      color: isDarkMode ? "#FFF" : "#000000",
-                      fontSize: dims.headerTitleSize,
-                    },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {`Olá, ${userName}`}
-                </Text>
-                <View style={styles.headerIcons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.iconButton,
-                      isDarkMode ? styles.iconButtonDark : styles.iconButtonLight,
-                      { padding: dims.iconPadding },
-                    ]}
-                    onPress={handleOpenSearch}
-                  >
-                    <Feather
-                      name="search"
-                      size={20}
-                      color={isDarkMode ? currentTheme.accent : "#000000"}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              {
+                backgroundColor: "#000",
+                opacity: bgDimAnim,
+              },
+            ]}
+          />
+
+          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+          <SafeAreaView edges={["top"]} style={styles.container}>
+            <ScrollView
+              style={styles.flex1}
+              contentContainerStyle={[
+                styles.scrollContent,
+                { paddingBottom: dims.bottomBarHeight + dims.bottomSpacing },
+              ]}
+              showsVerticalScrollIndicator={false}
+              bounces={true}
+              alwaysBounceVertical={true}
+              nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing || isRefetching}
+                  onRefresh={handleRefresh}
+                  tintColor={currentTheme?.accent || "#4CAF50"}
+                  colors={[currentTheme?.accent || "#4CAF50"]}
+                />
+              }
+            >
+              <View style={styles.homeContentWrapper}>
+                <View style={styles.topSection}>
+                  <View style={[styles.header, { paddingTop: dims.headerPaddingTop }]}>
+                    <Text
+                      style={[
+                        styles.headerTitle,
+                        styles.headerTitleDark,
+                        {
+                          color: "#FFF",
+                          fontSize: dims.headerTitleSize,
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {`Olá, ${userName}`}
+                    </Text>
+                    <View style={styles.headerIcons}>
+                      <TouchableOpacity
+                        style={[
+                          styles.iconButton,
+                          isDarkMode ? styles.iconButtonDark : styles.iconButtonLight,
+                          { padding: dims.iconPadding },
+                        ]}
+                        onPress={handleOpenSearch}
+                      >
+                        <Feather
+                          name="search"
+                          size={20}
+                          color={currentTheme?.accent || "#FFD700"}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
 
               <View style={[styles.categoriesSection, { height: dims.categoriesHeight }]}>
-                {isShowingSkeleton ? (
+                {categories.length === 0 ? (
                   <HomeCategoriesSkeleton isDarkMode={isDarkMode} />
                 ) : (
                   <ScrollView
@@ -419,8 +430,18 @@ export default function Home({ navigation }) {
                     horizontal
                     nestedScrollEnabled={true}
                     showsHorizontalScrollIndicator={false}
-                    onLayout={(e) => setScrollWidth(e.nativeEvent.layout.width)}
-                    onContentSizeChange={(w) => setContentWidth(w)}
+                    onLayout={(e) => {
+                      const width = e.nativeEvent.layout.width;
+                      scrollWidthRef.current = width;
+                      setScrollWidth(width);
+                    }}
+                    onContentSizeChange={(w) => {
+                      contentWidthRef.current = w;
+                      setContentWidth(w);
+                      if (activeCat !== undefined && activeCat !== null) {
+                        centerCategory(activeCat, false);
+                      }
+                    }}
                     contentContainerStyle={styles.categoriesContainer}
                   >
                     {categories.map((catItem, index) => {
@@ -434,7 +455,11 @@ export default function Home({ navigation }) {
                           accentColor={theme.accent}
                           isDarkMode={isDarkMode}
                           onLayout={(e) => {
-                            itemLayouts.current[index] = e.nativeEvent.layout;
+                            const layout = e.nativeEvent.layout;
+                            itemLayouts.current[index] = layout;
+                            if (index === activeCat) {
+                              centerCategory(index, true);
+                            }
                           }}
                           onPress={() => handleCategoryPress(index)}
                         />
@@ -506,9 +531,9 @@ export default function Home({ navigation }) {
                 <Text
                   style={[
                     styles.topDestinationsTitle,
-                    isDarkMode && styles.topDestinationsTitleDark,
+                    styles.topDestinationsTitleDark,
                     {
-                      color: isDarkMode ? "#FFF" : "#000000",
+                      color: "#FFF",
                       fontSize: dims.topDestTitleSize,
                     },
                   ]}
@@ -523,8 +548,8 @@ export default function Home({ navigation }) {
                   cardWidth={dims.topCardWidth}
                   cardHeight={dims.topCardHeight}
                   imageSize={dims.topCardImageSize}
-                  titleSize={dims.isSmallScreen ? 14 : 16}
-                  locationSize={dims.isSmallScreen ? 11.5 : 13}
+                  titleSize={dims.isSmallScreen ? 14 : dims.isTallScreen ? 17 : 16}
+                  locationSize={dims.isSmallScreen ? 11.5 : dims.isTallScreen ? 13.5 : 13}
                 />
               ) : (
                 <FlatList
@@ -550,8 +575,8 @@ export default function Home({ navigation }) {
                       cardWidth={dims.topCardWidth}
                       cardHeight={dims.topCardHeight}
                       imageSize={dims.topCardImageSize}
-                      titleSize={dims.isSmallScreen ? 14 : 16}
-                      locationSize={dims.isSmallScreen ? 11.5 : 13}
+                      titleSize={dims.isSmallScreen ? 14 : dims.isTallScreen ? 17 : 16}
+                      locationSize={dims.isSmallScreen ? 11.5 : dims.isTallScreen ? 13.5 : 13}
                     />
                   )}
                   ListFooterComponent={
@@ -567,6 +592,8 @@ export default function Home({ navigation }) {
           </View>
         </ScrollView>
       </SafeAreaView>
+        </LinearGradient>
+      </ImageBackground>
     </View>
   );
 }

@@ -107,7 +107,7 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
         <Text
           style={[
             styles.title,
-            { color: isDarkMode ? "#FFFFFF" : "#111111" },
+            { color: "#FFFFFF" },
             titleSize ? { fontSize: titleSize } : null,
           ]}
           numberOfLines={1}
@@ -119,7 +119,7 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
           <Text
             style={[
               styles.location,
-              { color: isDarkMode ? "rgba(255, 255, 255, 0.85)" : "#555555" },
+              { color: "#FFFFFF" },
               locationSize ? { fontSize: locationSize } : null,
             ]}
             numberOfLines={1}
@@ -150,11 +150,11 @@ const styles = StyleSheet.create({
     shadowRadius: 0,
   },
   cardContainerDark: {
-    backgroundColor: "#1A1A1A",
+    backgroundColor: "rgba(0, 0, 0, 0.72)",
     borderWidth: 0,
   },
   cardContainerLight: {
-    backgroundColor: "#EFEFEF",
+    backgroundColor: "rgba(100, 100, 100, 0.80)",
     borderWidth: 0,
   },
   imageWrapper: {
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
   skeletonLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
+    backgroundColor: "rgba(255, 255, 255, 0.16)",
   },
   fallbackDark: {
     backgroundColor: "#202020",
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   fallbackLight: {
-    backgroundColor: "#EBEBEB",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     justifyContent: "center",
     alignItems: "center",
   },

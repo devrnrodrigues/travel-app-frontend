@@ -97,17 +97,36 @@ const HomeCardItem = React.memo(function HomeCardItem({
           },
         ]}
       >
+        {Platform.OS === "android" && !isDarkMode && cardImgSource && (
+          <Image
+            source={cardImgSource}
+            blurRadius={4}
+            style={[
+              styles.cardFullBackground,
+              cardWidth ? { width: cardWidth, left: -(cardWidth * 0.06) } : null,
+            ]}
+          />
+        )}
+
         <View
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isDarkMode
-                ? "rgba(12, 12, 12, 0.82)"
-                : "rgba(255, 255, 255, 0.85)",
+              backgroundColor: !isDarkMode
+                ? "rgba(116, 116, 116, 0.4)"
+                : "rgba(12, 12, 12, 0.82)",
               borderRadius: 25,
             },
           ]}
         />
+
+        {Platform.OS !== "android" && !isDarkMode && (
+          <BlurView
+            intensity={20}
+            tint="light"
+            style={styles.cardOverlayImage}
+          />
+        )}
 
         <View style={styles.cardInfoInner}>
           <View style={styles.cardInfoLeft}>
@@ -118,7 +137,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
                   ? { fontSize: 17, lineHeight: 21 }
                   : null,
                 {
-                  color: isDarkMode ? "#FFFFFF" : "#111111",
+                  color: "#FFFFFF",
                   textShadowColor: "transparent",
                   textShadowOffset: { width: 0, height: 0 },
                   textShadowRadius: 0,
@@ -136,7 +155,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
                   ? { fontSize: 11.5 }
                   : null,
                 {
-                  color: isDarkMode ? "rgba(255, 255, 255, 0.85)" : "#555555",
+                  color: "rgba(255, 255, 255, 0.85)",
                   textShadowColor: "transparent",
                   textShadowOffset: { width: 0, height: 0 },
                   textShadowRadius: 0,
@@ -152,15 +171,15 @@ const HomeCardItem = React.memo(function HomeCardItem({
             <View
               style={[
                 styles.ratingContainer,
-                !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+                !isDarkMode && styles.cardInfoLightBg,
               ]}
             >
-              <Ionicons name="star" size={14} color={currentTheme.accent || "#FFD700"} />
+              <Ionicons name="star" size={14} color={currentTheme?.accent || "#FFD700"} />
               <Text
                 style={[
                   styles.ratingText,
                   {
-                    color: currentTheme.accent || (isDarkMode ? "#FFF" : "#111111"),
+                    color: currentTheme?.accent || "#FFD700",
                     fontWeight: "700",
                     textShadowColor: "transparent",
                     textShadowOffset: { width: 0, height: 0 },

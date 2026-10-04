@@ -22,20 +22,21 @@ export const getHomeDimensions = (
   const headerHeight = headerPaddingTop + (isSmallScreen ? 34 : 42);
 
   const categoriesHeight = isSmallScreen ? 44 : isTallScreen ? 54 : 48;
-  const topCardHeight = isSmallScreen ? 82 : isTallScreen ? 98 : 90;
-  const topCardWidth = isSmallScreen ? 236 : isTallScreen ? 275 : 258;
-  const topCardImageSize = isSmallScreen ? 64 : isTallScreen ? 78 : 72;
-  const topDestTitleSize = isSmallScreen ? 19 : 22;
-  const topDestHeaderMarginBottom = isSmallScreen ? 8 : 12;
+  const topCardHeight = isSmallScreen ? 82 : isTallScreen ? 134 : 90;
+  const topCardWidth = isSmallScreen ? 236 : isTallScreen ? 320 : 258;
+  const topCardImageSize = isSmallScreen ? 64 : isTallScreen ? 106 : 72;
+  const topDestTitleSize = isSmallScreen ? 19 : isTallScreen ? 23 : 22;
+  const topDestHeaderMarginBottom = isSmallScreen ? 8 : isTallScreen ? 12 : 12;
   const topDestSectionHeight = topDestTitleSize + topDestHeaderMarginBottom + topCardHeight;
 
   const bottomSpacing = isSmallScreen ? 10 : isTallScreen ? 16 : 12;
 
-  const totalFixedHeights = headerHeight + categoriesHeight + topDestSectionHeight;
-  const availableForCard = availableHeight - bottomSpacing - totalFixedHeights;
+  const baseDestHeight = isSmallScreen ? 109 : 132;
+  const totalBaseHeights = headerHeight + categoriesHeight + baseDestHeight;
+  const availableForCard = availableHeight - bottomSpacing - totalBaseHeights;
 
   const rawCardHeight = Math.round(availableForCard * 0.94);
-  const cardHeight = Math.round(Math.max(290, Math.min(rawCardHeight, 520)));
+  const cardHeight = Math.round(Math.max(290, Math.min(rawCardHeight, 505)));
   const cardWidth = Math.round(Math.min(windowWidth * 0.76, 360, cardHeight * 0.74));
 
   const cardInfoBottom = Math.round(Math.max(14, Math.min(25, cardHeight * 0.055)));
@@ -83,35 +84,6 @@ export default StyleSheet.create({
     width: "100%",
   },
   backgroundImage: { position: 'absolute', width: '100%', height: '100%' },
-  foliageHeader: {
-    position: "absolute",
-    top: -12,
-    left: 0,
-    right: 0,
-    width: "100%",
-    height: Math.min(270, Math.round(width * 0.62)),
-    zIndex: 0,
-    transform: [{ rotate: "-13deg" }, { scale: 1.1 }],
-  },
-  foliageHeaderLight: {
-    opacity: 0.75,
-  },
-  foliageFooterContainer: {
-    position: "absolute",
-    bottom: 28,
-    left: 0,
-    right: 0,
-    width: "100%",
-    height: Math.min(220, Math.round(width * 0.44)),
-    zIndex: 0,
-  },
-  foliageFooter: {
-    width: "100%",
-    height: "100%",
-  },
-  foliageFooterLight: {
-    opacity: 0.75,
-  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -149,7 +121,7 @@ export default StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.70)",
   },
   iconButtonLight: {
-    backgroundColor: "rgba(230, 230, 230, 0.70)",
+    backgroundColor: "rgba(100, 100, 100, 0.40)",
   },
   categoriesSection: { height: initialDims.categoriesHeight, justifyContent: "center" },
   categoriesContainer: { paddingHorizontal: 25, alignItems: "center" },
