@@ -132,6 +132,7 @@ export default StyleSheet.create({
     paddingBottom: 0,
   },
   columnWrapper: {
+    flexDirection: "row",
     paddingHorizontal: HORIZONTAL_PADDING,
     gap: CARD_GAP,
     marginBottom: CARD_GAP,
@@ -218,6 +219,7 @@ export default StyleSheet.create({
   cardTitle: {
     color: "#FFFFFF",
     fontSize: 15,
+    lineHeight: 18,
     fontWeight: "700",
     marginBottom: 3,
     textShadowColor: "rgba(0, 0, 0, 0.5)",
@@ -231,6 +233,7 @@ export default StyleSheet.create({
   locationText: {
     color: "rgba(255, 255, 255, 0.88)",
     fontSize: 12,
+    lineHeight: 15,
     fontWeight: "500",
     marginLeft: 4,
     flex: 1,

@@ -241,6 +241,7 @@ export default function Favorites({ navigation }) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const loading = isLoading && favorites.length === 0;
+  const isShowingSkeleton = loading;
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const lastItemTitleRef = useRef("");
@@ -457,10 +458,12 @@ export default function Favorites({ navigation }) {
         </View>
 
         <View style={[styles.flex1, { overflow: "visible" }]}>
-          {loading ? (
+          {isShowingSkeleton ? (
             <FavoritesSkeletonList
               isDarkMode={isDarkMode}
               count={cardDimensions.isSmallScreen ? 4 : 6}
+              cardWidth={cardDimensions.cardWidth}
+              cardHeight={cardDimensions.cardHeight}
             />
           ) : (
             <FlatList
