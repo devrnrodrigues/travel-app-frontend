@@ -182,7 +182,7 @@ export default function Explore({ navigation }) {
 
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === "android" ? 38 : 20);
-  const headerHeight = (insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10)) + 50;
+  const headerHeight = (insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10)) + 60;
   const bottomPadding = (insets.bottom || 0) + 85;
 
   const dismissSearchFocus = useCallback(() => {
@@ -474,7 +474,7 @@ export default function Explore({ navigation }) {
               >
                 <Feather
                   name="search"
-                  size={18}
+                  size={19}
                   color={
                     isSearchFocused
                       ? currentTheme?.accent || "#4CAF50"
@@ -507,7 +507,7 @@ export default function Explore({ navigation }) {
                   >
                     <Ionicons
                       name="close-circle"
-                      size={17}
+                      size={18}
                       color={isDarkMode ? "#8E8E93" : "#767676"}
                     />
                   </TouchableOpacity>
@@ -524,7 +524,7 @@ export default function Explore({ navigation }) {
               >
                 <Ionicons
                   name="images-outline"
-                  size={20}
+                  size={22}
                   color={isDarkMode ? "#FFFFFF" : "#000000"}
                 />
               </TouchableOpacity>

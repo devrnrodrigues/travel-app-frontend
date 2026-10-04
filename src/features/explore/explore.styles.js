@@ -70,9 +70,9 @@ export default StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    height: 34,
-    borderRadius: 9,
-    paddingHorizontal: 10,
+    height: 44,
+    borderRadius: 12,
+    paddingHorizontal: 12,
     borderWidth: 1,
   },
   searchBarInputDark: {
@@ -80,7 +80,7 @@ export default StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
   searchBarInputLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
+    backgroundColor: "rgba(255, 255, 255, 0.75)",
     borderColor: "rgba(0, 0, 0, 0.08)",
     shadowOpacity: 0.08,
   },
@@ -90,7 +90,7 @@ export default StyleSheet.create({
   searchInput: {
     flex: 1,
     height: "100%",
-    fontSize: 14.5,
+    fontSize: 15.5,
     paddingVertical: 0,
     outlineStyle: "none",
   },
@@ -105,9 +105,9 @@ export default StyleSheet.create({
   },
   photoIconButton: {
     marginLeft: 10,
-    width: 34,
-    height: 34,
-    borderRadius: 9,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -117,7 +117,7 @@ export default StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
   photoIconButtonLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
+    backgroundColor: "rgba(255, 255, 255, 0.75)",
     borderColor: "rgba(0, 0, 0, 0.08)",
   },
   columnWrapper: {
