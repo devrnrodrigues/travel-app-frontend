@@ -52,6 +52,7 @@ import { uploadAvatarApi, getProfileApi, updateProfileApi } from "./api/profileS
 import { createCollectionApi, getCollectionsApi } from "./api/collectionService";
 import { getFavoritesApi } from "../favorites/api/favoriteService";
 import profileNavBgImage from "../../../assets/images/profile-nav-bg.png";
+const foliageImage = require("../../../assets/images/image.png");
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -951,6 +952,40 @@ export default function ProfileScreen({ navigation }) {
                 ]}
                 onLayout={handleBodyLayout}
               >
+                <View pointerEvents="none" style={styles.profileFoliageWrapper}>
+                  <Image
+                    source={foliageImage}
+                    style={[
+                      styles.profileFoliage,
+                      isDarkMode ? styles.profileFoliageDark : styles.profileFoliageLight,
+                    ]}
+                    resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={
+                      isDarkMode
+                        ? [
+                            "rgba(12, 12, 14, 0)",
+                            "rgba(12, 12, 14, 0.35)",
+                            "rgba(12, 12, 14, 0.85)",
+                            "#0C0C0E",
+                            "#0C0C0E",
+                          ]
+                        : [
+                            "rgba(255, 255, 255, 0)",
+                            "rgba(255, 255, 255, 0.35)",
+                            "rgba(255, 255, 255, 0.85)",
+                            "#FFFFFF",
+                            "#FFFFFF",
+                          ]
+                    }
+                    locations={[0, 0.35, 0.7, 0.95, 1]}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={styles.profileFoliageGradient}
+                  />
+                </View>
+
                 <View style={styles.profileInfoGroup}>
                   <View
                     style={[
