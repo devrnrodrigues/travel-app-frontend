@@ -281,7 +281,7 @@ export default StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
-    backgroundColor: "#2D6A4F",
+    backgroundColor: "#529A78",
   },
   emptyActionBtnText: {
     color: "#FFFFFF",
@@ -317,12 +317,8 @@ export default StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  foliageFooterDark: {
-    opacity: 0.35,
-  },
-  foliageFooterOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
+  foliageFooterLight: {
+    opacity: 0.75,
   },
 });
 

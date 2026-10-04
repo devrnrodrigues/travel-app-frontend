@@ -33,7 +33,7 @@ import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 
 const foliageImage = require("../../../assets/images/image.png");
 const foliageFooterImage = require("../../../assets/images/image2.png");
-const EMPTY_STATE_GREEN = "#2D6A4F";
+const EMPTY_STATE_GREEN = "#529A78";
 
 const FavoriteCardItem = React.memo(function FavoriteCardItem({
   item,
@@ -347,10 +347,12 @@ export default function Favorites({ navigation }) {
       <View style={styles.foliageFooterContainer} pointerEvents="none">
         <Image
           source={foliageFooterImage}
-          style={[styles.foliageFooter, isDarkMode && styles.foliageFooterDark]}
+          style={[
+            styles.foliageFooter,
+            !isDarkMode && styles.foliageFooterLight,
+          ]}
           resizeMode="cover"
         />
-        {isDarkMode && <View style={styles.foliageFooterOverlay} />}
       </View>
       <SafeAreaView edges={["top"]} style={styles.container}>
         <View style={styles.navHeader}>
