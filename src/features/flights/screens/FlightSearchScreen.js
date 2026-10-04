@@ -230,13 +230,19 @@ export default function DetailsTicket({ navigation, route }) {
         setAllAirports(airports);
 
         const targetIata =
+          selectedItem?.iata ||
           selectedItem?.nearestAirportIata ||
           selectedItem?.nearest_airport_iata ||
           selectedItem?.nearestAirport?.iataCode;
 
         let match = null;
         if (targetIata) {
-          match = airports.find((a) => a.codigo_iata === targetIata);
+          const upperIata = String(targetIata).trim().toUpperCase();
+          match = airports.find(
+            (a) =>
+              (a.codigo_iata && a.codigo_iata.toUpperCase() === upperIata) ||
+              (a.iataCode && a.iataCode.toUpperCase() === upperIata)
+          );
         }
         if (!match && selectedItem?.title) {
           const titleLower = selectedItem.title.toLowerCase();
@@ -385,8 +391,7 @@ export default function DetailsTicket({ navigation, route }) {
         sort: sortOption,
         onlyDirect,
       });
-      if (!result.length) setError(true);
-      else setTickets(result);
+      setTickets(result || []);
     } catch (e) {
       console.error(e);
       setError(true);
