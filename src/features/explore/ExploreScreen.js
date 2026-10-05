@@ -136,22 +136,43 @@ export default function Explore({ navigation }) {
   const { currentTheme, isDarkMode } = useTheme();
   const bgSource = typeof currentTheme?.bg === "string" ? { uri: currentTheme.bg } : currentTheme?.bg;
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchInputRef = useRef(null);
+  const flatListRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const normalizedSearch = debouncedSearch.trim();
+
+  useEffect(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [normalizedSearch]);
 
   const PAGE_SIZE = 24;
 
   const {
     data,
     isLoading,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
     refetch,
     isRefetching,
   } = useInfiniteQuery({
-    queryKey: ["destinations", "explore"],
-    queryFn: ({ pageParam = 0 }) => getDestinations({ page: pageParam, size: PAGE_SIZE }),
+    queryKey: ["destinations", "explore", normalizedSearch],
+    queryFn: ({ pageParam = 0 }) =>
+      getDestinations({
+        name: normalizedSearch || undefined,
+        page: pageParam,
+        size: PAGE_SIZE,
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages, lastPageParam) => {
       if (!lastPage || lastPage.length < PAGE_SIZE) {
@@ -173,12 +194,13 @@ export default function Explore({ navigation }) {
     });
   }, [data]);
 
-  const loading = isLoading && destinations.length === 0;
+  const loading = (isLoading || (isFetching && !isFetchingNextPage && destinations.length === 0)) && destinations.length === 0;
   const isShowingSkeleton = loading;
   const loadingMore = isFetchingNextPage;
   const isLoadingMoreRef = useRef(false);
   isLoadingMoreRef.current = isFetchingNextPage;
   const refreshing = isRefetching;
+  const isSearching = (isFetching && !isFetchingNextPage && !refreshing) || searchQuery !== debouncedSearch;
 
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === "android" ? 38 : 20);
@@ -346,16 +368,7 @@ export default function Explore({ navigation }) {
     refetch();
   }, [refetch]);
 
-  const filteredDestinations = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (query === "") return destinations;
 
-    return destinations.filter((item) => (
-      item.title?.toLowerCase().includes(query) ||
-      item.location?.toLowerCase().includes(query) ||
-      item.category?.toLowerCase().includes(query)
-    ));
-  }, [destinations, searchQuery]);
 
 
 
@@ -401,7 +414,7 @@ export default function Explore({ navigation }) {
       >
         <View style={styles.container}>
           <StatusBar
-            barStyle={isDarkMode ? "light-content" : "dark-content"}
+            barStyle="light-content"
             backgroundColor="transparent"
             translucent
           />
@@ -412,7 +425,7 @@ export default function Explore({ navigation }) {
               styles.headerBar,
               {
                 paddingTop: headerPaddingTop,
-                backgroundColor: isDarkMode ? "#000000" : "#FFFFFF",
+                backgroundColor: isDarkMode ? "#000000" : "rgba(100, 100, 100, 1)",
                 transform: [{ translateY: searchTranslateY }],
                 opacity: searchOpacity,
               },
@@ -444,11 +457,11 @@ export default function Explore({ navigation }) {
                         "#000000",
                       ]
                     : [
-                        "#FFFFFF",
-                        "rgba(255, 255, 255, 0)",
-                        "rgba(255, 255, 255, 0)",
-                        "rgba(255, 255, 255, 0.45)",
-                        "#FFFFFF",
+                        "rgba(100, 100, 100, 1)",
+                        "rgba(100, 100, 100, 0)",
+                        "rgba(100, 100, 100, 0)",
+                        "rgba(100, 100, 100, 0.45)",
+                        "rgba(100, 100, 100, 1)",
                       ]
                 }
                 locations={[0, 0.16, 0.6, 0.88, 1]}
@@ -499,6 +512,13 @@ export default function Explore({ navigation }) {
                   autoCorrect={false}
                   selectionColor={currentTheme?.accent || "#4CAF50"}
                 />
+                {isSearching ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={currentTheme?.accent || "#4CAF50"}
+                    style={{ marginRight: 6 }}
+                  />
+                ) : null}
                 {searchQuery.length > 0 && (
                   <TouchableOpacity
                     onPress={() => setSearchQuery("")}
@@ -549,8 +569,9 @@ export default function Explore({ navigation }) {
           ) : (
             <FadeInView duration={350} style={styles.flex1}>
               <FlatList
+                ref={flatListRef}
                 style={styles.flex1}
-                data={filteredDestinations}
+                data={destinations}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 numColumns={3}
@@ -594,14 +615,16 @@ export default function Explore({ navigation }) {
                       color="#FFFFFF"
                     />
                     <Text style={styles.emptyStateText}>
-                      Nenhum destino encontrado para sua pesquisa.
+                      {normalizedSearch.length > 0
+                        ? `Nenhum destino encontrado para "${normalizedSearch}".`
+                        : "Nenhum destino encontrado para sua pesquisa."}
                     </Text>
                   </View>
                 }
                 ListFooterComponent={
                   loadingMore ? (
-                    <View style={styles.loadingMoreContainer}>
-                      <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
+                    <View style={{ paddingTop: GAP }}>
+                      <ExploreSkeletonGrid isDarkMode={isDarkMode} currentTheme={currentTheme} rows={1} />
                     </View>
                   ) : null
                 }
