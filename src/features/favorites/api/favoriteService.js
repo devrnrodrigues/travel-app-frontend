@@ -1,18 +1,16 @@
 import { apiClient } from "../../../config/apiClient";
 import { resolveDestinationImage } from "../../destinations/api/destinationService";
 
-export async function getFavoritesApi({ page = 0, size = 10 } = {}) {
+export async function getFavoritesApi({ page = 0, size = 10, search } = {}) {
   const params = new URLSearchParams();
   if (page != null) params.append("page", String(page));
   if (size != null) params.append("size", String(size));
+  if (search && search.trim()) params.append("search", search.trim());
 
   const query = params.toString();
   const endpoint = query ? `/favorites?${query}` : "/favorites";
   const data = await apiClient.get(endpoint);
-  const rawList = Array.isArray(data) ? data : (data?.content || []);
-  const list = Array.isArray(data) && size != null
-    ? rawList.slice(page * size, page * size + size)
-    : rawList;
+  const list = data?.content || (Array.isArray(data) ? data : []);
 
   return Promise.all(
     list.map(async (fav) => {

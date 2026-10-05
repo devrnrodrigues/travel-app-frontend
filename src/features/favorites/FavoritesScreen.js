@@ -33,8 +33,6 @@ import { FavoritesSkeletonList } from "../../shared/components/Skeleton";
 import { getFavoritesApi, removeFavoriteApi } from "./api/favoriteService";
 import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
 
-const EMPTY_STATE_GREEN = "#529A78";
-
 const FavoriteCardItem = React.memo(function FavoriteCardItem({
   item,
   index,
@@ -294,6 +292,41 @@ export default function Favorites({ navigation }) {
 
   const PAGE_SIZE = 10;
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const flatListRef = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const normalizedSearch = debouncedSearch.trim();
+
+  useEffect(() => {
+    scrollY.setValue(0);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    const raf = requestAnimationFrame(() => {
+      scrollY.setValue(0);
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [normalizedSearch, scrollY]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setDebouncedSearch("");
+    scrollY.setValue(0);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    requestAnimationFrame(() => {
+      scrollY.setValue(0);
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    });
+  }, [scrollY]);
+
   const {
     data,
     isLoading,
@@ -303,10 +336,14 @@ export default function Favorites({ navigation }) {
     fetchNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["favorites", userId],
+    queryKey: ["favorites", userId, normalizedSearch],
     enabled: !!user,
     queryFn: async ({ pageParam = 0 }) => {
-      return getFavoritesApi({ page: pageParam, size: PAGE_SIZE });
+      return getFavoritesApi({
+        page: pageParam,
+        size: PAGE_SIZE,
+        search: normalizedSearch || undefined,
+      });
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages, lastPageParam) => {
@@ -349,10 +386,7 @@ export default function Favorites({ navigation }) {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const lastItemTitleRef = useRef("");
-  const flatListRef = useRef(null);
-  const scrollY = useRef(new Animated.Value(0)).current;
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const searchInputRef = useRef(null);
   const isFocusedRef = useRef(isFocused);
@@ -388,16 +422,6 @@ export default function Favorites({ navigation }) {
     const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
     return () => sub.remove();
   }, [handleDeactivateSearch]);
-
-  const filteredFavorites = useMemo(() => {
-    if (!searchQuery.trim()) return favorites;
-    const q = searchQuery.toLowerCase().trim();
-    return favorites.filter((fav) => {
-      const title = (fav.title || "").toLowerCase();
-      const location = (fav.location || "").toLowerCase();
-      return title.includes(q) || location.includes(q);
-    });
-  }, [favorites, searchQuery]);
 
   if (itemToDelete?.title) {
     lastItemTitleRef.current = itemToDelete.title;
@@ -524,9 +548,7 @@ export default function Favorites({ navigation }) {
             />
             {searchQuery.length > 0 ? (
               <TouchableOpacity
-                onPress={() => {
-                  setSearchQuery("");
-                }}
+                onPress={handleClearSearch}
                 style={styles.searchClearBtn}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
@@ -576,18 +598,18 @@ export default function Favorites({ navigation }) {
           ) : (
             <Animated.FlatList
               ref={flatListRef}
-              data={filteredFavorites}
+              data={favorites}
               key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
               numColumns={2}
               columnWrapperStyle={styles.columnWrapper}
               contentContainerStyle={[
                 {
                   paddingBottom:
-                    filteredFavorites.length > cardDimensions.targetRows * 2
+                    favorites.length > cardDimensions.targetRows * 2
                       ? cardDimensions.scrollPaddingBottom
                       : 0,
                 },
-                filteredFavorites.length === 0 && {
+                favorites.length === 0 && {
                   flexGrow: 1,
                   justifyContent: "center",
                   alignItems: "center",
@@ -625,7 +647,7 @@ export default function Favorites({ navigation }) {
                 <FavoriteCardItem
                   item={item}
                   index={index}
-                  totalItems={filteredFavorites.length}
+                  totalItems={favorites.length}
                   scrollY={scrollY}
                   cardDimensions={cardDimensions}
                   navigation={navigation}
@@ -653,7 +675,7 @@ export default function Favorites({ navigation }) {
                           {
                             backgroundColor: isDarkMode
                               ? "rgba(255, 255, 255, 0.08)"
-                              : "rgba(0, 0, 0, 0.05)",
+                              : "rgba(255, 255, 255, 0.14)",
                           },
                         ]}
                       >
@@ -679,11 +701,20 @@ export default function Favorites({ navigation }) {
                     </>
                   ) : (
                     <>
-                      <View style={styles.emptyHeartContainer}>
+                      <View
+                        style={[
+                          styles.emptyIconContainer,
+                          {
+                            backgroundColor: isDarkMode
+                              ? "rgba(255, 255, 255, 0.08)"
+                              : "rgba(255, 255, 255, 0.14)",
+                          },
+                        ]}
+                      >
                         <Ionicons
-                          name="heart"
-                          size={46}
-                          color={EMPTY_STATE_GREEN}
+                          name="heart-outline"
+                          size={34}
+                          color={secondaryTextColor}
                         />
                       </View>
                       <Text
@@ -700,19 +731,6 @@ export default function Favorites({ navigation }) {
                         Toque no coração nos destinos que você mais gostar para
                         guardá-los aqui.
                       </Text>
-                      <TouchableOpacity
-                        style={[
-                          styles.emptyActionBtn,
-                          { backgroundColor: EMPTY_STATE_GREEN },
-                        ]}
-                        onPress={() => navigation.navigate("Explore")}
-                        activeOpacity={0.8}
-                      >
-                        <Feather name="compass" size={13} color="#FFFFFF" />
-                        <Text style={styles.emptyActionBtnText}>
-                          Explorar destinos
-                        </Text>
-                      </TouchableOpacity>
                     </>
                   )}
                 </View>
