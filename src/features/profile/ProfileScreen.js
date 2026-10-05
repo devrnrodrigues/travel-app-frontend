@@ -56,7 +56,6 @@ import { uploadAvatarApi, getProfileApi, updateProfileApi } from "./api/profileS
 import { createCollectionApi, getCollectionsApi } from "./api/collectionService";
 import { getFavoritesApi } from "../favorites/api/favoriteService";
 import profileNavBgImage from "../../../assets/images/profile-nav-bg.png";
-const foliageImage = require("../../../assets/images/image.png");
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -64,11 +63,6 @@ export default function ProfileScreen({ navigation }) {
   const { currentTheme, isDarkMode, toggleThemeMode } = useTheme();
   const bgSource =
     typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
-
-  const isFlorestas =
-    currentTheme?.slug === "florestas" ||
-    currentTheme?.name === "Florestas" ||
-    currentTheme?.icon === "leaf";
 
   const [loading, setLoading] = useState(true);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -94,12 +88,19 @@ export default function ProfileScreen({ navigation }) {
     queryFn: getCollectionsApi,
   });
 
+  const { data: profileData, refetch: refetchProfile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfileApi,
+    staleTime: 1000 * 60,
+  });
+
   const { data: favoritesData = [] } = useQuery({
     queryKey: ["favorites", "profile_count"],
     queryFn: () => getFavoritesApi({ page: 0, size: 50 }),
     staleTime: 1000 * 60 * 2,
   });
   const favoritesCount = Array.isArray(favoritesData) ? favoritesData.length : 0;
+  const commentsCount = profileData?.commentsCount ?? user?.commentsCount ?? 0;
 
   const [name, setName] = useState("");
   const [nationality, setNationality] = useState("Brasileiro");
@@ -135,6 +136,9 @@ export default function ProfileScreen({ navigation }) {
         if (remoteUser.nationality) {
           updates.nationality = remoteUser.nationality;
           setNationality(remoteUser.nationality);
+        }
+        if (remoteUser.commentsCount !== undefined && remoteUser.commentsCount !== currentUser?.commentsCount) {
+          updates.commentsCount = remoteUser.commentsCount;
         }
         const userId = currentUser?.id || remoteUser.id;
         if (userId) {
@@ -643,6 +647,7 @@ export default function ProfileScreen({ navigation }) {
         queryClient.invalidateQueries({ queryKey: ["profile"] }),
         queryClient.invalidateQueries({ queryKey: ["favorites"] }),
         refetchCollections(),
+        refetchProfile(),
         syncProfileWithBackend(),
       ]);
       await loadProfile();
@@ -652,7 +657,7 @@ export default function ProfileScreen({ navigation }) {
     } finally {
       setRefreshing(false);
     }
-  }, [queryClient, syncProfileWithBackend, loadProfile, refetchCollections]);
+  }, [queryClient, syncProfileWithBackend, loadProfile, refetchCollections, refetchProfile]);
 
   const handleGalleryCountChange = useCallback(async (count) => {
     setGalleryCount(count);
@@ -704,7 +709,9 @@ export default function ProfileScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       loadProfile();
-    }, [])
+      refetchProfile();
+      refetchCollections();
+    }, [loadProfile, refetchProfile, refetchCollections])
   );
 
   const handleOpenLogoutModal = () => {
@@ -936,40 +943,6 @@ export default function ProfileScreen({ navigation }) {
                 ]}
                 onLayout={handleBodyLayout}
               >
-                <View pointerEvents="none" style={styles.profileFoliageWrapper}>
-                  <Image
-                    source={foliageImage}
-                    style={[
-                      styles.profileFoliage,
-                      isDarkMode ? styles.profileFoliageDark : styles.profileFoliageLight,
-                    ]}
-                    resizeMode="cover"
-                  />
-                  <LinearGradient
-                    colors={
-                      isDarkMode
-                        ? [
-                            "rgba(12, 12, 14, 0)",
-                            "rgba(12, 12, 14, 0.35)",
-                            "rgba(12, 12, 14, 0.85)",
-                            "#0C0C0E",
-                            "#0C0C0E",
-                          ]
-                        : [
-                            "rgba(255, 255, 255, 0)",
-                            "rgba(255, 255, 255, 0.35)",
-                            "rgba(255, 255, 255, 0.85)",
-                            "#FFFFFF",
-                            "#FFFFFF",
-                          ]
-                    }
-                    locations={[0, 0.35, 0.7, 0.95, 1]}
-                    start={{ x: 0.5, y: 0 }}
-                    end={{ x: 0.5, y: 1 }}
-                    style={styles.profileFoliageGradient}
-                  />
-                </View>
-
                 <View style={styles.profileInfoGroup}>
                   <View
                     style={[
@@ -1181,7 +1154,7 @@ export default function ProfileScreen({ navigation }) {
                               scale < 1 && { fontSize: statValueFontSize, lineHeight: statValueLineHeight },
                             ]}
                           >
-                            0
+                            {commentsCount}
                           </Text>
                         </FadeInView>
                       )}

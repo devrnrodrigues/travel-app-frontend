@@ -20,6 +20,7 @@ import {
   deleteCommentApi,
   toggleCommentHelpfulApi,
 } from "../api/commentService";
+import { useQueryClient } from "@tanstack/react-query";
 import { DetailsReviewsSkeleton, SkeletonBox } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
 import { ReviewFormModal, DeleteReviewModal } from "./ReviewModals";
@@ -136,6 +137,7 @@ const ReviewsSection = forwardRef(function ReviewsSection({
   isDarkMode,
   onRatingCalculated,
 }, ref) {
+  const queryClient = useQueryClient();
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [inputComment, setInputComment] = useState("");
@@ -337,6 +339,7 @@ const ReviewsSection = forwardRef(function ReviewsSection({
       await deleteCommentApi(reviewToDelete.id);
       setReviewToDelete(null);
       fetchReviews();
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     } catch (err) {
       alert(err.message || "Não foi possível excluir o comentário.");
     } finally {
@@ -377,6 +380,7 @@ const ReviewsSection = forwardRef(function ReviewsSection({
       setReviewToEdit(null);
       setShowForm(false);
       fetchReviews();
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     } catch (err) {
       console.error(err);
       alert(err.message || "Não foi possível enviar sua avaliação.");

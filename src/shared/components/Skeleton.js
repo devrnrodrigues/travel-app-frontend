@@ -15,8 +15,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-const foliageImage = require("../../../assets/images/image.png");
-
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.75;
 const CARD_HEIGHT = 500;
@@ -1176,40 +1174,6 @@ export function ProfileSkeleton({ isDarkMode = true, scale: customScale }) {
           scale < 1 && { marginTop: -bodyOverlap },
         ]}
       >
-        <View pointerEvents="none" style={profileStyles.profileFoliageWrapper}>
-          <Image
-            source={foliageImage}
-            style={[
-              profileStyles.profileFoliage,
-              isDarkMode ? profileStyles.profileFoliageDark : profileStyles.profileFoliageLight,
-            ]}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={
-              isDarkMode
-                ? [
-                    "rgba(12, 12, 14, 0)",
-                    "rgba(12, 12, 14, 0.35)",
-                    "rgba(12, 12, 14, 0.85)",
-                    "#0C0C0E",
-                    "#0C0C0E",
-                  ]
-                : [
-                    "rgba(255, 255, 255, 0)",
-                    "rgba(255, 255, 255, 0.35)",
-                    "rgba(255, 255, 255, 0.85)",
-                    "#FFFFFF",
-                    "#FFFFFF",
-                  ]
-            }
-            locations={[0, 0.35, 0.7, 0.95, 1]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={profileStyles.profileFoliageGradient}
-          />
-        </View>
-
         <View style={profileStyles.profileInfoGroup}>
           <View
             style={[
