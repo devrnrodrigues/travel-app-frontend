@@ -12,8 +12,8 @@ const SearchCardItem = React.memo(function SearchCardItem({
   currentTheme,
   isDarkMode,
   isOverlayActive,
-  showPrice,
-  showRating,
+  showPrice = false,
+  showRating = false,
   onPress,
 }) {
   const isLocal = item.isLocalSource || typeof item.image_url !== "string";
@@ -30,20 +30,43 @@ const SearchCardItem = React.memo(function SearchCardItem({
     }).start();
   };
 
+  const shouldShowPrice = Boolean(showPrice && !showRating && (item.priceRange || item.price != null));
+  const shouldShowRating = Boolean(
+    showRating && !showPrice && item.realRating && item.realRating !== "0.0" && item.realRating !== "0"
+  );
+
+  const badgeOffset = shouldShowPrice ? 95 : shouldShowRating ? 50 : 0;
+
   return (
     <View style={styles.flex1}>
       <TouchableOpacity
         activeOpacity={0.85}
-        style={[styles.searchCardBase, !isDarkMode ? styles.searchCardLight : styles.searchCardDark, { height: cardHeight, marginBottom: cardMarginBottom }]}
-        onPress={onPress}>
+        style={[
+          styles.searchCardBase,
+          !isDarkMode ? styles.searchCardLight : styles.searchCardDark,
+          { height: cardHeight, marginBottom: cardMarginBottom },
+        ]}
+        onPress={onPress}
+      >
         <View
           style={[styles.searchCardImageWrapper, { width: imageSize, height: imageSize }]}
         >
           {item.image_url ? (
             <>
               <Animated.Image
-                source={item.isLocalSource || typeof item.image_url !== "string" ? item.image_url : { uri: item.image_url }}
-                style={[{ width: imageSize, height: imageSize, borderRadius: 13, opacity: imgAnim }]}
+                source={
+                  item.isLocalSource || typeof item.image_url !== "string"
+                    ? item.image_url
+                    : { uri: item.image_url }
+                }
+                style={[
+                  {
+                    width: imageSize,
+                    height: imageSize,
+                    borderRadius: 13,
+                    opacity: imgAnim,
+                  },
+                ]}
                 onLoad={handleImageLoad}
               />
               {!imageLoaded && (
@@ -52,7 +75,11 @@ const SearchCardItem = React.memo(function SearchCardItem({
                   height={imageSize}
                   borderRadius={13}
                   isDarkMode={isDarkMode}
-                  style={isDarkMode ? styles.searchCardSkeletonDark : styles.searchCardSkeletonLight}
+                  style={
+                    isDarkMode
+                      ? styles.searchCardSkeletonDark
+                      : styles.searchCardSkeletonLight
+                  }
                 />
               )}
             </>
@@ -67,14 +94,18 @@ const SearchCardItem = React.memo(function SearchCardItem({
                 alignItems: "center",
               }}
             >
-              <Ionicons name="image-outline" size={Math.round(imageSize * 0.45)} color={isDarkMode ? "#666" : "#999"} />
+              <Ionicons
+                name="image-outline"
+                size={Math.round(imageSize * 0.45)}
+                color={isDarkMode ? "#666" : "#999"}
+              />
             </View>
           )}
         </View>
 
         <View style={styles.searchCardInfo}>
           <Text
-            style={[styles.searchCardTitle, { paddingRight: (showPrice || showRating) ? 72 : 0 }]}
+            style={[styles.searchCardTitle, { paddingRight: badgeOffset }]}
             numberOfLines={1}
           >
             {item.title}
@@ -88,26 +119,45 @@ const SearchCardItem = React.memo(function SearchCardItem({
           </View>
         </View>
 
-        {((showPrice && item.price != null) || showRating) && (
-          <View
-            style={styles.searchCardBadgesContainer}
-          >
-            {showPrice && item.price != null && (
+        {(shouldShowPrice || shouldShowRating) && (
+          <View style={styles.searchCardBadgesContainer}>
+            {shouldShowPrice && (
               <View
-                style={[styles.searchCardPriceBadge, { marginRight: showRating ? 5 : 0 }]}
+                style={[
+                  styles.searchCardPriceBadge,
+                  !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+                ]}
               >
-                <Text style={[styles.searchCardBadgeText, { color: currentTheme.accent }]}>
-                  R$ {item.price}
+                <Text
+                  style={[
+                    styles.searchCardBadgeText,
+                    { color: currentTheme.accent },
+                  ]}
+                >
+                  {item.priceRange ? `${item.priceRange}/dia` : `R$ ${item.price}/dia`}
                 </Text>
               </View>
             )}
-            {showRating && (
+            {shouldShowRating && (
               <View
-                style={styles.searchCardRatingBadge}
+                style={[
+                  styles.searchCardRatingBadge,
+                  !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+                ]}
               >
-                <Ionicons name="star" size={11} color="#FFD700" style={styles.marginRight3} />
-                <Text style={styles.searchCardRatingText}>
-                  {item.realRating || "4.8"}
+                <Ionicons
+                  name="star"
+                  size={11}
+                  color="#FFD700"
+                  style={styles.marginRight3}
+                />
+                <Text
+                  style={[
+                    styles.searchCardRatingText,
+                    !isDarkMode && { color: "#000" },
+                  ]}
+                >
+                  {item.realRating}
                 </Text>
               </View>
             )}

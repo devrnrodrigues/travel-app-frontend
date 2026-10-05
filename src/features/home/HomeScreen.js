@@ -332,8 +332,8 @@ export default function Home({ navigation }) {
       <SearchModal
         visible={isSearchVisible}
         onClose={handleCloseSearch}
-        destinations={destinations}
-        loading={loading}
+        initialCategory={selectedCategory}
+        categories={categories}
         currentTheme={currentTheme}
         isDarkMode={isDarkMode}
         navigation={navigation}

@@ -35,6 +35,29 @@ export async function normalizeDestination(destination, fallbackCategory = "") {
   const avgColor = destination.avgColor || coverImageObj?.avgColor || null;
   const alt = destination.alt || coverImageObj?.alt || title;
 
+  let estimatedPrice = destination.price ?? null;
+  let estimatedPriceRange = null;
+
+  if (estimatedPrice == null && destination.aiCostEstimates) {
+    try {
+      const parsed =
+        typeof destination.aiCostEstimates === "object"
+          ? destination.aiCostEstimates
+          : JSON.parse(destination.aiCostEstimates);
+      if (parsed?.daily_total) {
+        const min = parsed.daily_total.min;
+        const max = parsed.daily_total.max;
+        if (min != null && max != null) {
+          estimatedPriceRange = `R$ ${min} - ${max}`;
+          estimatedPrice = min;
+        } else if (min != null) {
+          estimatedPrice = min;
+          estimatedPriceRange = `R$ ${min}`;
+        }
+      }
+    } catch (_) {}
+  }
+
   return {
     ...destination,
     id: destination.id,
@@ -54,13 +77,17 @@ export async function normalizeDestination(destination, fallbackCategory = "") {
     realRating,
     rating: destination.rating ?? 0.0,
     reviewCount: destination.reviewCount ?? 0,
+    price: estimatedPrice,
+    priceRange: estimatedPriceRange,
+    aiCostEstimates: destination.aiCostEstimates,
   };
 }
 
-export async function getDestinations({ category, name, page = 0, size = 50 } = {}) {
+export async function getDestinations({ category, name, sortBy, page = 0, size = 50 } = {}) {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
   if (name) params.append("name", name);
+  if (sortBy) params.append("sortBy", sortBy);
   params.append("page", String(page));
   params.append("size", String(size));
 

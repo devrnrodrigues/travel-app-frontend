@@ -1,47 +1,55 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, StatusBar, ImageBackground, Modal, TextInput, Animated, Keyboard, StyleSheet, Easing, Platform } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+  StatusBar,
+  ImageBackground,
+  Modal,
+  TextInput,
+  Animated,
+  Keyboard,
+  StyleSheet,
+  Easing,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import styles from "../home.styles";
-import { SearchSkeletonList } from "../../../shared/components/Skeleton";
+import { SearchSkeletonList, SearchCardSkeleton } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
 import SearchCardItem from "./SearchCardItem";
 import CountryFilterModal from "./CountryFilterModal";
+import CategoryFilterModal from "./CategoryFilterModal";
+import { getDestinations } from "../../destinations/api/destinationService";
 
 const SCREEN_HEIGHT = Dimensions.get("screen").height;
-
-const parsePrice = (price) => {
-  if (price === null || price === undefined || price === "") return null;
-  if (typeof price === "number") return isNaN(price) ? null : price;
-  const cleaned = String(price).replace(/[^0-9.-]+/g, "");
-  const num = parseFloat(cleaned);
-  return isNaN(num) ? null : num;
-};
-
-const parseRating = (rating) => {
-  if (rating === null || rating === undefined || rating === "N/A" || rating === "") return 0;
-  const num = parseFloat(rating);
-  return isNaN(num) ? 0 : num;
-};
 
 export default function SearchModal({
   visible,
   onClose,
-  destinations = [],
-  loading = false,
+  initialCategory = null,
+  categories = [],
   currentTheme,
   isDarkMode,
   navigation,
   bgSource,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory || null);
   const [alphaSort, setAlphaSort] = useState(null);
   const [priceSort, setPriceSort] = useState(null);
   const [ratingSort, setRatingSort] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [isCountryModalVisible, setIsCountryModalVisible] = useState(false);
+  const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
@@ -54,6 +62,109 @@ export default function SearchModal({
   const searchFlatListRef = useRef(null);
   const isClosingSearch = useRef(false);
   const isKeyboardVisible = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const normalizedSearch = debouncedSearch.trim();
+
+  const activeSortBy = useMemo(() => {
+    if (alphaSort === "asc") return "name_asc";
+    if (alphaSort === "desc") return "name_desc";
+    if (ratingSort === "desc") return "rating_desc";
+    if (ratingSort === "asc") return "rating_asc";
+    if (priceSort === "asc") return "price_asc";
+    if (priceSort === "desc") return "price_desc";
+    return undefined;
+  }, [alphaSort, ratingSort, priceSort]);
+
+  useEffect(() => {
+    if (visible) {
+      setSelectedCategory(initialCategory || null);
+      setSearchQuery("");
+      setDebouncedSearch("");
+      setAlphaSort(null);
+      setPriceSort(null);
+      setRatingSort(null);
+      setSelectedCountry(null);
+    }
+  }, [visible, initialCategory]);
+
+  const SEARCH_PAGE_SIZE = 12;
+  const activeCategoryParam =
+    selectedCategory && selectedCategory !== "all" && selectedCategory !== "todas"
+      ? selectedCategory
+      : undefined;
+
+  const {
+    data,
+    isLoading: isQueryLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: [
+      "destinations",
+      "searchModal",
+      activeCategoryParam,
+      normalizedSearch,
+      activeSortBy,
+    ],
+    enabled: visible,
+    queryFn: ({ pageParam = 0 }) =>
+      getDestinations({
+        category: activeCategoryParam,
+        name: normalizedSearch || undefined,
+        sortBy: activeSortBy,
+        page: pageParam,
+        size: SEARCH_PAGE_SIZE,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      if (!lastPage || lastPage.length < SEARCH_PAGE_SIZE) {
+        return undefined;
+      }
+      return lastPageParam + 1;
+    },
+  });
+
+  const apiDestinations = useMemo(() => {
+    if (!data?.pages) return [];
+    const flat = data.pages.flat();
+    const seen = new Set();
+    return flat.filter((item) => {
+      const key = item?.id;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [data]);
+
+  const selectedCategoryName = useMemo(() => {
+    if (!selectedCategory) return null;
+    const found = categories.find(
+      (c) =>
+        (c.slug && c.slug.toLowerCase() === selectedCategory.toLowerCase()) ||
+        (c.name && c.name.toLowerCase() === selectedCategory.toLowerCase())
+    );
+    return found?.name || found?.title || selectedCategory;
+  }, [categories, selectedCategory]);
+
+  const isSearching = (isFetching && !isFetchingNextPage) || searchQuery !== debouncedSearch;
+  const isSearchLoading =
+    (isQueryLoading || (isFetching && !isFetchingNextPage && apiDestinations.length === 0)) &&
+    apiDestinations.length === 0;
+
+  const loadNextSearchPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const filterIconRotate = filterAnim.interpolate({
     inputRange: [0, 1],
@@ -252,59 +363,15 @@ export default function SearchModal({
 
   useEffect(() => {
     searchScrollY.setValue(0);
-    if (searchFlatListRef.current) {
-      try {
-        searchFlatListRef.current.scrollToOffset({ offset: 0, animated: false });
-      } catch (_) { }
-    }
-  }, [visible, searchQuery, alphaSort, priceSort, ratingSort, selectedCountry]);
+    searchFlatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [visible, normalizedSearch, selectedCategory, activeSortBy, selectedCountry]);
 
   const filteredData = useMemo(() => {
-    return [...destinations]
-      .filter((item) => {
-        const matchesSearch =
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase()));
-        const matchesCountry = selectedCountry
-          ? item.location && item.location.toLowerCase().includes(selectedCountry.toLowerCase())
-          : true;
-        return matchesSearch && matchesCountry;
-      })
-      .sort((a, b) => {
-        if (alphaSort === "asc") return (a.title || "").localeCompare(b.title || "");
-        if (alphaSort === "desc") return (b.title || "").localeCompare(a.title || "");
-
-        if (priceSort === "asc") {
-          const pA = parsePrice(a.price);
-          const pB = parsePrice(b.price);
-          if (pA === null && pB === null) return 0;
-          if (pA === null) return 1;
-          if (pB === null) return -1;
-          return pA - pB;
-        }
-        if (priceSort === "desc") {
-          const pA = parsePrice(a.price);
-          const pB = parsePrice(b.price);
-          if (pA === null && pB === null) return 0;
-          if (pA === null) return 1;
-          if (pB === null) return -1;
-          return pB - pA;
-        }
-
-        if (ratingSort === "desc") {
-          const rA = parseRating(a.realRating);
-          const rB = parseRating(b.realRating);
-          return rB - rA;
-        }
-        if (ratingSort === "asc") {
-          const rA = parseRating(a.realRating);
-          const rB = parseRating(b.realRating);
-          return rA - rB;
-        }
-
-        return 0;
-      });
-  }, [destinations, searchQuery, selectedCountry, alphaSort, priceSort, ratingSort]);
+    if (!selectedCountry) return apiDestinations;
+    return apiDestinations.filter((item) =>
+      item.location && item.location.toLowerCase().includes(selectedCountry.toLowerCase())
+    );
+  }, [apiDestinations, selectedCountry]);
 
   const resolvedBgSource = useMemo(() => {
     if (bgSource) return bgSource;
@@ -367,7 +434,25 @@ export default function SearchModal({
                   <Feather name="sliders" size={24} color={isFilterVisible ? currentTheme.accent : "#FFF"} />
                 </Animated.View>
               </TouchableOpacity>
-              <Animated.View style={[styles.searchInputBox, { borderColor: searchFocusAnim.interpolate({ inputRange: [0, 1], outputRange: ["transparent", currentTheme.accent] }), backgroundColor: searchFocusAnim.interpolate({ inputRange: [0, 1], outputRange: !isDarkMode ? ["rgba(100, 100, 100, 0.82)", "rgba(100, 100, 100, 1)"] : ["rgba(20, 20, 20, 0.75)", "rgba(10, 10, 10, 0.85)"] }), justifyContent: "center" }]}>
+              <Animated.View
+                style={[
+                  styles.searchInputBox,
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    borderColor: searchFocusAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["transparent", currentTheme.accent],
+                    }),
+                    backgroundColor: searchFocusAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: !isDarkMode
+                        ? ["rgba(100, 100, 100, 0.82)", "rgba(100, 100, 100, 1)"]
+                        : ["rgba(20, 20, 20, 0.75)", "rgba(10, 10, 10, 0.85)"],
+                    }),
+                  },
+                ]}
+              >
                 <TextInput
                   ref={searchInputRef}
                   underlineColorAndroid="transparent"
@@ -385,6 +470,26 @@ export default function SearchModal({
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
                 />
+                {isSearching ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={currentTheme?.accent || "#FFF"}
+                    style={{ marginRight: 10 }}
+                  />
+                ) : null}
+                {searchQuery.length > 0 && !isSearching ? (
+                  <TouchableOpacity
+                    onPress={() => setSearchQuery("")}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={{ marginRight: 10 }}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color={isDarkMode ? "rgba(255, 255, 255, 0.65)" : "#FFF"}
+                    />
+                  </TouchableOpacity>
+                ) : null}
               </Animated.View>
               <TouchableOpacity onPress={handleCloseSearch} style={styles.marginLeft15}>
                 <Feather name="x" size={24} color="#FFF" />
@@ -400,6 +505,40 @@ export default function SearchModal({
                 contentContainerStyle={styles.filterCategoriesContent}
                 style={styles.searchFilterRow}
               >
+                <TouchableOpacity
+                  onPress={() => {
+                    dismissSearchFocus();
+                    setIsCategoryModalVisible(true);
+                  }}
+                  activeOpacity={0.75}
+                  style={[
+                    styles.filterBtnBase,
+                    selectedCategory ? { backgroundColor: currentTheme.accent } : styles.filterBtnInactive,
+                  ]}
+                >
+                  <Feather
+                    name="grid"
+                    size={14}
+                    color={selectedCategory ? "#000" : "#FFF"}
+                    style={styles.marginRight6}
+                  />
+                  <Text style={selectedCategory ? styles.filterBtnActiveText : styles.filterBtnInactiveText}>
+                    {selectedCategoryName || "Categorias"}
+                  </Text>
+                  {selectedCategory ? (
+                    <TouchableOpacity
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setSelectedCategory(null);
+                      }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      style={styles.marginLeft6}
+                    >
+                      <Feather name="x" size={14} color="#000" />
+                    </TouchableOpacity>
+                  ) : null}
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={() => {
                     dismissSearchFocus();
@@ -490,7 +629,7 @@ export default function SearchModal({
               </ScrollView>
             </Animated.View>
 
-            {loading ? (
+            {isSearchLoading ? (
               <SearchSkeletonList
                 isDarkMode={isDarkMode}
                 cardHeight={searchCardHeight}
@@ -502,8 +641,8 @@ export default function SearchModal({
                 <Animated.FlatList
                   ref={searchFlatListRef}
                   data={filteredData}
-                  extraData={[alphaSort, priceSort, ratingSort, selectedCountry, currentTheme, isDarkMode]}
-                  keyExtractor={(item) => item.id.toString()}
+                  extraData={[alphaSort, priceSort, ratingSort, selectedCountry, selectedCategory, currentTheme, isDarkMode]}
+                  keyExtractor={(item, index) => (item?.id ? String(item.id) : String(index))}
                   showsVerticalScrollIndicator={false}
                   removeClippedSubviews={false}
                   initialNumToRender={12}
@@ -513,6 +652,8 @@ export default function SearchModal({
                   keyboardDismissMode="on-drag"
                   keyboardShouldPersistTaps="handled"
                   scrollEventThrottle={16}
+                  onEndReached={loadNextSearchPage}
+                  onEndReachedThreshold={0.5}
                   onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { y: searchScrollY } } }],
                     { useNativeDriver: true }
@@ -532,7 +673,7 @@ export default function SearchModal({
                       cardMarginBottom={searchCardMarginBottom}
                       currentTheme={currentTheme}
                       isDarkMode={isDarkMode}
-                      isOverlayActive={isCountryModalVisible}
+                      isOverlayActive={isCountryModalVisible || isCategoryModalVisible}
                       showPrice={Boolean(priceSort)}
                       showRating={Boolean(ratingSort)}
                       onPress={() => {
@@ -543,10 +684,28 @@ export default function SearchModal({
                       }}
                     />
                   )}
+                  ListFooterComponent={
+                    isFetchingNextPage ? (
+                      <View style={{ paddingTop: 6 }}>
+                        <SearchCardSkeleton
+                          cardHeight={searchCardHeight}
+                          cardMarginBottom={searchCardMarginBottom}
+                          isDarkMode={isDarkMode}
+                        />
+                        <SearchCardSkeleton
+                          cardHeight={searchCardHeight}
+                          cardMarginBottom={searchCardMarginBottom}
+                          isDarkMode={isDarkMode}
+                        />
+                      </View>
+                    ) : null
+                  }
                   ListEmptyComponent={
                     <View style={styles.searchEmptyContainer}>
                       <Text style={styles.whiteText}>
-                        Nenhum destino encontrado.
+                        {normalizedSearch.length > 0
+                          ? `Nenhum destino encontrado para "${normalizedSearch}".`
+                          : "Nenhum destino encontrado."}
                       </Text>
                     </View>
                   }
@@ -559,9 +718,19 @@ export default function SearchModal({
         <CountryFilterModal
           visible={isCountryModalVisible}
           onClose={() => setIsCountryModalVisible(false)}
-          destinations={destinations}
+          destinations={apiDestinations}
           selectedCountry={selectedCountry}
           onSelectCountry={setSelectedCountry}
+          currentTheme={currentTheme}
+          isDarkMode={isDarkMode}
+        />
+
+        <CategoryFilterModal
+          visible={isCategoryModalVisible}
+          onClose={() => setIsCategoryModalVisible(false)}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
           currentTheme={currentTheme}
           isDarkMode={isDarkMode}
         />
