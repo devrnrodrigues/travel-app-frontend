@@ -11,10 +11,35 @@ export default function FlightResults({ tickets, loading, error, onRetry, curren
 
   const cheapestTicket = tickets && tickets.length > 0 ? tickets[0] : null;
 
-  const sanitizeBaggage = (text) => {
+  const sanitizeBaggage = (text, prefix) => {
     if (!text) return null;
-    const clean = String(text).replace(/undefined/gi, "").replace(/0x\s*/gi, "").trim();
-    return clean.length > 0 ? clean : "Inclusa";
+    let clean = String(text).replace(/undefined/gi, "").replace(/0x\s*/gi, "").trim();
+    if (!clean) return "Inclusa";
+    if (prefix) {
+      const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`^(?:${escapedPrefix}\\s*)+`, "i");
+      clean = clean.replace(regex, "").trim();
+      return `${prefix} ${clean}`;
+    }
+    return clean;
+  };
+
+  const formatPriceDisplay = (price, currency) => {
+    if (!price) return "";
+    let str = String(price).trim();
+    if (currency) {
+      str = str.replace(new RegExp(`^${currency}\\s*`, "i"), "").trim();
+    }
+    str = str.replace(/^BRL\s*/i, "").trim();
+    const symbolMap = {
+      BRL: "R$",
+      USD: "US$",
+      EUR: "€",
+      GBP: "£",
+      AED: "AED",
+    };
+    const symbol = symbolMap[currency?.toUpperCase()] || (currency === "BRL" ? "R$" : currency) || "R$";
+    return `${symbol} ${str}`;
   };
 
   if (loading) {
@@ -56,7 +81,8 @@ export default function FlightResults({ tickets, loading, error, onRetry, curren
               styles.ticketCard,
               !isDarkMode && {
                 backgroundColor: "#FFFFFF",
-                borderWidth: 0,
+                borderWidth: 1,
+                borderColor: "#E5E7EB",
                 elevation: 0,
                 marginHorizontal: 3,
                 marginVertical: 4,
@@ -165,7 +191,7 @@ export default function FlightResults({ tickets, loading, error, onRetry, curren
                   <View style={styles.rowCenterMarginBottom4}>
                     <Feather name="briefcase" size={12} color={!isDarkMode ? "#6B7280" : "#8E8E93"} style={styles.marginRight4} />
                     <Text style={!isDarkMode ? styles.flightDetailTextLight : styles.flightDetailTextDark}>
-                      Despachada: {sanitizeBaggage(ticket.baggageInfo)}
+                      {sanitizeBaggage(ticket.baggageInfo, "Despachada:")}
                     </Text>
                   </View>
                 ) : null}
@@ -173,7 +199,7 @@ export default function FlightResults({ tickets, loading, error, onRetry, curren
                   <View style={styles.rowCenter}>
                     <Feather name="package" size={12} color={!isDarkMode ? "#6B7280" : "#8E8E93"} style={styles.marginRight4} />
                     <Text style={!isDarkMode ? styles.flightDetailTextLight : styles.flightDetailTextDark}>
-                      Mão: {sanitizeBaggage(ticket.cabinBagInfo)}
+                      {sanitizeBaggage(ticket.cabinBagInfo, "Mão:")}
                     </Text>
                   </View>
                 ) : null}
@@ -190,7 +216,7 @@ export default function FlightResults({ tickets, loading, error, onRetry, curren
                 <View>
                   <Text style={[styles.cardPriceLabel, !isDarkMode && { color: "#6B7280" }]}>Preço total</Text>
                   <Text style={[styles.cardPriceValue, !isDarkMode && { color: "#111827", fontWeight: "800" }]}>
-                    {ticket.currency} {ticket.price}
+                    {formatPriceDisplay(ticket.price, ticket.currency)}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -235,7 +261,7 @@ export default function FlightResults({ tickets, loading, error, onRetry, curren
           <Text style={[styles.priceLabel, !isDarkMode && { color: "#6B7280" }]}>Passagens a partir de</Text>
           {cheapestTicket?.price ? (
             <Text style={[styles.priceValue, !isDarkMode && { color: "#111827", fontWeight: "800" }]}>
-              {cheapestTicket.currency} {cheapestTicket.price}
+              {formatPriceDisplay(cheapestTicket.price, cheapestTicket.currency)}
             </Text>
           ) : (
             <Text style={[styles.priceValue, !isDarkMode && { color: "#111827" }]}>—</Text>

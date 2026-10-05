@@ -758,7 +758,6 @@ export default function DetailsTicket({ navigation, route }) {
                 activeOpacity={0.6}
               >
                 <Text style={[styles.inputText, !isDarkMode && { color: "#111827" }]}>{sortOption}</Text>
-                <Feather name="chevron-down" size={18} color="#8E8E93" />
               </TouchableOpacity>
 
               <Text style={[styles.inputLabel, !isDarkMode && { color: "#111827", fontWeight: "800" }]}>CLASSE DO VOO</Text>
@@ -795,7 +794,6 @@ export default function DetailsTicket({ navigation, route }) {
                 <Text style={[styles.inputText, !isDarkMode && { color: "#111827" }]}>
                   {`${currency} (${CURRENCY_MAP[currency] || currency})`}
                 </Text>
-                <Feather name="chevron-down" size={18} color="#8E8E93" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -894,6 +892,7 @@ export default function DetailsTicket({ navigation, route }) {
         onClose={() => setClassModalVisible(false)}
         onSelectClass={setCabinClass}
         cabinClassMap={CABIN_CLASS_MAP}
+        selectedClass={cabinClass}
         currentTheme={currentTheme}
         isDarkMode={isDarkMode}
       />
@@ -902,6 +901,7 @@ export default function DetailsTicket({ navigation, route }) {
         visible={currencyModalVisible}
         onClose={() => setCurrencyModalVisible(false)}
         onSelectCurrency={setCurrency}
+        selectedCurrency={currency}
         currentTheme={currentTheme}
         isDarkMode={isDarkMode}
       />
@@ -929,6 +929,7 @@ export default function DetailsTicket({ navigation, route }) {
         onClose={() => setSortModalVisible(false)}
         onSelectSort={setSortOption}
         sortMap={SORT_MAP}
+        selectedSort={sortOption}
         currentTheme={currentTheme}
         isDarkMode={isDarkMode}
       />

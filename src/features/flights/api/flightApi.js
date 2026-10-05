@@ -111,7 +111,9 @@ export async function searchFlights({
       returnStops: hasReturn ? (card.stopsLabel || "Direto") : null,
       baggageInfo: card.baggageInfo || null,
       cabinBagInfo: null,
-      price: card.formattedPrice || (card.totalPrice != null ? Number(card.totalPrice).toFixed(2) : null),
+      price: card.totalPrice != null
+        ? Number(card.totalPrice).toFixed(2)
+        : (card.formattedPrice ? String(card.formattedPrice).replace(/^[A-Za-z]{1,4}\s*/, "") : null),
       priceNum: card.totalPrice != null ? Number(card.totalPrice) : Infinity,
       currency: card.currency || currency || "BRL",
       bookingUrl: card.bookingUrl || null,
