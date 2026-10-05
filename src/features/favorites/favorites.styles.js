@@ -14,7 +14,7 @@ export const getCardDimensions = (
   const cardWidth = Math.floor((windowWidth - HORIZONTAL_PADDING * 2 - CARD_GAP) / 2);
   const bottomInset = insetsBottom || 0;
   const topInset = insetsTop || 0;
-  const estimatedHeaderHeight = 114;
+  const estimatedHeaderHeight = 128;
   const tabHeight = 54 + bottomInset;
 
   const visibleHeight =
@@ -28,7 +28,7 @@ export const getCardDimensions = (
   const verticalPadding = CARD_GAP;
   const totalVerticalSpacing = (targetRows + 1) * CARD_GAP;
   const usableCardsHeight = visibleHeight - totalVerticalSpacing;
-  const cardHeight = Math.max(140, Math.ceil(usableCardsHeight / targetRows));
+  const cardHeight = Math.max(140, Math.floor(usableCardsHeight / targetRows));
 
   return {
     cardWidth,

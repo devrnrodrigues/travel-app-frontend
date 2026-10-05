@@ -26,7 +26,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import styles, { dialogStyles, getCardDimensions } from "./favorites.styles";
+import styles, { dialogStyles, getCardDimensions, CARD_GAP } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
 import { useAuth } from "../auth/context/AuthContext";
 import { FavoritesSkeletonList } from "../../shared/components/Skeleton";
@@ -37,6 +37,10 @@ const EMPTY_STATE_GREEN = "#529A78";
 
 const FavoriteCardItem = React.memo(function FavoriteCardItem({
   item,
+  index,
+  totalItems,
+  scrollY,
+  cardDimensions,
   navigation,
   currentTheme,
   isDarkMode,
@@ -84,104 +88,204 @@ const FavoriteCardItem = React.memo(function FavoriteCardItem({
     });
   };
 
+  const visibleRows = cardDimensions?.targetRows || 3;
+  const totalRows = Math.ceil((totalItems || 0) / 2);
+  const rowIndex = Math.floor(index / 2);
+  const rowSlot = (cardHeight || 0) + CARD_GAP;
+  const itemOffset = rowIndex * rowSlot;
+
+  const canFoldTop = totalRows > visibleRows && rowIndex < totalRows - visibleRows;
+  const canFoldBottom = totalRows > visibleRows && rowIndex >= visibleRows;
+
+  let rotateX = "0deg";
+  let translateY = 0;
+  let opacity = 1;
+
+  if (scrollY && canFoldTop && canFoldBottom) {
+    const inputRange = [
+      Math.round(itemOffset - (visibleRows - 0.05) * rowSlot),
+      Math.round(itemOffset - (visibleRows - 0.55) * rowSlot),
+      Math.round(itemOffset - (visibleRows - 1) * rowSlot),
+      Math.round(itemOffset),
+      Math.round(itemOffset + 0.45 * rowSlot),
+      Math.round(itemOffset + 0.95 * rowSlot),
+    ];
+    rotateX = scrollY.interpolate({
+      inputRange,
+      outputRange: ["60deg", "28deg", "0deg", "0deg", "-28deg", "-60deg"],
+      extrapolate: "clamp",
+    });
+    translateY = scrollY.interpolate({
+      inputRange,
+      outputRange: [20, 8, 0, 0, 0, 0],
+      extrapolate: "clamp",
+    });
+    opacity = scrollY.interpolate({
+      inputRange,
+      outputRange: [0, 0.9, 1, 1, 0.9, 0],
+      extrapolate: "clamp",
+    });
+  } else if (scrollY && canFoldTop) {
+    const inputRange = [
+      Math.round(itemOffset),
+      Math.round(itemOffset + 0.45 * rowSlot),
+      Math.round(itemOffset + 0.95 * rowSlot),
+    ];
+    rotateX = scrollY.interpolate({
+      inputRange,
+      outputRange: ["0deg", "-28deg", "-60deg"],
+      extrapolate: "clamp",
+    });
+    translateY = scrollY.interpolate({
+      inputRange,
+      outputRange: [0, 0, 0],
+      extrapolate: "clamp",
+    });
+    opacity = scrollY.interpolate({
+      inputRange,
+      outputRange: [1, 0.9, 0],
+      extrapolate: "clamp",
+    });
+  } else if (scrollY && canFoldBottom) {
+    const inputRange = [
+      Math.round(itemOffset - (visibleRows - 0.05) * rowSlot),
+      Math.round(itemOffset - (visibleRows - 0.55) * rowSlot),
+      Math.round(itemOffset - (visibleRows - 1) * rowSlot),
+    ];
+    rotateX = scrollY.interpolate({
+      inputRange,
+      outputRange: ["60deg", "28deg", "0deg"],
+      extrapolate: "clamp",
+    });
+    translateY = scrollY.interpolate({
+      inputRange,
+      outputRange: [20, 8, 0],
+      extrapolate: "clamp",
+    });
+    opacity = scrollY.interpolate({
+      inputRange,
+      outputRange: [0, 0.9, 1],
+      extrapolate: "clamp",
+    });
+  }
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.88}
+    <Animated.View
       style={[
-        styles.card,
-        isDarkMode ? styles.cardDark : styles.cardLight,
         cardWidth && cardHeight ? { width: cardWidth, height: cardHeight } : null,
+        {
+          opacity,
+          transform: [{ perspective: 700 }, { translateY }, { rotateX }],
+        },
       ]}
-      onPress={handlePress}
-      onLongPress={() => setItemToDelete(item)}
-      delayLongPress={450}
     >
-      <View style={styles.cardInner}>
-        {item.image_url ? (
-          <>
-            <Animated.Image
-              source={{ uri: getOptimizedImageUrl(item.image_url, 450) }}
-              style={[styles.cardImage, { opacity: imgAnim }]}
-              resizeMode="cover"
-              onLoad={handleImageLoad}
-            />
-            {!imageLoaded && (
-              <View
-                style={[
-                  StyleSheet.absoluteFillObject,
-                  { backgroundColor: isDarkMode ? "#252525" : "#E2E2E2" },
-                ]}
+      <TouchableOpacity
+        activeOpacity={0.88}
+        style={[
+          styles.card,
+          isDarkMode ? styles.cardDark : styles.cardLight,
+          cardWidth && cardHeight ? { width: cardWidth, height: cardHeight } : null,
+        ]}
+        onPress={handlePress}
+        onLongPress={() => setItemToDelete(item)}
+        delayLongPress={450}
+      >
+        <View style={styles.cardInner}>
+          {item.image_url ? (
+            <>
+              <Animated.Image
+                source={{ uri: getOptimizedImageUrl(item.image_url, 450) }}
+                style={[styles.cardImage, { opacity: imgAnim }]}
+                resizeMode="cover"
+                onLoad={handleImageLoad}
               />
-            )}
-          </>
-        ) : (
-          <View
-            style={[
-              styles.cardPlaceholder,
-              { backgroundColor: isDarkMode ? "#222222" : "#E5E5EA" },
-            ]}
-          >
-            <Ionicons
-              name="image-outline"
-              size={32}
-              color={isDarkMode ? "#666666" : "#999999"}
-            />
-            <Text
+              {!imageLoaded && (
+                <View
+                  style={[
+                    StyleSheet.absoluteFillObject,
+                    { backgroundColor: isDarkMode ? "#252525" : "#E2E2E2" },
+                  ]}
+                />
+              )}
+            </>
+          ) : (
+            <View
               style={[
-                styles.cardPlaceholderText,
-                { color: isDarkMode ? "#777777" : "#8E8E93" },
+                styles.cardPlaceholder,
+                { backgroundColor: isDarkMode ? "#222222" : "#E5E5EA" },
               ]}
             >
-              Sem imagem
-            </Text>
-          </View>
-        )}
-
-        {hasRating && ratingValue ? (
-          <View style={styles.ratingBadge}>
-            <Ionicons name="star" size={10} color="#FFD700" />
-            <Text style={styles.ratingText}>{ratingValue}</Text>
-          </View>
-        ) : null}
-
-
-        <LinearGradient
-          colors={["transparent", "rgba(0, 0, 0, 0.42)", "rgba(0, 0, 0, 0.88)"]}
-          locations={[0, 0.42, 1]}
-          style={styles.cardOverlay}
-        >
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.title}
-          </Text>
-          {item.location ? (
-            <View style={styles.locationRow}>
-              <Feather
-                name="map-pin"
-                size={11}
-                color={currentTheme.accent || "#007AFF"}
+              <Ionicons
+                name="image-outline"
+                size={32}
+                color={isDarkMode ? "#666666" : "#999999"}
               />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {item.location}
+              <Text
+                style={[
+                  styles.cardPlaceholderText,
+                  { color: isDarkMode ? "#777777" : "#8E8E93" },
+                ]}
+              >
+                Sem imagem
               </Text>
             </View>
+          )}
+
+          {hasRating && ratingValue ? (
+            <View style={styles.ratingBadge}>
+              <Ionicons name="star" size={10} color="#FFD700" />
+              <Text style={styles.ratingText}>{ratingValue}</Text>
+            </View>
           ) : null}
-        </LinearGradient>
-      </View>
-    </TouchableOpacity>
+
+          <LinearGradient
+            colors={["transparent", "rgba(0, 0, 0, 0.42)", "rgba(0, 0, 0, 0.88)"]}
+            locations={[0, 0.42, 1]}
+            style={styles.cardOverlay}
+          >
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {item.title}
+            </Text>
+            {item.location ? (
+              <View style={styles.locationRow}>
+                <Feather
+                  name="map-pin"
+                  size={11}
+                  color={currentTheme.accent || "#007AFF"}
+                />
+                <Text style={styles.locationText} numberOfLines={1}>
+                  {item.location}
+                </Text>
+              </View>
+            ) : null}
+          </LinearGradient>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 });
 
 export default function Favorites({ navigation }) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  const handleContainerLayout = useCallback((e) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h > 0 && Math.abs(h - containerHeight) > 1) {
+      setContainerHeight(h);
+    }
+  }, [containerHeight]);
+
   const cardDimensions = useMemo(() => {
     return getCardDimensions(
       windowWidth,
       windowHeight,
       insets.bottom,
-      insets.top
+      insets.top,
+      containerHeight
     );
-  }, [windowWidth, windowHeight, insets.bottom, insets.top]);
+  }, [windowWidth, windowHeight, insets.bottom, insets.top, containerHeight]);
 
   const { currentTheme, isDarkMode } = useTheme();
   const { user } = useAuth();
@@ -246,6 +350,7 @@ export default function Favorites({ navigation }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const lastItemTitleRef = useRef("");
   const flatListRef = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -457,7 +562,10 @@ export default function Favorites({ navigation }) {
           </View>
         </View>
 
-        <View style={[styles.flex1, { overflow: "visible" }]}>
+        <View
+          style={[styles.flex1, { overflow: "visible" }]}
+          onLayout={handleContainerLayout}
+        >
           {isShowingSkeleton ? (
             <FavoritesSkeletonList
               isDarkMode={isDarkMode}
@@ -466,7 +574,7 @@ export default function Favorites({ navigation }) {
               cardHeight={cardDimensions.cardHeight}
             />
           ) : (
-            <FlatList
+            <Animated.FlatList
               ref={flatListRef}
               data={filteredFavorites}
               key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
@@ -497,6 +605,13 @@ export default function Favorites({ navigation }) {
               initialNumToRender={cardDimensions.targetRows * 2}
               maxToRenderPerBatch={cardDimensions.targetRows * 2}
               windowSize={7}
+              bounces={true}
+              overScrollMode="always"
+              scrollEventThrottle={16}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: Platform.OS !== "web" }
+              )}
               refreshControl={
                 <RefreshControl
                   refreshing={isRefetching}
@@ -506,9 +621,13 @@ export default function Favorites({ navigation }) {
                   progressViewOffset={-90}
                 />
               }
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <FavoriteCardItem
                   item={item}
+                  index={index}
+                  totalItems={filteredFavorites.length}
+                  scrollY={scrollY}
+                  cardDimensions={cardDimensions}
                   navigation={navigation}
                   currentTheme={currentTheme}
                   isDarkMode={isDarkMode}
