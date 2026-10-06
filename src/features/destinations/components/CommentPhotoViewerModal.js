@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import {
   Modal,
   View,
@@ -9,11 +9,12 @@ import {
   FlatList,
   Dimensions,
   Platform,
-  StyleSheet,
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { Ionicons } from "@expo/vector-icons";
+import viewerStyles from "../styles/commentPhotoViewerModal.styles";
+import useCommentPhotoViewer from "../hooks/useCommentPhotoViewer";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -23,37 +24,18 @@ export default function CommentPhotoViewerModal({
   initialIndex = 0,
   onClose,
 }) {
-  const [activeIndex, setActiveIndex] = useState(initialIndex);
-  const flatListRef = useRef(null);
-
-  useEffect(() => {
-    if (visible) {
-      setActiveIndex(initialIndex);
-      setTimeout(() => {
-        if (flatListRef.current && photos.length > 0 && initialIndex < photos.length) {
-          flatListRef.current.scrollToIndex({
-            index: initialIndex,
-            animated: false,
-          });
-        }
-      }, 50);
-    }
-  }, [visible, initialIndex, photos.length]);
-
-  useEffect(() => {
-    if (Platform.OS !== "web" || !visible) return;
-    const handleKeyDown = (e) => {
-      if (e.key === "ArrowLeft") {
-        setActiveIndex((prev) => (prev - 1 + photos.length) % photos.length);
-      } else if (e.key === "ArrowRight") {
-        setActiveIndex((prev) => (prev + 1) % photos.length);
-      } else if (e.key === "Escape") {
-        onClose?.();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [visible, photos.length, onClose]);
+  const {
+    activeIndex,
+    flatListRef,
+    handleNextWeb,
+    handlePrevWeb,
+    handleMomentumScrollEnd,
+  } = useCommentPhotoViewer({
+    visible,
+    photos,
+    initialIndex,
+    onClose,
+  });
 
   if (!visible || !photos || photos.length === 0) return null;
 
@@ -86,11 +68,7 @@ export default function CommentPhotoViewerModal({
                 {photos.length > 1 && (
                   <TouchableOpacity
                     style={[viewerStyles.webNavBtn, viewerStyles.webNavBtnLeft]}
-                    onPress={() =>
-                      setActiveIndex(
-                        (prev) => (prev - 1 + photos.length) % photos.length
-                      )
-                    }
+                    onPress={handlePrevWeb}
                     activeOpacity={0.7}
                   >
                     <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
@@ -108,9 +86,7 @@ export default function CommentPhotoViewerModal({
                 {photos.length > 1 && (
                   <TouchableOpacity
                     style={[viewerStyles.webNavBtn, viewerStyles.webNavBtnRight]}
-                    onPress={() =>
-                      setActiveIndex((prev) => (prev + 1) % photos.length)
-                    }
+                    onPress={handleNextWeb}
                     activeOpacity={0.7}
                   >
                     <Ionicons name="chevron-forward" size={28} color="#FFFFFF" />
@@ -130,14 +106,7 @@ export default function CommentPhotoViewerModal({
                   offset: SCREEN_WIDTH * index,
                   index,
                 })}
-                onMomentumScrollEnd={(e) => {
-                  const nextIndex = Math.round(
-                    e.nativeEvent.contentOffset.x / SCREEN_WIDTH
-                  );
-                  if (nextIndex >= 0 && nextIndex < photos.length) {
-                    setActiveIndex(nextIndex);
-                  }
-                }}
+                onMomentumScrollEnd={(e) => handleMomentumScrollEnd(e, SCREEN_WIDTH)}
                 keyExtractor={(item) => item.id || item.url}
                 renderItem={({ item }) => (
                   <TouchableWithoutFeedback onPress={onClose}>
@@ -166,87 +135,3 @@ export default function CommentPhotoViewerModal({
     </Modal>
   );
 }
-
-const viewerStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.96)",
-  },
-  safeArea: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  contentArea: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  webContainer: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  webCloseBtn: {
-    position: "absolute",
-    top: 24,
-    right: 24,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 50,
-  },
-  webNavBtn: {
-    position: "absolute",
-    top: "50%",
-    marginTop: -24,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 20,
-  },
-  webNavBtnLeft: {
-    left: 24,
-  },
-  webNavBtnRight: {
-    right: 24,
-  },
-  slide: {
-    width: SCREEN_WIDTH,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mainImage: {
-    width: "100%",
-    height: "85%",
-    maxWidth: 900,
-    maxHeight: 700,
-  },
-  footer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    zIndex: 10,
-  },
-  counterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-  },
-  counterText: {
-    color: "#FFFFFF",
-    fontSize: 13.5,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-});

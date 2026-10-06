@@ -1,591 +1,118 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   View,
-  Text,
-  Image,
-  TouchableOpacity,
   ScrollView,
   StatusBar,
-  Dimensions,
   Animated,
-  BackHandler,
-  Easing,
-  StyleSheet,
-  LayoutAnimation,
+  RefreshControl,
   Platform,
   UIManager,
-  RefreshControl,
 } from "react-native";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
-import { useQueryClient } from "@tanstack/react-query";
-import Feather from "react-native-vector-icons/Feather";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import styles from "./styles/details.styles";
-import {
-  getWeather,
-  // getAiDescription,
-  // getAiPrice,
-} from "./api/detailsApi";
-import { getDestinationById } from "./api/destinationService";
-import { useAuth } from "../auth/context/AuthContext";
-import {
-  checkFavoriteApi,
-  addFavoriteApi,
-  removeFavoriteApi,
-} from "../favorites/api/favoriteService";
+import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../theme/ThemeContext";
-import {
-  SkeletonBox,
-  DetailsDescriptionSkeleton,
-} from "../../shared/components/Skeleton";
-import FadeInView from "../../shared/components/FadeInView";
-import ImageGalleryModal, { ThumbnailItem } from "./components/ImageGalleryModal";
+import useDestinationDetails from "./hooks/useDestinationDetails";
+import useDestinationFavorite from "./hooks/useDestinationFavorite";
+import useDestinationThemeAnimations from "./hooks/useDestinationThemeAnimations";
+import DestinationHeader from "./components/DestinationHeader";
+import DestinationDescription from "./components/DestinationDescription";
+import DestinationWeather from "./components/DestinationWeather";
+import DestinationFooter from "./components/DestinationFooter";
 import ReviewsSection from "./components/ReviewsSection";
+import ImageGalleryModal from "./components/ImageGalleryModal";
 import EstimatedPriceModal from "./components/EstimatedPriceModal";
-
-const { width } = Dimensions.get("window");
-const STRICT_THUMB_SIZE = Math.round(width * 0.115);
-
-function formatTimeAgo(dateString) {
-  if (!dateString) return "poucos instantes";
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (isNaN(diffInSeconds) || diffInSeconds < 60) {
-    return "poucos instantes";
-  }
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} ${diffInMinutes === 1 ? "minuto" : "minutos"}`;
-  }
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const remainingMinutes = diffInMinutes % 60;
-  if (diffInHours < 24) {
-    const horaStr = `${diffInHours} ${diffInHours === 1 ? "hora" : "horas"}`;
-    if (remainingMinutes > 0) {
-      return `${horaStr} e ${remainingMinutes} ${remainingMinutes === 1 ? "minuto" : "minutos"}`;
-    }
-    return horaStr;
-  }
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} ${diffInDays === 1 ? "dia" : "dias"}`;
-}
-
-function getFirstParagraph(text) {
-  if (!text) return "";
-  if (Array.isArray(text)) return (text[0] || "").trim();
-  const paragraphs = text.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0);
-  return (paragraphs[0] || text).trim();
-}
-
-function getTruncatedFirstParagraph(text) {
-  const firstParagraph = getFirstParagraph(text);
-  if (!firstParagraph) return "";
-
-  const words = firstParagraph.split(/\s+/);
-  if (words.length === 0) return firstParagraph;
-
-  const lastWord = words[words.length - 1];
-  const cleanWord = lastWord.replace(/[.,!?;:]+$/, "");
-  const halfWord =
-    cleanWord.length > 2
-      ? cleanWord.slice(0, Math.ceil(cleanWord.length / 2))
-      : cleanWord;
-
-  const rest = words.slice(0, -1).join(" ");
-  return rest ? `${rest} ${halfWord}...` : `${halfWord}...`;
-}
-
-function getRemainingParagraphs(text) {
-  if (!text) return [];
-  if (Array.isArray(text)) {
-    return text.slice(1).map((p) => (p || "").trim()).filter(Boolean);
-  }
-  const paragraphs = text.split(/\r?\n\r?\n/).map((p) => p.trim()).filter(Boolean);
-  if (paragraphs.length <= 1) return [];
-  return paragraphs.slice(1);
-}
-
-function isDescriptionUnavailable(text) {
-  if (!text) return true;
-  const first = getFirstParagraph(text).toLowerCase();
-  return (
-    first.length === 0 ||
-    first.includes("indisponível") ||
-    first.includes("indisponivel") ||
-    first.includes("não foi possível") ||
-    first.includes("nao foi possivel")
-  );
-}
-
-function parseCostEstimates(raw) {
-  if (!raw) return null;
-  if (typeof raw === "object") return raw;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
 
 export default function Details({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { item, currentTheme } = route.params;
-  const [description, setDescription] = useState(
-    Array.isArray(item?.description)
-      ? item.description
-      : Array.isArray(item?.aiSummary)
-      ? item.aiSummary
-      : []
-  );
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  const toggleDescription = () => {
-    LayoutAnimation.configureNext({
-      duration: 220,
-      create: {
-        type: LayoutAnimation.Types.easeInEaseOut,
-        property: LayoutAnimation.Properties.opacity,
-      },
-      update: {
-        type: LayoutAnimation.Types.easeInEaseOut,
-      },
-      delete: {
-        type: LayoutAnimation.Types.easeInEaseOut,
-        property: LayoutAnimation.Properties.opacity,
-      },
-    });
-    setIsDescriptionExpanded((prev) => !prev);
-  };
-  const [weather, setWeather] = useState(null);
-  const [loadingWeather, setLoadingWeather] = useState(true);
-  const [loadingAi, setLoadingAi] = useState(true);
-  const [loadingImages, setLoadingImages] = useState(true);
-
-  const initialImg = item.image_url || item.coverImageUrl || null;
-  const [mainImage, setMainImage] = useState(initialImg);
-  const [thumbnails, setThumbnails] = useState(
-    initialImg ? [initialImg, null, null, null] : [null, null, null, null]
+  const details = useDestinationDetails(item);
+  const favorite = useDestinationFavorite(item, user);
+  const themeAnim = useDestinationThemeAnimations(
+    isDarkMode,
+    navigation,
+    details.isImageModalVisible,
+    () => details.setIsImageModalVisible(false)
   );
-  const [isImageModalVisible, setIsImageModalVisible] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const reviewsSectionRef = useRef(null);
 
-  const [isFavorited, setIsFavorited] = useState(!!item.item_id);
-  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
-  const [averageRating, setAverageRating] = useState("N/A");
-  const [loadingReviews, setLoadingReviews] = useState(true);
-  const [costEstimates, setCostEstimates] = useState(() =>
-    parseCostEstimates(item?.aiCostEstimates)
-  );
-  const [loadingPrice, setLoadingPrice] = useState(true);
-  const [showPriceModal, setShowPriceModal] = useState(false);
-  const [showWeatherInfo, setShowWeatherInfo] = useState(false);
-  const weatherInfoAnim = useRef(new Animated.Value(0)).current;
-
-  const toggleWeatherInfo = () => {
-    const toValue = showWeatherInfo ? 0 : 1;
-    setShowWeatherInfo(!showWeatherInfo);
-    Animated.timing(weatherInfoAnim, {
-      toValue,
-      duration: 320,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-  };
-
-  useEffect(() => {
-    if (!loadingWeather) {
-      if (!weather) {
-        setShowWeatherInfo(true);
-        Animated.timing(weatherInfoAnim, {
-          toValue: 1,
-          duration: 350,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: false,
-        }).start();
-      } else {
-        setShowWeatherInfo(false);
-        Animated.timing(weatherInfoAnim, {
-          toValue: 0,
-          duration: 250,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: false,
-        }).start();
-      }
-    }
-  }, [loadingWeather, weather]);
-
-  const themeAnim = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
-  const iconRotateAnim = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(themeAnim, {
-        toValue: isDarkMode ? 1 : 0,
-        duration: 380,
-        easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: false,
-      }),
-      Animated.timing(iconRotateAnim, {
-        toValue: isDarkMode ? 1 : 0,
-        duration: 400,
-        easing: Easing.out(Easing.back(1.4)),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [isDarkMode]);
-
-  const infoSectionBg = themeAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["#FFFFFF", "#080808ff"],
-  });
-
-  const statCardBg = themeAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["#F8F9FA", "#161616"],
-  });
-
-  const footerPriceBg = themeAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["#FFFFFF", "#0A0A0A"],
-  });
-
-  const screenFadeAnim = useRef(new Animated.Value(0)).current;
-  const isExitingRef = useRef(false);
-
-  useEffect(() => {
-    Animated.timing(screenFadeAnim, {
-      toValue: 1,
-      duration: 180,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-  const handleGoBack = () => {
-    if (isExitingRef.current) return;
-    isExitingRef.current = true;
-    Animated.timing(screenFadeAnim, {
-      toValue: 0,
-      duration: 180,
-      easing: Easing.in(Easing.ease),
-      useNativeDriver: true,
-    }).start(() => {
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else {
-        navigation.navigate("Main");
-      }
-    });
-  };
-
-  useEffect(() => {
-    const onBackPress = () => {
-      if (isImageModalVisible) {
-        setIsImageModalVisible(false);
-        return true;
-      }
-      handleGoBack();
-      return true;
-    };
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
-    return () => backHandler.remove();
-  }, [isImageModalVisible]);
-
-  const loadFavoriteStatus = useCallback(async () => {
-    if (!user || !item?.id) return;
-    try {
-      const isFav = await checkFavoriteApi(item.id);
-      setIsFavorited(isFav);
-    } catch (error) {
-      console.error("Erro ao verificar favorito:", error);
-    }
-  }, [item?.id, user]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadFavoriteStatus();
-    }, [loadFavoriteStatus])
-  );
-
-  const toggleFavorite = async () => {
-    if (!user) {
-      alert("Você precisa estar logado para favoritar.");
-      return;
-    }
-
-    if (isTogglingFavorite || !item?.id) return;
-    setIsTogglingFavorite(true);
-
-    try {
-      if (isFavorited) {
-        setIsFavorited(false);
-        await removeFavoriteApi(item.id);
-      } else {
-        setIsFavorited(true);
-        await addFavoriteApi(item.id);
-      }
-      queryClient.invalidateQueries({ queryKey: ["favorites"] });
-    } catch (error) {
-      setIsFavorited((prev) => !prev);
-      console.error("Erro ao alternar favorito:", error);
-    } finally {
-      setIsTogglingFavorite(false);
-    }
-  };
-
-  const fetchDestinationDetails = useCallback(async (isPull = false) => {
-    const destId = item?.id || item?.item_id;
-    if (!destId) return;
-
-    try {
-      if (!isPull) {
-        setLoadingWeather(true);
-        setLoadingAi(true);
-        setLoadingImages(true);
-        setLoadingPrice(true);
-      }
-      const data = await getDestinationById(destId);
-      if (data) {
-        if (data.weather) {
-          setWeather({
-            temp: Math.round(data.weather.temperature ?? 0),
-            humidity: data.weather.rainProbability ?? 0,
-            rainProbability: data.weather.rainProbability ?? 0,
-            wind: Math.round(data.weather.windSpeed ?? 0),
-            condition: data.weather.conditionText || "Tempo estável",
-            updatedAt: data.weather.updatedAt,
-          });
-        } else {
-          const fallbackWeather = await getWeather(destId);
-          setWeather(fallbackWeather);
-        }
-
-        if (data.description && (Array.isArray(data.description) ? data.description.length > 0 : Boolean(data.description))) {
-          setDescription(data.description);
-        } else {
-          // const geminiText = await getAiDescription(item, isPull);
-          // setDescription(geminiText || []);
-          setDescription(["Descrição indisponivel."]);
-        }
-
-        if (data.aiCostEstimates) {
-          setCostEstimates(parseCostEstimates(data.aiCostEstimates));
-        } else {
-          setCostEstimates(null);
-        }
-
-        const backendImages = Array.isArray(data.images) && data.images.length > 0
-          ? data.images.map((img) => img.url).filter(Boolean)
-          : [];
-
-        const allImages = [
-          data.coverImageUrl || item.image_url,
-          ...backendImages.filter((u) => u !== (data.coverImageUrl || item.image_url)),
-        ].filter(Boolean);
-
-        if (allImages.length > 0) {
-          setMainImage(allImages[0]);
-          setThumbnails(allImages.slice(0, 4));
-        } else {
-          setMainImage(null);
-          setThumbnails([]);
-        }
-      }
-    } catch {
-      try {
-        const fallbackWeather = await getWeather(destId);
-        // const [fallbackWeather, geminiText] = await Promise.all([
-        //   getWeather(destId),
-        //   getAiDescription(item, isPull),
-        // ]);
-        if (fallbackWeather) setWeather(fallbackWeather);
-        // setDescription(geminiText || []);
-        setDescription(["Descrição indisponivel."]);
-      } catch {
-        if (!isPull) setDescription(["Descrição indisponivel."]);
-      }
-      setCostEstimates(null);
-    } finally {
-      setLoadingWeather(false);
-      setLoadingAi(false);
-      setLoadingImages(false);
-      setLoadingPrice(false);
-    }
-  }, [item]);
-
-  const fetchPrice = useCallback(async (isPull = false) => {
-    try {
-      // const price = await getAiPrice(item);
-      // setEstimatedPrice(price);
-    } catch (error) {
-      console.error("Erro ao obter preço estimado:", error);
-    }
-  }, [item]);
-
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
+    details.setRefreshing(true);
     try {
       await Promise.all([
-        fetchDestinationDetails(true),
-        fetchPrice(true),
-        loadFavoriteStatus(),
-        reviewsSectionRef.current?.fetchReviews ? reviewsSectionRef.current.fetchReviews(true) : Promise.resolve(),
+        details.fetchDestinationDetails(true),
+        favorite.loadFavoriteStatus(),
+        reviewsSectionRef.current?.fetchReviews
+          ? reviewsSectionRef.current.fetchReviews(true)
+          : Promise.resolve(),
       ]);
     } finally {
-      setRefreshing(false);
+      details.setRefreshing(false);
     }
-  }, [fetchDestinationDetails, fetchPrice, loadFavoriteStatus]);
+  }, [details, favorite]);
 
-  useEffect(() => {
-    setShowWeatherInfo(false);
-    weatherInfoAnim.setValue(0);
-    const currentImg = item.image_url || item.coverImageUrl || null;
-    setMainImage(currentImg);
-    setLoadingImages(true);
-    setLoadingPrice(true);
-    setThumbnails(
-      currentImg ? [currentImg, null, null, null] : [null, null, null, null]
-    );
-    fetchDestinationDetails();
-  }, [item?.id, fetchDestinationDetails]);
+  const handleNavigateTicket = useCallback(() => {
+    navigation.navigate("DetailsTicket", {
+      currentTheme,
+      item: {
+        ...item,
+        image_url: details.mainImage || item?.image_url || item?.image,
+      },
+    });
+  }, [navigation, currentTheme, item, details.mainImage]);
 
   return (
     <Animated.View
       style={[
         styles.mainContainer,
+        isDarkMode ? styles.containerDark : styles.containerLight,
         {
-          backgroundColor: isDarkMode ? "#000000" : "#FFFFFF",
-          opacity: screenFadeAnim,
+          opacity: themeAnim.screenFadeAnim,
         },
       ]}
     >
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      <View style={styles.imageSection}>
-        {mainImage ? (
-          <TouchableOpacity
-            activeOpacity={0.95}
-            onPress={() => setIsImageModalVisible(true)}
-            style={styles.mainImageTouchable}
-          >
-            <Image source={{ uri: mainImage }} style={styles.mainImage} resizeMode="cover" />
-          </TouchableOpacity>
-        ) : (
-          <View
-            style={[
-              styles.mainImage,
-              {
-                backgroundColor: isDarkMode ? "#141414" : "#222222",
-                justifyContent: "center",
-                alignItems: "center",
-              },
-            ]}
-          >
-            <Ionicons name="image-outline" size={54} color="rgba(255, 255, 255, 0.35)" />
-            <Text
-              style={{
-                color: "rgba(255, 255, 255, 0.6)",
-                marginTop: 12,
-                fontSize: 15,
-                fontWeight: "500",
-              }}
-            >
-              Sem imagens disponível.
-            </Text>
-          </View>
-        )}
-
-        <SafeAreaView style={styles.topBar} pointerEvents="box-none">
-          <TouchableOpacity
-            style={[
-              styles.roundButton,
-              !isDarkMode
-                ? { backgroundColor: "rgba(255, 255, 255, 0.8)", shadowColor: "#000", shadowOpacity: 0.1 }
-                : { backgroundColor: "rgba(0, 0, 0, 0.7)" },
-            ]}
-            onPress={handleGoBack}
-            activeOpacity={0.7}
-          >
-            <Feather
-              name="chevron-left"
-              size={24}
-              color={!isDarkMode ? "#000000" : "#FFFFFF"}
-            />
-          </TouchableOpacity>
-
-          <View style={styles.rightActionsColumn} pointerEvents="box-none">
-            <TouchableOpacity
-              style={[
-                styles.roundButton,
-                !isDarkMode
-                  ? { backgroundColor: "rgba(255, 255, 255, 0.8)", shadowColor: "#000", shadowOpacity: 0.1 }
-                  : { backgroundColor: "rgba(0, 0, 0, 0.7)" },
-              ]}
-              activeOpacity={0.7}
-              onPress={toggleFavorite}
-            >
-              <Ionicons name={isFavorited ? "heart" : "heart-outline"} size={22} color={currentTheme.accent} />
-            </TouchableOpacity>
-
-            {(loadingImages || thumbnails.length > 1) && (
-              <View style={styles.rightThumbnails} pointerEvents="box-none">
-                {thumbnails.map((imgUrl, index) => (
-                  <ThumbnailItem
-                    key={imgUrl ? `${imgUrl}-${index}` : `loading-thumb-${index}`}
-                    imgUrl={imgUrl}
-                    isSelected={mainImage === imgUrl}
-                    accent={currentTheme.accent}
-                    size={STRICT_THUMB_SIZE}
-                    isLoading={!imgUrl || (index > 0 && loadingImages)}
-                    isDarkMode={isDarkMode}
-                    onPress={() => imgUrl && setMainImage(imgUrl)}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
-        </SafeAreaView>
-
-        <View style={styles.titleOverlay}>
-          <Text style={styles.mainTitle} numberOfLines={2}>{item.title}</Text>
-          <View style={styles.locationContainer}>
-            <Ionicons name="location-sharp" size={16} color={currentTheme.accent} />
-            <Text style={styles.locationText} numberOfLines={1}>{item.location}</Text>
-          </View>
-        </View>
-      </View>
+      <DestinationHeader
+        mainImage={details.mainImage}
+        onOpenImageModal={() => details.setIsImageModalVisible(true)}
+        onGoBack={themeAnim.handleGoBack}
+        onToggleFavorite={favorite.toggleFavorite}
+        isFavorited={favorite.isFavorited}
+        loadingImages={details.loadingImages}
+        thumbnails={details.thumbnails}
+        onSelectImage={details.setMainImage}
+        title={item.title}
+        location={item.location}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
+      />
 
       <Animated.View
         style={[
           styles.infoBottomSection,
+          !isDarkMode
+            ? styles.infoBottomSectionLight
+            : styles.infoBottomSectionDark,
           {
-            backgroundColor: infoSectionBg,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: -6 },
-            shadowOpacity: !isDarkMode ? 0.08 : 0.6,
-            shadowRadius: 16,
-            elevation: 0,
+            backgroundColor: themeAnim.infoSectionBg,
           },
         ]}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
           alwaysBounceVertical={true}
-          contentContainerStyle={[styles.scrollContent, { paddingTop: 16, paddingBottom: 24 }]}
+          contentContainerStyle={styles.scrollContentDetails}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={details.refreshing}
               onRefresh={onRefresh}
               tintColor={currentTheme.accent}
               colors={[currentTheme.accent]}
@@ -593,236 +120,25 @@ export default function Details({ route, navigation }) {
             />
           }
         >
-          <View style={styles.rowCenterMarginBottom8}>
-            <Text style={[styles.descriptionHeader, { marginBottom: 0, flex: 1 }, !isDarkMode && { color: "#111827" }]}>
-              Descrição
-            </Text>
-          </View>
+          <DestinationDescription
+            description={details.description}
+            loadingAi={details.loadingAi}
+            isDescriptionExpanded={details.isDescriptionExpanded}
+            toggleDescription={details.toggleDescription}
+            isDarkMode={isDarkMode}
+            currentTheme={currentTheme}
+          />
 
-          {loadingAi ? (
-            <DetailsDescriptionSkeleton isDarkMode={isDarkMode} />
-          ) : isDescriptionUnavailable(description) ? (
-            <FadeInView duration={240}>
-              <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>
-                {getFirstParagraph(description) || "Descrição indisponível."}
-              </Text>
-            </FadeInView>
-          ) : (
-            <FadeInView duration={240}>
-              {!isDescriptionExpanded ? (
-                <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>
-                  {getTruncatedFirstParagraph(description)}{" "}
-                  <Text
-                    onPress={toggleDescription}
-                    style={{ color: currentTheme.accent, fontWeight: "700" }}
-                  >
-                    ver mais
-                  </Text>
-                </Text>
-              ) : (
-                <View>
-                  <Text style={[styles.descriptionBody, !isDarkMode && { color: "#374151" }]}>
-                    {getFirstParagraph(description)}
-                  </Text>
-                  {getRemainingParagraphs(description).map((para, idx, arr) => {
-                    const isLast = idx === arr.length - 1;
-                    return (
-                      <Text
-                        key={idx}
-                        style={[
-                          styles.descriptionBody,
-                          { marginTop: 12 },
-                          !isDarkMode && { color: "#374151" },
-                        ]}
-                      >
-                        {para}
-                        {isLast && (
-                          <Text
-                            onPress={toggleDescription}
-                            style={{ color: currentTheme.accent, fontWeight: "700" }}
-                          >
-                            {" "}ver menos
-                          </Text>
-                        )}
-                      </Text>
-                    );
-                  })}
-                  {getRemainingParagraphs(description).length === 0 && (
-                    <Text
-                      onPress={toggleDescription}
-                      style={{ color: currentTheme.accent, fontWeight: "700", marginTop: 8 }}
-                    >
-                      ver menos
-                    </Text>
-                  )}
-                </View>
-              )}
-            </FadeInView>
-          )}
-
-          <View style={[styles.marginBottom24, { marginTop: 24 }]}>
-            <View style={styles.rowSpaceBetween}>
-              <TouchableOpacity
-                onPress={toggleWeatherInfo}
-                activeOpacity={0.7}
-                style={styles.rowCenter}
-              >
-                <Text style={[styles.descriptionHeader, { marginBottom: 0 }, !isDarkMode && { color: "#111827" }]}>
-                  Clima
-                </Text>
-                <View style={styles.weatherCenterMargin}>
-                  <Feather
-                    name="info"
-                    size={14}
-                    color={showWeatherInfo ? currentTheme.accent : (!isDarkMode ? "#9CA3AF" : "rgba(255, 255, 255, 0.45)")}
-                  />
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            <Animated.View style={[styles.weatherNoticeWrapper, { maxHeight: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 24] }), opacity: weatherInfoAnim.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0.5, 1] }), marginTop: weatherInfoAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 4] }) }]}>
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.weatherNotice,
-                  {
-                    color: !isDarkMode ? "#6B7280" : "rgba(255, 255, 255, 0.55)",
-                    fontSize: 11,
-                  },
-                ]}
-              >
-                {!loadingWeather && !weather
-                  ? "Sem informações de clima disponíveis"
-                  : `Informações de clima atualizado há ${formatTimeAgo(weather?.updatedAt)}`}
-              </Text>
-            </Animated.View>
-          </View>
-
-          <View style={[styles.statsContainer, { marginBottom: (!loadingWeather && weather) ? 0 : 24 }]}>
-            <Animated.View
-              style={[
-                styles.statCard,
-                { backgroundColor: statCardBg },
-                !isDarkMode ? {
-                  borderWidth: 0,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.09,
-                  shadowRadius: 8,
-                  elevation: 0,
-                } : {
-                  borderWidth: 0,
-                  borderColor: "transparent",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.6,
-                  shadowRadius: 8,
-                  elevation: 0,
-                },
-              ]}
-            >
-              <Text style={[styles.statLabel, !isDarkMode && { color: "#6B7280" }]}>Vento</Text>
-              {loadingWeather ? (
-                <SkeletonBox width={46} height={18} borderRadius={5} isDarkMode={isDarkMode} />
-              ) : (
-                <FadeInView duration={200}>
-                  <Text style={[styles.statValue, { color: currentTheme.accent }]}>
-                    {weather?.wind != null ? `${weather.wind} km/h` : "N/A"}
-                  </Text>
-                </FadeInView>
-              )}
-            </Animated.View>
-
-            <Animated.View
-              style={[
-                styles.statCard,
-                { backgroundColor: statCardBg },
-                !isDarkMode ? {
-                  borderWidth: 0,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.09,
-                  shadowRadius: 8,
-                  elevation: 0,
-                } : {
-                  borderWidth: 0,
-                  borderColor: "transparent",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.6,
-                  shadowRadius: 8,
-                  elevation: 0,
-                },
-              ]}
-            >
-              <Text style={[styles.statLabel, !isDarkMode && { color: "#6B7280" }]}>Temperatura</Text>
-              {loadingWeather ? (
-                <SkeletonBox width={44} height={18} borderRadius={5} isDarkMode={isDarkMode} />
-              ) : (
-                <FadeInView duration={200}>
-                  <Text style={[styles.statValue, { color: currentTheme.accent }]}>
-                    {weather?.temp != null ? `${weather.temp}°C` : "N/A"}
-                  </Text>
-                </FadeInView>
-              )}
-            </Animated.View>
-
-            <Animated.View
-              style={[
-                styles.statCard,
-                { backgroundColor: statCardBg },
-                !isDarkMode ? {
-                  borderWidth: 0,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.09,
-                  shadowRadius: 8,
-                  elevation: 0,
-                } : {
-                  borderWidth: 0,
-                  borderColor: "transparent",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.6,
-                  shadowRadius: 8,
-                  elevation: 0,
-                },
-              ]}
-            >
-              <Text style={[styles.statLabel, !isDarkMode && { color: "#6B7280" }]}>Chuva</Text>
-              {loadingWeather ? (
-                <SkeletonBox width={36} height={18} borderRadius={5} isDarkMode={isDarkMode} />
-              ) : (
-                <FadeInView duration={200}>
-                  <Text style={[styles.statValue, { color: currentTheme.accent }]}>
-                    {weather?.rainProbability != null
-                      ? `${weather.rainProbability}%`
-                      : weather?.humidity != null
-                      ? `${weather.humidity}%`
-                      : "N/A"}
-                  </Text>
-                </FadeInView>
-              )}
-            </Animated.View>
-          </View>
-
-          {!loadingWeather && weather && (
-            <FadeInView duration={240}>
-              <Text
-                style={[
-                  styles.weatherAlert,
-                  {
-                    marginTop: 24,
-                    marginBottom: 0,
-                    color: isDarkMode ? "rgba(255, 255, 255, 0.62)" : "#6B7280",
-                    fontStyle: "italic",
-                  },
-                ]}
-              >
-                {`Condição climática atual: ${weather.condition}.`}
-              </Text>
-            </FadeInView>
-          )}
+          <DestinationWeather
+            weather={details.weather}
+            loadingWeather={details.loadingWeather}
+            showWeatherInfo={details.showWeatherInfo}
+            toggleWeatherInfo={details.toggleWeatherInfo}
+            weatherInfoAnim={details.weatherInfoAnim}
+            statCardBg={themeAnim.statCardBg}
+            currentTheme={currentTheme}
+            isDarkMode={isDarkMode}
+          />
 
           <ReviewsSection
             ref={reviewsSectionRef}
@@ -830,115 +146,35 @@ export default function Details({ route, navigation }) {
             currentUser={user}
             currentTheme={currentTheme}
             isDarkMode={isDarkMode}
-            onRatingCalculated={(calculatedRating, isLoading) => {
-              setAverageRating(calculatedRating);
-              setLoadingReviews(isLoading);
-            }}
           />
         </ScrollView>
 
-        <Animated.View
-          style={[
-            styles.footerPriceRow,
-            {
-              backgroundColor: footerPriceBg,
-              paddingTop: 16,
-              paddingBottom: Math.max(insets.bottom + 12, 28),
-              borderTopWidth: StyleSheet.hairlineWidth,
-              borderTopColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: !isDarkMode ? 0.05 : 0.4,
-              shadowRadius: 8,
-              elevation: 0,
-            },
-          ]}
-        >
-          <View style={styles.priceContainer}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setShowPriceModal(true)}
-              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
-            >
-              <Text style={[styles.priceLabel, !isDarkMode && { color: "#6B7280" }]}>
-                Diária estimada
-              </Text>
-              <Feather
-                name="help-circle"
-                size={14}
-                color={currentTheme?.accent || "#3B82F6"}
-                style={{ marginTop: -1 }}
-              />
-            </TouchableOpacity>
-            <FadeInView duration={200}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setShowPriceModal(true)}
-              >
-                {loadingPrice ? (
-                  <View style={{ marginTop: 5, marginBottom: 2 }}>
-                    <SkeletonBox
-                      width={130}
-                      height={22}
-                      borderRadius={6}
-                      isDarkMode={isDarkMode}
-                    />
-                  </View>
-                ) : (
-                  <Text style={[styles.priceValue, !isDarkMode && { color: "#111827" }]}>
-                    {costEstimates?.daily_total?.min != null && costEstimates?.daily_total?.max != null
-                      ? `R$ ${costEstimates.daily_total.min} - ${costEstimates.daily_total.max}`
-                      : "R$ ???? - ????"}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </FadeInView>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              !isDarkMode
-                ? { backgroundColor: "#000000", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 6, elevation: 0 }
-                : { backgroundColor: currentTheme.accent },
-            ]}
-            activeOpacity={0.8}
-            onPress={() =>
-              navigation.navigate("DetailsTicket", {
-                currentTheme,
-                item: {
-                  ...item,
-                  image_url: mainImage || item?.image_url || item?.image,
-                },
-              })
-            }
-          >
-            <Image
-              source={require("../../../assets/airplane-ticket.webp")}
-              style={{
-                width: 26,
-                height: 26,
-                tintColor: !isDarkMode ? "#FFFFFF" : "#000000",
-              }}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </Animated.View>
+        <DestinationFooter
+          footerPriceBg={themeAnim.footerPriceBg}
+          insetsBottom={insets.bottom}
+          isDarkMode={isDarkMode}
+          currentTheme={currentTheme}
+          loadingPrice={details.loadingPrice}
+          costEstimates={details.costEstimates}
+          onOpenPriceModal={() => details.setShowPriceModal(true)}
+          onNavigateTicket={handleNavigateTicket}
+        />
       </Animated.View>
 
       <ImageGalleryModal
-        visible={isImageModalVisible}
-        onClose={() => setIsImageModalVisible(false)}
-        thumbnails={thumbnails.filter(Boolean)}
-        mainImage={mainImage}
-        onSelectImage={setMainImage}
+        visible={details.isImageModalVisible}
+        onClose={() => details.setIsImageModalVisible(false)}
+        thumbnails={details.thumbnails.filter(Boolean)}
+        mainImage={details.mainImage}
+        onSelectImage={details.setMainImage}
         defaultImage={item.image_url}
       />
 
       <EstimatedPriceModal
-        visible={showPriceModal}
-        onClose={() => setShowPriceModal(false)}
-        data={costEstimates}
-        loading={loadingPrice}
+        visible={details.showPriceModal}
+        onClose={() => details.setShowPriceModal(false)}
+        data={details.costEstimates}
+        loading={details.loadingPrice}
         currentTheme={currentTheme}
         isDarkMode={isDarkMode}
       />

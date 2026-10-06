@@ -7,6 +7,12 @@ export default StyleSheet.create({
   mainContainer: {
     flex: 1,
   },
+  containerLight: {
+    backgroundColor: "#FFFFFF",
+  },
+  containerDark: {
+    backgroundColor: "#000000",
+  },
   imageSection: {
     width: width,
     height: height * 0.52,
@@ -19,6 +25,24 @@ export default StyleSheet.create({
   mainImage: {
     width: "100%",
     height: "100%",
+  },
+  mainImageEmpty: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mainImageEmptyDark: {
+    backgroundColor: "#141414",
+  },
+  mainImageEmptyLight: {
+    backgroundColor: "#222222",
+  },
+  emptyImageText: {
+    color: "rgba(255, 255, 255, 0.6)",
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: "500",
   },
   topBar: {
     position: "absolute",
@@ -49,6 +73,14 @@ export default StyleSheet.create({
     shadowRadius: 10,
     elevation: 0,
     zIndex: 10000,
+  },
+  roundButtonLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+  },
+  roundButtonDark: {
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   rightActionsColumn: {
     flexDirection: "column",
@@ -132,9 +164,22 @@ export default StyleSheet.create({
     shadowRadius: 12,
     elevation: 0,
   },
+  infoBottomSectionLight: {
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+  },
+  infoBottomSectionDark: {
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
+  },
   scrollContent: {
     paddingTop: 24,
     paddingBottom: 20,
+    paddingHorizontal: width * 0.07,
+  },
+  scrollContentDetails: {
+    paddingTop: 16,
+    paddingBottom: 24,
     paddingHorizontal: width * 0.07,
   },
   weatherNotice: {
@@ -144,11 +189,22 @@ export default StyleSheet.create({
     marginBottom: 0,
     fontWeight: "400",
   },
+  weatherNoticeTextLight: {
+    color: "#6B7280",
+    fontSize: 11,
+  },
+  weatherNoticeTextDark: {
+    color: "rgba(255, 255, 255, 0.55)",
+    fontSize: 11,
+  },
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 24,
     gap: 10,
+  },
+  statsContainerHasWeather: {
+    marginBottom: 0,
   },
   statCard: {
     flex: 1,
@@ -163,6 +219,23 @@ export default StyleSheet.create({
     shadowRadius: 7,
     elevation: 0,
   },
+  statCardLight: {
+    borderWidth: 0,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.09,
+    shadowRadius: 8,
+    elevation: 0,
+  },
+  statCardDark: {
+    borderWidth: 0,
+    borderColor: "transparent",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 0,
+  },
   statLabel: {
     fontSize: 11,
     color: "#FFFFFF",
@@ -170,6 +243,9 @@ export default StyleSheet.create({
     marginBottom: 4,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  statLabelLight: {
+    color: "#6B7280",
   },
   statValue: {
     fontSize: 14,
@@ -182,11 +258,31 @@ export default StyleSheet.create({
     marginBottom: 8,
     includeFontPadding: false,
   },
+  descriptionHeaderLight: {
+    color: "#111827",
+  },
+  descriptionHeaderFlex: {
+    marginBottom: 0,
+    flex: 1,
+  },
   descriptionBody: {
     fontSize: 14,
-    color: "#e7e7e7ff",
+    color: "#e7e7e7",
     lineHeight: 22,
     textAlign: "left",
+  },
+  descriptionBodyLight: {
+    color: "#374151",
+  },
+  descriptionBodyMargin: {
+    marginTop: 12,
+  },
+  seeMoreText: {
+    fontWeight: "700",
+  },
+  seeMoreTextMargin: {
+    fontWeight: "700",
+    marginTop: 8,
   },
   aiLoader: {
     alignSelf: "flex-start",
@@ -199,6 +295,18 @@ export default StyleSheet.create({
     marginTop: 12,
     fontStyle: "italic",
     lineHeight: 18,
+  },
+  weatherAlertLight: {
+    marginTop: 24,
+    marginBottom: 0,
+    color: "#6B7280",
+    fontStyle: "italic",
+  },
+  weatherAlertDark: {
+    marginTop: 24,
+    marginBottom: 0,
+    color: "rgba(255, 255, 255, 0.62)",
+    fontStyle: "italic",
   },
   footerPriceRow: {
     flexDirection: "row",
@@ -216,8 +324,28 @@ export default StyleSheet.create({
     shadowRadius: 8,
     elevation: 0,
   },
+  footerPriceRowLight: {
+    borderTopColor: "rgba(0, 0, 0, 0.08)",
+    shadowOpacity: 0.05,
+  },
+  footerPriceRowDark: {
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+    shadowOpacity: 0.4,
+  },
   priceContainer: {
     justifyContent: "center",
+  },
+  priceHelpTouchable: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  priceHelpIcon: {
+    marginTop: -1,
+  },
+  priceSkeletonWrapper: {
+    marginTop: 5,
+    marginBottom: 2,
   },
   priceLabel: {
     fontSize: 12,
@@ -225,11 +353,17 @@ export default StyleSheet.create({
     fontWeight: "600",
     marginBottom: 3,
   },
+  priceLabelLight: {
+    color: "#6B7280",
+  },
   priceValue: {
     fontSize: 24,
     fontWeight: "800",
     color: "#FFFFFF",
     marginTop: 1,
+  },
+  priceValueLight: {
+    color: "#111827",
   },
   actionButton: {
     width: 58,
@@ -242,6 +376,23 @@ export default StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.4,
     shadowRadius: 5,
+  },
+  actionButtonLight: {
+    backgroundColor: "#000000",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 0,
+  },
+  actionButtonIcon: {
+    width: 26,
+    height: 26,
+  },
+  actionButtonIconLight: {
+    tintColor: "#FFFFFF",
+  },
+  actionButtonIconDark: {
+    tintColor: "#000000",
   },
   fullImageModalOverlay: {
     flex: 1,
@@ -332,6 +483,9 @@ export default StyleSheet.create({
   marginBottom24: {
     marginBottom: 24,
   },
+  marginTop24: {
+    marginTop: 24,
+  },
   rowSpaceBetween: {
     flexDirection: "row",
     alignItems: "center",
@@ -377,5 +531,8 @@ export default StyleSheet.create({
   },
   weatherNoticeWrapper: {
     overflow: "hidden",
+  },
+  alignItemsCenter: {
+    alignItems: "center",
   },
 });

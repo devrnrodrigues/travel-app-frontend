@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -6,34 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Dimensions,
   Animated,
-  Easing,
   Pressable,
 } from "react-native";
-import Feather from "react-native-vector-icons/Feather";
+import { Feather } from "@expo/vector-icons";
 import { SkeletonBox } from "../../../shared/components/Skeleton";
-
-const { width } = Dimensions.get("window");
-
-const BREAKDOWN_CONFIG = [
-  {
-    key: "hotel_per_room",
-    title: "Hospedagem",
-  },
-  {
-    key: "food",
-    title: "Alimentação",
-  },
-  {
-    key: "activities",
-    title: "Passeios",
-  },
-  {
-    key: "transport",
-    title: "Transporte local",
-  },
-];
+import styles from "../styles/estimatedPriceModal.styles";
+import useEstimatedPriceModal, {
+  BREAKDOWN_CONFIG,
+} from "../hooks/useEstimatedPriceModal";
 
 export default function EstimatedPriceModal({
   visible,
@@ -43,100 +24,24 @@ export default function EstimatedPriceModal({
   currentTheme,
   isDarkMode,
 }) {
-  const [modalRendered, setModalRendered] = useState(visible);
-  const [showHotelInfo, setShowHotelInfo] = useState(false);
-  const hotelInfoAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  const toggleHotelInfo = () => {
-    if (!showHotelInfo) {
-      setShowHotelInfo(true);
-      Animated.timing(hotelInfoAnim, {
-        toValue: 1,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
-      }).start();
-    } else {
-      Animated.timing(hotelInfoAnim, {
-        toValue: 0,
-        duration: 180,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: false,
-      }).start(() => {
-        setShowHotelInfo(false);
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (visible) {
-      setModalRendered(true);
-      setShowHotelInfo(false);
-      hotelInfoAnim.setValue(0);
-      scaleAnim.setValue(0.95);
-      opacityAnim.setValue(0);
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 9,
-          tension: 70,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (modalRendered) {
-      setShowHotelInfo(false);
-      hotelInfoAnim.setValue(0);
-      Animated.parallel([
-        Animated.timing(scaleAnim, {
-          toValue: 0.95,
-          duration: 160,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 160,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setModalRendered(false);
-      });
-    }
-  }, [visible]);
-
-  const handleClose = () => {
-    setShowHotelInfo(false);
-    hotelInfoAnim.setValue(0);
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 0.95,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setModalRendered(false);
-      onClose();
-    });
-  };
+  const {
+    modalRendered,
+    showHotelInfo,
+    hotelInfoAnim,
+    scaleAnim,
+    opacityAnim,
+    toggleHotelInfo,
+    handleClose,
+    accentColor,
+    seasonText,
+  } = useEstimatedPriceModal({
+    visible,
+    onClose,
+    data,
+    currentTheme,
+  });
 
   if (!modalRendered) return null;
-
-  const accentColor = currentTheme?.accent || "#3B82F6";
-  const seasonText =
-    data?.estimated_for?.season === "typical"
-      ? "temporada típica"
-      : data?.estimated_for?.season || "temporada típica";
 
   return (
     <Modal
@@ -210,14 +115,14 @@ export default function EstimatedPriceModal({
                 Faixa diária total
               </Text>
               {loading ? (
-                <View style={{ marginVertical: 4 }}>
+                <View style={styles.skeletonWrapper}>
                   <SkeletonBox
                     width={150}
                     height={26}
                     borderRadius={6}
                     isDarkMode={isDarkMode}
                   />
-                  <View style={{ marginTop: 8 }}>
+                  <View style={styles.skeletonSpacing}>
                     <SkeletonBox
                       width={180}
                       height={14}
@@ -374,7 +279,7 @@ export default function EstimatedPriceModal({
 
                       <View style={styles.rowRight}>
                         {loading ? (
-                          <View style={{ alignItems: "flex-end" }}>
+                          <View style={styles.alignEnd}>
                             <SkeletonBox
                               width={95}
                               height={17}
@@ -386,7 +291,7 @@ export default function EstimatedPriceModal({
                               height={12}
                               borderRadius={3}
                               isDarkMode={isDarkMode}
-                              style={{ marginTop: 5 }}
+                              style={styles.skeletonSmallSpacing}
                             />
                           </View>
                         ) : (
@@ -445,201 +350,3 @@ export default function EstimatedPriceModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 22,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 400,
-    maxHeight: "82%",
-    borderRadius: 24,
-    paddingTop: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  cardDark: {
-    backgroundColor: "#000000",
-  },
-  cardLight: {
-    backgroundColor: "#FFFFFF",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-  headerTextContainer: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  title: {
-    fontSize: 21,
-    fontWeight: "700",
-    letterSpacing: -0.4,
-  },
-  subtitle: {
-    fontSize: 13,
-    marginTop: 3,
-    lineHeight: 18,
-  },
-  closeButton: {
-    padding: 4,
-    marginTop: -2,
-  },
-  textLight: {
-    color: "#FFFFFF",
-  },
-  textDark: {
-    color: "#111827",
-  },
-  subtitleDark: {
-    color: "#A1A1AA",
-  },
-  subtitleLight: {
-    color: "#6B7280",
-  },
-  scrollContent: {
-    paddingBottom: 4,
-  },
-  heroSection: {
-    marginTop: 4,
-    marginBottom: 6,
-  },
-  heroLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    marginBottom: 4,
-  },
-  heroValue: {
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.6,
-  },
-  avgRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 6,
-  },
-  avgDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  avgText: {
-    fontSize: 13,
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginVertical: 18,
-  },
-  separatorDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-  },
-  separatorLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
-  },
-  sectionHeading: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 12,
-  },
-  breakdownList: {
-    marginBottom: 14,
-  },
-  breakdownRowWrapper: {
-    paddingVertical: 13,
-  },
-  breakdownRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  titleColumn: {
-    justifyContent: "center",
-  },
-  titleWithInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  infoIconButton: {
-    padding: 2,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 1,
-  },
-  hotelInfoContainer: {
-    marginTop: 2,
-    overflow: "hidden",
-  },
-  hotelInfoText: {
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  rowBorderDark: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(255, 255, 255, 0.08)",
-  },
-  rowBorderLight: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(0, 0, 0, 0.06)",
-  },
-  rowLeft: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  rowTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    letterSpacing: -0.2,
-    textAlign: "left",
-  },
-  rowRight: {
-    alignItems: "flex-end",
-  },
-  rowRange: {
-    fontSize: 15,
-    fontWeight: "700",
-    letterSpacing: -0.2,
-  },
-  rowAvg: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  disclaimerContainer: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  disclaimerContainerDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-  },
-  disclaimerContainerLight: {
-    backgroundColor: "#F4F4F5",
-  },
-  disclaimerText: {
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  disclaimerDark: {
-    color: "#A1A1AA",
-  },
-  disclaimerLight: {
-    color: "#6B7280",
-  },
-});

@@ -188,7 +188,7 @@ export default function ImageGalleryModal({
           showsHorizontalScrollIndicator={false}
           bounces={true}
           style={styles.fullScreenCover}
-          contentContainerStyle={{ alignItems: "center" }}
+          contentContainerStyle={styles.alignItemsCenter}
           getItemLayout={(_, index) => ({
             length: width,
             offset: width * index,

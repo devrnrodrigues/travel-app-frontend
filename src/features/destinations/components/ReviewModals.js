@@ -15,7 +15,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import reviewStyles from "../styles/reviews.styles";
