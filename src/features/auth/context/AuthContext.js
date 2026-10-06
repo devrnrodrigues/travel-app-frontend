@@ -1,10 +1,38 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
-import { loginApi, registerApi, loginWithGoogleApi, logoutApi } from "../api/authService";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {
+  loginApi,
+  registerApi,
+  loginWithGoogleApi,
+  logoutApi,
+} from "../api/authService";
 
 const AuthContext = createContext({});
+
+async function checkWelcomeStatus(userId) {
+  const userSeen = await AsyncStorage.getItem(`hasSeenWelcome_${userId}`);
+  const globalSeen = await AsyncStorage.getItem("hasSeenWelcome");
+  return userSeen === "true" || globalSeen === "true";
+}
+
+async function persistAuthTokensAndUser(data) {
+  const userData = data.user;
+  await AsyncStorage.setItem("accessToken", data.accessToken);
+  if (data.refreshToken) {
+    await AsyncStorage.setItem("refreshToken", data.refreshToken);
+  }
+  await AsyncStorage.setItem("currentUser", JSON.stringify(userData));
+  return userData;
+}
 
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
@@ -24,9 +52,8 @@ export function AuthProvider({ children }) {
           setUser(parsedUser);
           setSession({ user: parsedUser, accessToken: storedToken });
 
-          const userSeen = await AsyncStorage.getItem(`hasSeenWelcome_${parsedUser.id}`);
-          const globalSeen = await AsyncStorage.getItem("hasSeenWelcome");
-          setHasSeenWelcome(userSeen === "true" || globalSeen === "true");
+          const seen = await checkWelcomeStatus(parsedUser.id);
+          setHasSeenWelcome(seen);
         } else {
           setUser(null);
           setSession(null);
@@ -44,68 +71,68 @@ export function AuthProvider({ children }) {
     restoreSession();
   }, []);
 
-  const login = useCallback(async (email, password) => {
-    queryClient.clear();
-    const data = await loginApi(email, password);
-    const userData = data.user;
+  const login = useCallback(
+    async (email, password) => {
+      queryClient.clear();
+      const data = await loginApi(email, password);
+      const userData = await persistAuthTokensAndUser(data);
 
-    await AsyncStorage.setItem("accessToken", data.accessToken);
-    if (data.refreshToken) {
-      await AsyncStorage.setItem("refreshToken", data.refreshToken);
-    }
-    await AsyncStorage.setItem("currentUser", JSON.stringify(userData));
+      setUser(userData);
+      setSession({
+        user: userData,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
 
-    setUser(userData);
-    setSession({ user: userData, accessToken: data.accessToken, refreshToken: data.refreshToken });
+      const seen = await checkWelcomeStatus(userData.id);
+      setHasSeenWelcome(seen);
 
-    const userSeen = await AsyncStorage.getItem(`hasSeenWelcome_${userData.id}`);
-    const globalSeen = await AsyncStorage.getItem("hasSeenWelcome");
-    setHasSeenWelcome(userSeen === "true" || globalSeen === "true");
+      return data;
+    },
+    [queryClient]
+  );
 
-    return data;
-  }, [queryClient]);
+  const register = useCallback(
+    async ({ fullName, email, password }) => {
+      queryClient.clear();
+      const data = await registerApi({ fullName, email, password });
+      const userData = await persistAuthTokensAndUser(data);
 
-  const register = useCallback(async ({ fullName, email, password }) => {
-    queryClient.clear();
-    const data = await registerApi({ fullName, email, password });
-    const userData = data.user;
+      setUser(userData);
+      setSession({
+        user: userData,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
 
-    await AsyncStorage.setItem("accessToken", data.accessToken);
-    if (data.refreshToken) {
-      await AsyncStorage.setItem("refreshToken", data.refreshToken);
-    }
-    await AsyncStorage.setItem("currentUser", JSON.stringify(userData));
+      const seen = await checkWelcomeStatus(userData.id);
+      setHasSeenWelcome(seen);
 
-    setUser(userData);
-    setSession({ user: userData, accessToken: data.accessToken, refreshToken: data.refreshToken });
+      return data;
+    },
+    [queryClient]
+  );
 
-    const userSeen = await AsyncStorage.getItem(`hasSeenWelcome_${userData.id}`);
-    const globalSeen = await AsyncStorage.getItem("hasSeenWelcome");
-    setHasSeenWelcome(userSeen === "true" || globalSeen === "true");
+  const loginWithGoogle = useCallback(
+    async (idToken) => {
+      queryClient.clear();
+      const data = await loginWithGoogleApi(idToken);
+      const userData = await persistAuthTokensAndUser(data);
 
-    return data;
-  }, [queryClient]);
+      setUser(userData);
+      setSession({
+        user: userData,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
 
-  const loginWithGoogle = useCallback(async (idToken) => {
-    queryClient.clear();
-    const data = await loginWithGoogleApi(idToken);
-    const userData = data.user;
+      const seen = await checkWelcomeStatus(userData.id);
+      setHasSeenWelcome(seen);
 
-    await AsyncStorage.setItem("accessToken", data.accessToken);
-    if (data.refreshToken) {
-      await AsyncStorage.setItem("refreshToken", data.refreshToken);
-    }
-    await AsyncStorage.setItem("currentUser", JSON.stringify(userData));
-
-    setUser(userData);
-    setSession({ user: userData, accessToken: data.accessToken, refreshToken: data.refreshToken });
-
-    const userSeen = await AsyncStorage.getItem(`hasSeenWelcome_${userData.id}`);
-    const globalSeen = await AsyncStorage.getItem("hasSeenWelcome");
-    setHasSeenWelcome(userSeen === "true" || globalSeen === "true");
-
-    return data;
-  }, [queryClient]);
+      return data;
+    },
+    [queryClient]
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -135,6 +162,13 @@ export function AuthProvider({ children }) {
       AsyncStorage.setItem("currentUser", JSON.stringify(updated));
       return updated;
     });
+    setSession((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        user: { ...prev.user, ...newUserData },
+      };
+    });
   }, []);
 
   const markWelcomeSeen = useCallback(async () => {
@@ -145,21 +179,35 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  const contextValue = useMemo(
+    () => ({
+      user,
+      session,
+      isLoading,
+      hasSeenWelcome,
+      login,
+      register,
+      loginWithGoogle,
+      logout,
+      updateUser,
+      markWelcomeSeen,
+    }),
+    [
+      user,
+      session,
+      isLoading,
+      hasSeenWelcome,
+      login,
+      register,
+      loginWithGoogle,
+      logout,
+      updateUser,
+      markWelcomeSeen,
+    ]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        isLoading,
-        hasSeenWelcome,
-        login,
-        register,
-        loginWithGoogle,
-        logout,
-        updateUser,
-        markWelcomeSeen,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

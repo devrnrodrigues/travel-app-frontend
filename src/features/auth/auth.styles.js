@@ -56,6 +56,7 @@ export default StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 20,
     alignItems: "center",
+    overflow: "hidden",
   },
   closeButton: {
     position: "absolute",
@@ -116,23 +117,23 @@ export default StyleSheet.create({
     marginLeft: 4,
   },
   button: {
- backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 8,
-  width: "100%",
-  height: 52,
-  borderRadius: 16,
-  justifyContent: "center",
-  alignItems: "center",
-  marginTop: 6,
-},
+    width: "100%",
+    height: 52,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 6,
+  },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: "#000000ff",
+    color: "#000000",
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.2,
@@ -163,7 +164,6 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255, 255, 255, 0.42)",
-
     borderRadius: 16,
   },
   googleIcon: {
@@ -172,7 +172,7 @@ export default StyleSheet.create({
     marginRight: 10,
   },
   googleButtonText: {
-    color: "#ffffffff",
+    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
     letterSpacing: 0.2,
@@ -224,6 +224,12 @@ export default StyleSheet.create({
     fontSize: 12.5,
     marginLeft: 7,
     fontWeight: "600",
+  },
+  requirementTextValid: {
+    color: "#00E676",
+  },
+  requirementTextInvalid: {
+    color: "#FF3B30",
   },
   flex1: {
     flex: 1,
