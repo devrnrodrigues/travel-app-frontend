@@ -8,117 +8,17 @@ const CARD_HEIGHT = Math.round(COLUMN_WIDTH * 1.52);
 
 export { COLUMN_WIDTH, CARD_HEIGHT, GAP, HORIZONTAL_PADDING };
 
-export default StyleSheet.create({
+export const exploreStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "transparent",
   },
-  header: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: "transparent",
-  },
-  headerBar: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    width: "100%",
-    paddingBottom: 16,
-    zIndex: 9999,
-    elevation: 10,
-  },
-  headerFoliageWrapper: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    overflow: "hidden",
-  },
-  headerFoliage: {
-    width: "124%",
-    height: Math.min(320, Math.round(width * 0.82)),
-    position: "absolute",
-    top: -6,
-    left: "-8%",
-  },
-  headerFoliageDark: {
-    opacity: 0.85,
-  },
-  headerFoliageLight: {
-    opacity: 0.85,
-  },
-  headerFoliageGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    height: "100%",
-    zIndex: 2,
-    elevation: 2,
-  },
-  searchBarRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-  },
-  searchBarInputWrapper: {
+  screenDarkBg: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    height: 44,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    borderWidth: 1,
+    backgroundColor: "#0A0A0A",
   },
-  searchBarInputDark: {
-    backgroundColor: "rgba(38, 38, 38, 0.72)",
-    borderColor: "rgba(255, 255, 255, 0.1)",
-  },
-  searchBarInputLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.75)",
-    borderColor: "rgba(0, 0, 0, 0.08)",
-    shadowOpacity: 0.08,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
+  flex1: {
     flex: 1,
-    height: "100%",
-    fontSize: 15.5,
-    paddingVertical: 0,
-    outlineStyle: "none",
-  },
-  searchInputDark: {
-    color: "#FFFFFF",
-  },
-  searchInputLight: {
-    color: "#000000",
-  },
-  clearButton: {
-    padding: 4,
-  },
-  photoIconButton: {
-    marginLeft: 10,
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-  },
-  photoIconButtonDark: {
-    backgroundColor: "rgba(38, 38, 38, 0.72)",
-    borderColor: "rgba(255, 255, 255, 0.1)",
-  },
-  photoIconButtonLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.75)",
-    borderColor: "rgba(0, 0, 0, 0.08)",
   },
   columnWrapper: {
     gap: GAP,
@@ -128,136 +28,17 @@ export default StyleSheet.create({
     gap: GAP,
     backgroundColor: "transparent",
   },
-  masonryContainer: {
-    paddingHorizontal: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
+  listFooterWrapper: {
+    paddingTop: GAP,
+  },
+  bgDark: {
     backgroundColor: "#000000",
   },
-  masonryRow: {
-    flexDirection: "row",
-    gap: GAP,
-    backgroundColor: "#000000",
-  },
-  masonryColumn: {
-    flex: 1,
-    gap: GAP,
-    backgroundColor: "#000000",
-  },
-  gridItem: {
-    width: "100%",
-    position: "relative",
-    backgroundColor: "#000000",
-    overflow: "hidden",
-  },
-  gridItemLight: {
-    backgroundColor: "#F3F4F6",
-  },
-  gridImage: {
-    width: "100%",
-    height: "100%",
-  },
-  topBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
-    borderRadius: 5,
-    paddingHorizontal: 4.5,
-    paddingVertical: 2,
-    flexDirection: "row",
-    alignItems: "center",
-    zIndex: 2,
-  },
-  topBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 9.5,
-    fontWeight: "700",
-    marginLeft: 2.5,
-  },
-  bottomOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    minHeight: 46,
-    justifyContent: "flex-end",
-    paddingHorizontal: 6,
-    paddingBottom: 6,
-    paddingTop: 16,
-  },
-  destinationTitle: {
-    color: "#FFFFFF",
-    fontSize: 11.5,
-    fontWeight: "700",
-    lineHeight: 14.5,
-  },
-  destinationLocation: {
-    color: "rgba(255, 255, 255, 0.85)",
-    fontSize: 9.5,
-    fontWeight: "500",
-  },
-  emptyStateContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 80,
-    paddingHorizontal: 20,
-  },
-  emptyStateText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 12,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  badgeIconMargin: {
-    marginRight: 2.5,
-  },
-  screenDarkBg: {
-    flex: 1,
-    backgroundColor: "#0A0A0A",
-  },
-  flex1: {
-    flex: 1,
-  },
-  searchBarInner: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    height: "100%",
-  },
-  imageSkeletonOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  imageSkeletonDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.07)",
-  },
-  imageSkeletonLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
-  },
-  searchBarInputFocusedDark: {
-    backgroundColor: "#1F1F1F",
-  },
-  searchBarInputFocusedLight: {
-    backgroundColor: "#FFFFFF",
-  },
-  loadingMoreContainer: {
-    paddingTop: 16,
-    paddingBottom: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 56,
+  bgLight: {
+    backgroundColor: "#E5E7EB",
   },
 });
+
 export const categoryThemes = {
   "Florestas": { colors: ["rgba(15, 23, 21, 0.45)", "rgba(20, 33, 29, 0.55)", "rgba(27, 46, 41, 0.68)"], accent: "#4CAF50" },
   "florestas": { colors: ["rgba(15, 23, 21, 0.45)", "rgba(20, 33, 29, 0.55)", "rgba(27, 46, 41, 0.68)"], accent: "#4CAF50" },
@@ -289,3 +70,5 @@ export const defaultTheme = {
   colors: ["#0A0A0A", "#050505"],
   accent: "#4CAF50",
 };
+
+export default exploreStyles;
