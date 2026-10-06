@@ -1,267 +1,31 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   View,
-  Text,
-  Image,
   ImageBackground,
   StatusBar,
-  TouchableOpacity,
-  FlatList,
   ActivityIndicator,
-  Modal,
-  TouchableWithoutFeedback,
-  TextInput,
   Keyboard,
   BackHandler,
   Platform,
   RefreshControl,
   Animated,
-  StyleSheet,
   useWindowDimensions,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect } from "@react-navigation/native";
-import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import Feather from "react-native-vector-icons/Feather";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import styles, { dialogStyles, getCardDimensions, CARD_GAP } from "./favorites.styles";
+import styles, { getCardDimensions } from "./favorites.styles";
 import { useTheme } from "../../theme/ThemeContext";
-import { useAuth } from "../auth/context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { FavoritesSkeletonList } from "../../shared/components/Skeleton";
-import { getFavoritesApi, removeFavoriteApi } from "./api/favoriteService";
-import { getOptimizedImageUrl } from "../../shared/utils/imageUrl";
+import FavoriteCardItem from "./components/FavoriteCardItem";
+import FavoriteHeader from "./components/FavoriteHeader";
+import FavoriteDeleteModal from "./components/FavoriteDeleteModal";
+import FavoriteEmptyState from "./components/FavoriteEmptyState";
+import useFavoritesList from "./hooks/useFavoritesList";
+import useFavoriteDelete from "./hooks/useFavoriteDelete";
 
-const FavoriteCardItem = React.memo(function FavoriteCardItem({
-  item,
-  index,
-  totalItems,
-  scrollY,
-  cardDimensions,
-  navigation,
-  currentTheme,
-  isDarkMode,
-  setItemToDelete,
-  cardWidth,
-  cardHeight,
-}) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const imgAnim = useRef(new Animated.Value(0)).current;
-
-  const reviewCount = Number(
-    item?.reviewCount ??
-    item?.reviewsCount ??
-    item?.destinationReviewCount ??
-    (Array.isArray(item?.reviews) ? item.reviews.length : 0)
-  );
-  const hasRating = reviewCount >= 1;
-  const ratingValue =
-    item?.realRating && item.realRating !== "0.0" && item.realRating !== "0"
-      ? item.realRating
-      : item?.rating != null && Number(item.rating) > 0
-        ? Number(item.rating).toFixed(1)
-        : item?.destinationRating != null && Number(item.destinationRating) > 0
-          ? Number(item.destinationRating).toFixed(1)
-          : null;
-
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-    Animated.timing(imgAnim, {
-      toValue: 1,
-      duration: 220,
-      useNativeDriver: Platform.OS !== "web",
-    }).start();
-  };
-
-  const handlePress = () => {
-    Keyboard.dismiss();
-    navigation.navigate("Details", {
-      item: {
-        ...item,
-        id: item.item_id || item.id,
-        item_id: item.item_id || item.id,
-      },
-      currentTheme,
-    });
-  };
-
-  const visibleRows = cardDimensions?.targetRows || 3;
-  const totalRows = Math.ceil((totalItems || 0) / 2);
-  const rowIndex = Math.floor(index / 2);
-  const rowSlot = (cardHeight || 0) + CARD_GAP;
-  const itemOffset = rowIndex * rowSlot;
-
-  const canFoldTop = totalRows > visibleRows && rowIndex < totalRows - visibleRows;
-  const canFoldBottom = totalRows > visibleRows && rowIndex >= visibleRows;
-
-  let rotateX = "0deg";
-  let translateY = 0;
-  let opacity = 1;
-
-  if (scrollY && canFoldTop && canFoldBottom) {
-    const inputRange = [
-      Math.round(itemOffset - (visibleRows - 0.05) * rowSlot),
-      Math.round(itemOffset - (visibleRows - 0.55) * rowSlot),
-      Math.round(itemOffset - (visibleRows - 1) * rowSlot),
-      Math.round(itemOffset),
-      Math.round(itemOffset + 0.45 * rowSlot),
-      Math.round(itemOffset + 0.95 * rowSlot),
-    ];
-    rotateX = scrollY.interpolate({
-      inputRange,
-      outputRange: ["60deg", "28deg", "0deg", "0deg", "-28deg", "-60deg"],
-      extrapolate: "clamp",
-    });
-    translateY = scrollY.interpolate({
-      inputRange,
-      outputRange: [20, 8, 0, 0, 0, 0],
-      extrapolate: "clamp",
-    });
-    opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [0, 0.9, 1, 1, 0.9, 0],
-      extrapolate: "clamp",
-    });
-  } else if (scrollY && canFoldTop) {
-    const inputRange = [
-      Math.round(itemOffset),
-      Math.round(itemOffset + 0.45 * rowSlot),
-      Math.round(itemOffset + 0.95 * rowSlot),
-    ];
-    rotateX = scrollY.interpolate({
-      inputRange,
-      outputRange: ["0deg", "-28deg", "-60deg"],
-      extrapolate: "clamp",
-    });
-    translateY = scrollY.interpolate({
-      inputRange,
-      outputRange: [0, 0, 0],
-      extrapolate: "clamp",
-    });
-    opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [1, 0.9, 0],
-      extrapolate: "clamp",
-    });
-  } else if (scrollY && canFoldBottom) {
-    const inputRange = [
-      Math.round(itemOffset - (visibleRows - 0.05) * rowSlot),
-      Math.round(itemOffset - (visibleRows - 0.55) * rowSlot),
-      Math.round(itemOffset - (visibleRows - 1) * rowSlot),
-    ];
-    rotateX = scrollY.interpolate({
-      inputRange,
-      outputRange: ["60deg", "28deg", "0deg"],
-      extrapolate: "clamp",
-    });
-    translateY = scrollY.interpolate({
-      inputRange,
-      outputRange: [20, 8, 0],
-      extrapolate: "clamp",
-    });
-    opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [0, 0.9, 1],
-      extrapolate: "clamp",
-    });
-  }
-
-  return (
-    <Animated.View
-      style={[
-        cardWidth && cardHeight ? { width: cardWidth, height: cardHeight } : null,
-        {
-          opacity,
-          transform: [{ perspective: 700 }, { translateY }, { rotateX }],
-        },
-      ]}
-    >
-      <TouchableOpacity
-        activeOpacity={0.88}
-        style={[
-          styles.card,
-          isDarkMode ? styles.cardDark : styles.cardLight,
-          cardWidth && cardHeight ? { width: cardWidth, height: cardHeight } : null,
-        ]}
-        onPress={handlePress}
-        onLongPress={() => setItemToDelete(item)}
-        delayLongPress={450}
-      >
-        <View style={styles.cardInner}>
-          {item.image_url ? (
-            <>
-              <Animated.Image
-                source={{ uri: getOptimizedImageUrl(item.image_url, 450) }}
-                style={[styles.cardImage, { opacity: imgAnim }]}
-                resizeMode="cover"
-                onLoad={handleImageLoad}
-              />
-              {!imageLoaded && (
-                <View
-                  style={[
-                    StyleSheet.absoluteFillObject,
-                    { backgroundColor: isDarkMode ? "#252525" : "#E2E2E2" },
-                  ]}
-                />
-              )}
-            </>
-          ) : (
-            <View
-              style={[
-                styles.cardPlaceholder,
-                { backgroundColor: isDarkMode ? "#222222" : "#E5E5EA" },
-              ]}
-            >
-              <Ionicons
-                name="image-outline"
-                size={32}
-                color={isDarkMode ? "#666666" : "#999999"}
-              />
-              <Text
-                style={[
-                  styles.cardPlaceholderText,
-                  { color: isDarkMode ? "#777777" : "#8E8E93" },
-                ]}
-              >
-                Sem imagem
-              </Text>
-            </View>
-          )}
-
-          {hasRating && ratingValue ? (
-            <View style={styles.ratingBadge}>
-              <Ionicons name="star" size={10} color="#FFD700" />
-              <Text style={styles.ratingText}>{ratingValue}</Text>
-            </View>
-          ) : null}
-
-          <LinearGradient
-            colors={["transparent", "rgba(0, 0, 0, 0.42)", "rgba(0, 0, 0, 0.88)"]}
-            locations={[0, 0.42, 1]}
-            style={styles.cardOverlay}
-          >
-            <Text style={styles.cardTitle} numberOfLines={1}>
-              {item.title}
-            </Text>
-            {item.location ? (
-              <View style={styles.locationRow}>
-                <Feather
-                  name="map-pin"
-                  size={11}
-                  color={currentTheme.accent || "#007AFF"}
-                />
-                <Text style={styles.locationText} numberOfLines={1}>
-                  {item.location}
-                </Text>
-              </View>
-            ) : null}
-          </LinearGradient>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-});
+const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)", "rgba(0, 0, 0, 0.98)"];
+const GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
 
 export default function Favorites({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -287,105 +51,29 @@ export default function Favorites({ navigation }) {
 
   const { currentTheme, isDarkMode } = useTheme();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const userId = user?.id || user?._id || "anon";
-
-  const PAGE_SIZE = 10;
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const flatListRef = useRef(null);
-  const scrollY = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const normalizedSearch = debouncedSearch.trim();
-
-  useEffect(() => {
-    scrollY.setValue(0);
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    const raf = requestAnimationFrame(() => {
-      scrollY.setValue(0);
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [normalizedSearch, scrollY]);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery("");
-    setDebouncedSearch("");
-    scrollY.setValue(0);
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    requestAnimationFrame(() => {
-      scrollY.setValue(0);
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    });
-  }, [scrollY]);
 
   const {
-    data,
-    isLoading,
+    searchQuery,
+    setSearchQuery,
+    flatListRef,
+    scrollY,
+    handleClearSearch,
+    favorites,
+    isShowingSkeleton,
     isRefetching,
     refetch,
-    hasNextPage,
-    fetchNextPage,
+    loadNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["favorites", userId, normalizedSearch],
-    enabled: !!user,
-    queryFn: async ({ pageParam = 0 }) => {
-      return getFavoritesApi({
-        page: pageParam,
-        size: PAGE_SIZE,
-        search: normalizedSearch || undefined,
-      });
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages, lastPageParam) => {
-      if (!lastPage || lastPage.length < PAGE_SIZE) {
-        return undefined;
-      }
-      return lastPageParam + 1;
-    },
-  });
+  } = useFavoritesList(user);
 
-  const { data: isFavoritesHidden } = useQuery({
-    queryKey: ["hideFavorites"],
-    queryFn: async () => {
-      const val = await AsyncStorage.getItem("@debug_hide_favorites");
-      return val === "true";
-    },
-    initialData: false,
-  });
-
-  const favorites = useMemo(() => {
-    if (isFavoritesHidden || !data?.pages) return [];
-    const flat = data.pages.flat();
-    const seen = new Set();
-    return flat.filter((item) => {
-      const key = item?.destinationId || item?.id;
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [isFavoritesHidden, data]);
-
-  const loadNextPage = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const loading = isLoading && favorites.length === 0;
-  const isShowingSkeleton = loading;
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const lastItemTitleRef = useRef("");
+  const {
+    itemToDelete,
+    setItemToDelete,
+    isDeleting,
+    lastItemTitleRef,
+    confirmDelete,
+    cancelDelete,
+  } = useFavoriteDelete();
 
   const [isFocused, setIsFocused] = useState(false);
   const searchInputRef = useRef(null);
@@ -423,405 +111,167 @@ export default function Favorites({ navigation }) {
     return () => sub.remove();
   }, [handleDeactivateSearch]);
 
-  if (itemToDelete?.title) {
-    lastItemTitleRef.current = itemToDelete.title;
-  }
-
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-    try {
-      setIsDeleting(true);
-      const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
-      await removeFavoriteApi(destId);
-
-      queryClient.setQueriesData({ queryKey: ["favorites"] }, (old) => {
-        if (!old) return old;
-        if (old.pages) {
-          return {
-            ...old,
-            pages: old.pages.map((page) =>
-              page.filter((fav) => (fav.destinationId || fav.id) !== destId)
-            ),
-          };
-        }
-        return (old || []).filter((fav) => (fav.destinationId || fav.id) !== destId);
-      });
-      setItemToDelete(null);
-    } catch (error) {
-      console.error("Erro ao remover favorito:", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: ["hideFavorites"] });
-      queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
-    }, [queryClient, userId])
-  );
-
   const primaryTextColor = "#FFFFFF";
   const secondaryTextColor = "rgba(255, 255, 255, 0.70)";
   const accentColor = currentTheme.accent || "#007AFF";
   const bgSource = typeof currentTheme?.bg === "string" ? { uri: currentTheme.bg } : currentTheme?.bg;
 
+  const gradientColors = useMemo(() => {
+    if (currentTheme?.colors && currentTheme.colors.length >= 3) {
+      return [
+        currentTheme.colors[0],
+        currentTheme.colors[1],
+        "rgba(0, 0, 0, 0.72)",
+        "rgba(0, 0, 0, 0.96)",
+      ];
+    }
+    return DEFAULT_GRADIENT;
+  }, [currentTheme?.colors]);
+
+  const contentContainerStyle = useMemo(() => [
+    {
+      paddingBottom:
+        favorites.length > cardDimensions.targetRows * 2
+          ? cardDimensions.scrollPaddingBottom
+          : 0,
+    },
+    favorites.length === 0 && [
+      styles.emptyListContainer,
+      { paddingBottom: cardDimensions.tabBarHeight },
+    ],
+  ], [favorites.length, cardDimensions]);
+
+  const renderItem = useCallback(
+    ({ item, index }) => (
+      <FavoriteCardItem
+        item={item}
+        index={index}
+        totalItems={favorites.length}
+        scrollY={scrollY}
+        cardDimensions={cardDimensions}
+        navigation={navigation}
+        currentTheme={currentTheme}
+        isDarkMode={isDarkMode}
+        setItemToDelete={setItemToDelete}
+        cardWidth={cardDimensions.cardWidth}
+        cardHeight={cardDimensions.cardHeight}
+      />
+    ),
+    [
+      favorites.length,
+      scrollY,
+      cardDimensions,
+      navigation,
+      currentTheme,
+      isDarkMode,
+      setItemToDelete,
+    ]
+  );
+
+  const keyExtractor = useCallback(
+    (item) => (item.destinationId || item.id || item.item_id).toString(),
+    []
+  );
+
   return (
     <View style={styles.root}>
       <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
         <LinearGradient
-          colors={
-            currentTheme?.colors && currentTheme.colors.length >= 3
-              ? [
-                  currentTheme.colors[0],
-                  currentTheme.colors[1],
-                  "rgba(0, 0, 0, 0.72)",
-                  "rgba(0, 0, 0, 0.96)",
-                ]
-              : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)", "rgba(0, 0, 0, 0.98)"]
-          }
-          locations={[0, 0.38, 0.72, 1]}
+          colors={gradientColors}
+          locations={GRADIENT_LOCATIONS}
           style={styles.flex1}
         >
           <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
           <SafeAreaView edges={["top"]} style={styles.container}>
-        <View style={styles.navHeader}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.navigate("Explore")}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={26} color={accentColor} />
-            <Text style={[styles.backButtonText, { color: accentColor }]}>
-              Explorar
-            </Text>
-          </TouchableOpacity>
-          {isRefetching && (
-            <ActivityIndicator size="small" color={accentColor} style={{ marginRight: 4 }} />
-          )}
-        </View>
-
-        <View style={styles.titleContainer}>
-          <Text style={[styles.largeTitle, { color: primaryTextColor }]}>
-            Favoritos
-          </Text>
-        </View>
-
-        <View style={styles.searchContainer}>
-          <View
-            style={[
-              styles.searchBox,
-              isDarkMode ? styles.searchBoxDark : styles.searchBoxLight,
-              isFocused && { borderColor: accentColor },
-            ]}
-          >
-            <Feather
-              name="search"
-              size={18}
-              color={
-                isFocused
-                  ? accentColor
-                  : isDarkMode
-                  ? "rgba(255, 255, 255, 0.45)"
-                  : "rgba(0, 0, 0, 0.55)"
-              }
-              style={styles.searchIcon}
-            />
-            <TextInput
-              ref={searchInputRef}
-              style={[
-                styles.searchInput,
-                isDarkMode ? styles.searchInputDark : styles.searchInputLight,
-              ]}
-              placeholder="Buscar"
-              placeholderTextColor={
-                isDarkMode ? "rgba(255, 255, 255, 0.45)" : "rgba(0, 0, 0, 0.50)"
-              }
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              returnKeyType="search"
-              autoCapitalize="none"
-              autoCorrect={false}
-              selectionColor={accentColor}
-            />
-            {searchQuery.length > 0 ? (
-              <TouchableOpacity
-                onPress={handleClearSearch}
-                style={styles.searchClearBtn}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons
-                  name="close-circle"
-                  size={18}
-                  color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.55)"}
-                />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => {
-                  setIsFocused(true);
-                  searchInputRef.current?.focus();
-                }}
-                style={styles.searchClearBtn}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="mic"
-                  size={18}
-                  color={
-                    isFocused
-                      ? accentColor
-                      : isDarkMode
-                      ? "rgba(255, 255, 255, 0.45)"
-                      : "rgba(0, 0, 0, 0.55)"
-                  }
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        <View
-          style={[styles.flex1, { overflow: "visible" }]}
-          onLayout={handleContainerLayout}
-        >
-          {isShowingSkeleton ? (
-            <FavoritesSkeletonList
+            <FavoriteHeader
+              navigation={navigation}
+              accentColor={accentColor}
+              primaryTextColor={primaryTextColor}
               isDarkMode={isDarkMode}
-              count={cardDimensions.isSmallScreen ? 4 : 6}
-              cardWidth={cardDimensions.cardWidth}
-              cardHeight={cardDimensions.cardHeight}
+              isRefetching={isRefetching}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              isFocused={isFocused}
+              setIsFocused={setIsFocused}
+              searchInputRef={searchInputRef}
+              handleClearSearch={handleClearSearch}
             />
-          ) : (
-            <Animated.FlatList
-              ref={flatListRef}
-              data={favorites}
-              key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
-              numColumns={2}
-              columnWrapperStyle={styles.columnWrapper}
-              contentContainerStyle={[
-                {
-                  paddingBottom:
-                    favorites.length > cardDimensions.targetRows * 2
-                      ? cardDimensions.scrollPaddingBottom
-                      : 0,
-                },
-                favorites.length === 0 && {
-                  flexGrow: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  paddingBottom: cardDimensions.tabBarHeight,
-                },
-              ]}
-              onScrollBeginDrag={handleDeactivateSearch}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              keyExtractor={(item) =>
-                (item.destinationId || item.id || item.item_id).toString()
-              }
-              onEndReached={loadNextPage}
-              onEndReachedThreshold={0.5}
-              initialNumToRender={cardDimensions.targetRows * 2}
-              maxToRenderPerBatch={cardDimensions.targetRows * 2}
-              windowSize={7}
-              bounces={true}
-              overScrollMode="always"
-              scrollEventThrottle={16}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                { useNativeDriver: Platform.OS !== "web" }
-              )}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefetching}
-                  onRefresh={refetch}
-                  tintColor={accentColor}
-                  colors={[accentColor]}
-                  progressViewOffset={-90}
-                />
-              }
-              renderItem={({ item, index }) => (
-                <FavoriteCardItem
-                  item={item}
-                  index={index}
-                  totalItems={favorites.length}
-                  scrollY={scrollY}
-                  cardDimensions={cardDimensions}
-                  navigation={navigation}
-                  currentTheme={currentTheme}
+
+            <View
+              style={[styles.flex1, styles.overflowVisible]}
+              onLayout={handleContainerLayout}
+            >
+              {isShowingSkeleton ? (
+                <FavoritesSkeletonList
                   isDarkMode={isDarkMode}
-                  setItemToDelete={setItemToDelete}
+                  count={cardDimensions.isSmallScreen ? 4 : 6}
                   cardWidth={cardDimensions.cardWidth}
                   cardHeight={cardDimensions.cardHeight}
                 />
-              )}
-              ListFooterComponent={
-                isFetchingNextPage ? (
-                  <View style={{ paddingVertical: 16, alignItems: "center" }}>
-                    <ActivityIndicator size="small" color={accentColor} />
-                  </View>
-                ) : null
-              }
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  {searchQuery.trim() ? (
-                    <>
-                      <View
-                        style={[
-                          styles.emptyIconContainer,
-                          {
-                            backgroundColor: isDarkMode
-                              ? "rgba(255, 255, 255, 0.08)"
-                              : "rgba(255, 255, 255, 0.14)",
-                          },
-                        ]}
-                      >
-                        <Feather
-                          name="search"
-                          size={32}
-                          color={secondaryTextColor}
-                        />
-                      </View>
-                      <Text
-                        style={[styles.emptyTitle, { color: primaryTextColor }]}
-                      >
-                        Nenhum resultado
-                      </Text>
-                      <Text
-                        style={[
-                          styles.emptySubtitle,
-                          { color: secondaryTextColor },
-                        ]}
-                      >
-                        Nenhum destino salvo corresponde a "{searchQuery}".
-                      </Text>
-                    </>
-                  ) : (
-                    <>
-                      <View
-                        style={[
-                          styles.emptyIconContainer,
-                          {
-                            backgroundColor: isDarkMode
-                              ? "rgba(255, 255, 255, 0.08)"
-                              : "rgba(255, 255, 255, 0.14)",
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name="heart-outline"
-                          size={34}
-                          color={secondaryTextColor}
-                        />
-                      </View>
-                      <Text
-                        style={[styles.emptyTitle, { color: primaryTextColor }]}
-                      >
-                        Nenhum favorito ainda
-                      </Text>
-                      <Text
-                        style={[
-                          styles.emptySubtitle,
-                          { color: secondaryTextColor },
-                        ]}
-                      >
-                        Toque no coração nos destinos que você mais gostar para
-                        guardá-los aqui.
-                      </Text>
-                    </>
+              ) : (
+                <Animated.FlatList
+                  ref={flatListRef}
+                  data={favorites}
+                  key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
+                  numColumns={2}
+                  columnWrapperStyle={styles.columnWrapper}
+                  contentContainerStyle={contentContainerStyle}
+                  onScrollBeginDrag={handleDeactivateSearch}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  keyExtractor={keyExtractor}
+                  onEndReached={loadNextPage}
+                  onEndReachedThreshold={0.5}
+                  initialNumToRender={cardDimensions.targetRows * 2}
+                  maxToRenderPerBatch={cardDimensions.targetRows * 2}
+                  windowSize={7}
+                  bounces={true}
+                  overScrollMode="always"
+                  scrollEventThrottle={16}
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: Platform.OS !== "web" }
                   )}
-                </View>
-              }
-            />
-          )}
-        </View>
-      </SafeAreaView>
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={isRefetching}
+                      onRefresh={refetch}
+                      tintColor={accentColor}
+                      colors={[accentColor]}
+                      progressViewOffset={-90}
+                    />
+                  }
+                  renderItem={renderItem}
+                  ListFooterComponent={
+                    isFetchingNextPage ? (
+                      <View style={styles.listFooterWrapper}>
+                        <ActivityIndicator size="small" color={accentColor} />
+                      </View>
+                    ) : null
+                  }
+                  ListEmptyComponent={
+                    <FavoriteEmptyState
+                      searchQuery={searchQuery}
+                      isDarkMode={isDarkMode}
+                      primaryTextColor={primaryTextColor}
+                      secondaryTextColor={secondaryTextColor}
+                    />
+                  }
+                />
+              )}
+            </View>
+          </SafeAreaView>
         </LinearGradient>
       </ImageBackground>
 
-      <Modal
-        visible={!!itemToDelete}
-        transparent={true}
-        animationType="fade"
-        statusBarTranslucent={true}
-        navigationBarTranslucent={true}
-        onRequestClose={() => !isDeleting && setItemToDelete(null)}
-      >
-        <TouchableWithoutFeedback
-          onPress={() => !isDeleting && setItemToDelete(null)}
-        >
-          <View style={dialogStyles.overlay}>
-            <TouchableWithoutFeedback>
-              <View
-                style={[
-                  dialogStyles.dialogCard,
-                  !isDarkMode && dialogStyles.dialogCardLight,
-                ]}
-              >
-                <View style={dialogStyles.contentSection}>
-                  <Text
-                    style={[
-                      dialogStyles.title,
-                      !isDarkMode && dialogStyles.titleLight,
-                    ]}
-                  >
-                    Remover dos favoritos?
-                  </Text>
-                  <Text
-                    style={[
-                      dialogStyles.message,
-                      !isDarkMode && dialogStyles.messageLight,
-                    ]}
-                  >
-                    Deseja remover "
-                    {itemToDelete?.title || lastItemTitleRef.current}
-                    " da sua lista de destinos salvos?
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    dialogStyles.actionButton,
-                    !isDarkMode && dialogStyles.actionButtonLight,
-                  ]}
-                  onPress={confirmDelete}
-                  disabled={isDeleting}
-                  activeOpacity={0.65}
-                >
-                  {isDeleting ? (
-                    <ActivityIndicator size="small" color="#FF3B30" />
-                  ) : (
-                    <Text style={dialogStyles.deleteText}>Excluir</Text>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    dialogStyles.actionButton,
-                    dialogStyles.lastButton,
-                    !isDarkMode && dialogStyles.actionButtonLight,
-                  ]}
-                  onPress={() => setItemToDelete(null)}
-                  disabled={isDeleting}
-                  activeOpacity={0.65}
-                >
-                  <Text
-                    style={[
-                      dialogStyles.cancelText,
-                      !isDarkMode && dialogStyles.cancelTextLight,
-                    ]}
-                  >
-                    Cancelar
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+      <FavoriteDeleteModal
+        itemToDelete={itemToDelete}
+        isDeleting={isDeleting}
+        lastItemTitleRef={lastItemTitleRef}
+        isDarkMode={isDarkMode}
+        confirmDelete={confirmDelete}
+        cancelDelete={cancelDelete}
+      />
     </View>
   );
 }
