@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { useShimmerAnimation, ShimmerOverlay } from "../../../shared/components/Skeleton";
-import { styles } from "../profile.styles";
+import styles, { getPillWidthStyle } from "../styles/countryPillSkeleton.styles";
 
 export function CountryPillSkeleton({ isDarkMode, width = 110 }) {
   const shimmerAnim = useShimmerAnimation(1800);
@@ -9,34 +9,22 @@ export function CountryPillSkeleton({ isDarkMode, width = 110 }) {
   return (
     <View
       style={[
-        styles.countryPill,
-        !isDarkMode && styles.countryPillLight,
-        {
-          width,
-          overflow: "hidden",
-          position: "relative",
-        },
+        styles.pill,
+        !isDarkMode && styles.pillLight,
+        getPillWidthStyle(width),
       ]}
     >
       <View
         style={[
           styles.flagIcon,
-          {
-            backgroundColor: isDarkMode
-              ? "rgba(255, 255, 255, 0.15)"
-              : "rgba(0, 0, 0, 0.12)",
-          },
+          isDarkMode ? styles.flagIconDark : styles.flagIconLight,
         ]}
       />
       <View
-        style={{
-          flex: 1,
-          height: 14,
-          borderRadius: 4,
-          backgroundColor: isDarkMode
-            ? "rgba(255, 255, 255, 0.15)"
-            : "rgba(0, 0, 0, 0.12)",
-        }}
+        style={[
+          styles.labelBar,
+          isDarkMode ? styles.labelBarDark : styles.labelBarLight,
+        ]}
       />
       <ShimmerOverlay
         animatedValue={shimmerAnim}
@@ -51,7 +39,7 @@ export function CountryPillSkeleton({ isDarkMode, width = 110 }) {
 export function CountryPillSkeletonGroup({ isDarkMode, count = 4 }) {
   const widths = [112, 130, 96, 136, 118];
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+    <View style={[styles.container, styles.gap8]}>
       {Array.from({ length: count }).map((_, i) => (
         <CountryPillSkeleton
           key={i}

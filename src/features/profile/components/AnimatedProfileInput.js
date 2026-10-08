@@ -1,6 +1,9 @@
 import React, { useRef, useEffect } from "react";
 import { TextInput, Animated, Easing } from "react-native";
-import { styles } from "../profile.styles";
+import styles, {
+  getInputAnimatedStyle,
+  getTextInputStyle,
+} from "../styles/animatedProfileInput.styles";
 
 export default function AnimatedProfileInput({
   isFocused,
@@ -18,26 +21,22 @@ export default function AnimatedProfileInput({
       easing: Easing.out(Easing.ease),
       useNativeDriver: false,
     }).start();
-  }, [isFocused]);
+  }, [isFocused, anim]);
 
   const borderColor = anim.interpolate({
     inputRange: [0, 1],
     outputRange: ["transparent", currentTheme.accent],
   });
 
+  const minHeight = props.multiline ? 80 : 50;
+  const inputMinHeight = props.multiline ? 70 : 46;
+
   return (
     <Animated.View
       style={[
-        styles.input,
-        !isDarkMode && styles.inputContainerLight,
-        styles.inputContainer,
-        {
-          borderWidth: 1.5,
-          borderColor,
-          minHeight: props.multiline ? 80 : 50,
-          width: "100%",
-          justifyContent: "center",
-        },
+        styles.container,
+        !isDarkMode && styles.containerLight,
+        getInputAnimatedStyle(borderColor, minHeight),
         style,
       ]}
     >
@@ -45,10 +44,7 @@ export default function AnimatedProfileInput({
         style={[
           styles.textInput,
           !isDarkMode && styles.textInputLight,
-          {
-            color: !isDarkMode ? "#000000" : "#FFFFFF",
-            minHeight: props.multiline ? 70 : 46,
-          },
+          getTextInputStyle(inputMinHeight),
           props.multiline ? styles.textInputMultiline : styles.textInputSingle,
         ]}
         {...props}

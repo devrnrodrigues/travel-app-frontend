@@ -1,0 +1,1667 @@
+import { StyleSheet, Platform, Dimensions } from "react-native";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const NAV_BG_ASPECT_RATIO = 1376 / 638;
+const NAV_BG_HEIGHT = Math.round(SCREEN_WIDTH / NAV_BG_ASPECT_RATIO);
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  flex1: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 25,
+    paddingTop: 20,
+    paddingBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerTitle: {
+    color: "#FFF",
+    fontSize: 32,
+    fontWeight: "800",
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+  },
+  profileCard: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 14,
+    backgroundColor: "rgba(10, 10, 10, 0.90)",
+    borderWidth: 0,
+    borderColor: "transparent",
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    elevation: 0,
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  profileCardLight: {
+    backgroundColor: "rgba(240, 240, 240, 0.30)",
+    borderWidth: 0,
+    borderColor: "transparent",
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  settingsButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 34,
+    height: 34,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  avatarLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  avatarImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+  },
+  userName: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    marginTop: 8,
+    fontWeight: "bold",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  userNameLight: {
+    color: "#FFFFFF",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  userSubtitle: {
+    fontSize: 13.5,
+    marginTop: -2,
+    fontWeight: "600",
+  },
+  bioText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    marginTop: 13,
+    textAlign: "center",
+    lineHeight: 18,
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  bioTextLight: {
+    color: "#FFFFFF",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  coverBanner: {
+    width: "100%",
+    height: 230,
+    position: "relative",
+    overflow: "hidden",
+  },
+  coverOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.26)",
+  },
+  coverTopBar: {
+    position: "absolute",
+    top: Platform.OS === "android" ? 42 : 18,
+    right: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    zIndex: 10,
+  },
+  coverIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  coverCameraBtn: {
+    position: "absolute",
+    bottom: 24,
+    right: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  newProfileBody: {
+    flex: 1,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -24,
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  profileFoliageWrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    overflow: "hidden",
+    zIndex: 0,
+  },
+  profileFoliage: {
+    width: "100%",
+    height: 150,
+    position: "absolute",
+    top: -10,
+    left: 0,
+    right: 0,
+  },
+  profileFoliageDark: {
+    opacity: 0.80,
+  },
+  profileFoliageLight: {
+    opacity: 0.85,
+  },
+  profileFoliageGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: 120,
+    zIndex: 2,
+    elevation: 2,
+  },
+  profileInfoGroup: {
+    width: "100%",
+    alignItems: "center",
+  },
+  newProfileBodyDark: {
+    backgroundColor: "#0C0C0E",
+  },
+  newProfileBodyLight: {
+    backgroundColor: "#FFFFFF",
+  },
+  avatarContainer: {
+    width: 102,
+    height: 102,
+    marginTop: -52,
+    marginBottom: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  avatarBordered: {
+    width: 102,
+    height: 102,
+    borderRadius: 51,
+    borderWidth: 4,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarImageBig: {
+    width: 102,
+    height: 102,
+    borderRadius: 51,
+  },
+  newUserName: {
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+    textAlign: "center",
+  },
+  newUserNameDark: {
+    color: "#FFFFFF",
+  },
+  newUserNameLight: {
+    color: "#111827",
+  },
+  newNationalityText: {
+    fontSize: 13.5,
+    lineHeight: 18,
+    fontWeight: "600",
+    marginTop: 4,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  newBioText: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
+    maxWidth: 310,
+    marginBottom: 20,
+  },
+  newBioTextDark: {
+    color: "#9CA3AF",
+  },
+  newBioTextLight: {
+    color: "#6B7280",
+  },
+  statsContainer: {
+    alignSelf: "stretch",
+    marginHorizontal: -20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingVertical: 18,
+    marginBottom: 24,
+  },
+  statsContainerDark: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+  },
+  statsContainerLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statDividerLine: {
+    width: StyleSheet.hairlineWidth,
+    height: 32,
+  },
+  statValue: {
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  statValueDark: {
+    color: "#FFFFFF",
+  },
+  statValueLight: {
+    color: "#111827",
+  },
+  statLabelText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginTop: 4,
+  },
+  statLabelTextDark: {
+    color: "#9CA3AF",
+  },
+  statLabelTextLight: {
+    color: "#6B7280",
+  },
+  collectionsSection: {
+    alignSelf: "stretch",
+    marginHorizontal: -20,
+    marginTop: 8,
+    marginBottom: 0,
+  },
+  collectionsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  collectionsHeading: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  collectionsHeadingDark: {
+    color: "#FFFFFF",
+  },
+  collectionsHeadingLight: {
+    color: "#111827",
+  },
+  collectionsScrollContent: {
+    gap: 14,
+    paddingTop: 6,
+    paddingBottom: 14,
+    paddingHorizontal: 14,
+  },
+  collectionCardItem: {
+    width: 180,
+    height: 260,
+    borderRadius: 22,
+    overflow: "hidden",
+    position: "relative",
+  },
+  collectionCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  collectionCardGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 95,
+    justifyContent: "flex-end",
+    padding: 14,
+  },
+  collectionCardTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  collectionCardSub: {
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 3,
+  },
+  addCardItem: {
+    width: 180,
+    height: 260,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  addCardCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: "rgba(255, 255, 255, 0.22)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  addCardText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  bottomNavBgContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 155,
+    overflow: "hidden",
+  },
+  bottomNavBgImage: {
+    position: "absolute",
+    bottom: -32,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: NAV_BG_HEIGHT,
+  },
+  bottomNavDarkOpacity: {
+    opacity: 0.4,
+  },
+  bottomNavGradientFade: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
+    backgroundColor: "#000000",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 22,
+    paddingTop: 12,
+    paddingBottom: 34,
+    height: "88%",
+    borderWidth: 0,
+    borderColor: "transparent",
+  },
+  modalContentLight: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 0,
+    borderColor: "transparent",
+  },
+  dragHandleArea: {
+    paddingTop: 2,
+    paddingBottom: 4,
+    width: "100%",
+  },
+  indicator: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  indicatorLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 25,
+    width: "100%",
+  },
+  modalTitle: {
+    color: "#FFF",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  modalTitleLight: {
+    color: "#000000",
+  },
+  label: {
+    color: "#FFF",
+    marginBottom: 8,
+    fontSize: 13,
+    marginLeft: 5,
+    fontWeight: "700",
+  },
+  labelLight: {
+    color: "#222222",
+  },
+  input: {
+    backgroundColor: "#0D0D0D",
+    color: "#FFF",
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    outlineStyle: "none",
+  },
+  inputContainer: {
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    padding: 0,
+  },
+  inputContainerLight: {
+    backgroundColor: "#F2F2F7",
+  },
+  textInput: {
+    width: "100%",
+    color: "#FFFFFF",
+    fontSize: 15,
+    paddingHorizontal: 15,
+    paddingVertical: Platform.OS === "android" ? 10 : 12,
+    outlineStyle: "none",
+  },
+  textInputLight: {
+    color: "#000000",
+  },
+  textInputMultiline: {
+    minHeight: 70,
+    textAlignVertical: "top",
+  },
+  textInputSingle: {
+    minHeight: 46,
+    textAlignVertical: "center",
+  },
+  countryScroll: {
+    marginBottom: 20,
+    marginTop: -8,
+  },
+  countryScrollContent: {
+    paddingVertical: 4,
+    gap: 8,
+  },
+  countryPill: {
+    height: 35,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: "rgba(15, 15, 15, 0.6)",
+    gap: 6,
+  },
+  countryPillLight: {
+    backgroundColor: "#F2F2F7",
+  },
+  countryPillText: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "500",
+  },
+  countryPillTextLight: {
+    color: "#000000",
+  },
+  flagIcon: {
+    width: 20,
+    height: 14,
+    borderRadius: 3,
+  },
+  bioInput: {
+    height: 100,
+  },
+  saveButton: {
+    padding: 18,
+    borderRadius: 15,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  modalScroll: {
+    width: "100%",
+  },
+  modalFooterRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+    width: "100%",
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  logoutText: {
+    color: "#FF3B30",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  themeToggleButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  themeToggleLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  themeToggleDark: {
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  galleryContainer: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginBottom: 118,
+    gap: 12,
+    ...(Platform.OS === "web" ? { minHeight: 0 } : {}),
+  },
+  galleryContainerScrollable: {
+    gap: 0,
+    overflow: "hidden",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
+  },
+  galleryScroll: {
+    flex: 1,
+    width: "100%",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
+  },
+  galleryScrollContent: {
+    gap: 12,
+    paddingBottom: 4,
+    ...(Platform.OS === "web" ? { width: "100%", minHeight: "100%" } : {}),
+  },
+  galleryRow: {
+    width: "100%",
+    flexDirection: "row",
+    gap: 12,
+    ...(Platform.OS === "web" ? { minHeight: 0 } : {}),
+  },
+  galleryCard: {
+    flex: 1,
+    backgroundColor: "rgba(10, 10, 10, 0.85)",
+    borderRadius: 18,
+    paddingTop: 8,
+    paddingHorizontal: 6,
+    paddingBottom: 8,
+    borderWidth: 0,
+    borderColor: "transparent",
+    elevation: 0,
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
+  },
+  galleryCardLight: {
+    backgroundColor: "rgba(240, 240, 240, 0.30)",
+    borderWidth: 0,
+    borderColor: "transparent",
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  galleryCardTouch: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
+  },
+  stackContainer: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    ...(Platform.OS === "web" ? { height: "100%", minHeight: 0 } : {}),
+  },
+  stackPhoto: {
+    position: "absolute",
+    width: "92%",
+    height: "83%",
+    backgroundColor: "#FFFFFF",
+    paddingTop: 5,
+    paddingHorizontal: 5,
+    paddingBottom: 6,
+    borderRadius: 2,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 5,
+  },
+  photoMediaBox: {
+    flex: 1,
+    width: "100%",
+    backgroundColor: "#2a303c",
+    overflow: "hidden",
+    position: "relative",
+    ...(Platform.OS === "web" ? { minHeight: 0 } : {}),
+  },
+  photoImg: {
+    width: "100%",
+    height: "100%",
+  },
+  photoDimOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#000000",
+  },
+  photoCaptionBox: {
+    minHeight: 34,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    width: "100%",
+  },
+  photoCaptionText: {
+    fontFamily: "Caveat-SemiBold",
+    fontSize: 16,
+    color: "#000000",
+    textAlign: "center",
+    lineHeight: 18.5,
+    paddingHorizontal: 6,
+  },
+  cardInfo: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    marginTop: 4,
+  },
+  cardTitle: {
+    fontSize: 12.5,
+    fontWeight: "900",
+    letterSpacing: 0.4,
+    color: "#FFFFFF",
+    textShadowColor: "#000000",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    flexShrink: 1,
+    marginRight: 4,
+  },
+  cardCounter: {
+    backgroundColor: "#000000ff",
+    paddingVertical: 2,
+    paddingHorizontal: 9,
+    borderRadius: 99,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  cardCounterLight: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.16,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  cardCounterText: {
+    fontFamily: "Caveat-SemiBold",
+    fontSize: 12,
+  },
+  gallerySpacer: {
+    flex: 1,
+  },
+  collectionCountGrid: {
+    gap: 8,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  collectionCountRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  collectionCountBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 0,
+    borderColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  collectionCountBtnLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.06)",
+    borderWidth: 0,
+    borderColor: "transparent",
+  },
+  collectionCountText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  collectionCountTextLight: {
+    color: "#1A1A1A",
+  },
+  collectionCountTextActive: {
+    color: "#000000",
+    fontWeight: "800",
+  },
+  emptyGalleryContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "rgba(255, 255, 255, 0.14)",
+  },
+  emptyGalleryContainerDark: {
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+    borderColor: "rgba(255, 255, 255, 0.10)",
+  },
+  emptyGallerySubtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.94)",
+    marginTop: 10,
+    marginBottom: 16,
+    textAlign: "center",
+    lineHeight: 18,
+    maxWidth: 260,
+  },
+  emptyGalleryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 0,
+  },
+  emptyGalleryBtnText: {
+    color: "rgba(255, 255, 255, 0.95)",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  avatarModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.96)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  avatarModalContent: {
+    position: "relative",
+    width: 260,
+    height: 260,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarModalImageWrapper: {
+    position: "relative",
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    overflow: "hidden",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  avatarModalImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    borderRadius: 130,
+  },
+  avatarModalPlaceholder: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    borderRadius: 130,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarEditBadge: {
+    position: "absolute",
+    bottom: 6,
+    right: 6,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    borderWidth: 3,
+    borderColor: "#000000",
+    zIndex: 30,
+  },
+  avatarUploadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    borderRadius: 130,
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20,
+  },
+  addCollectionTriggerBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 14,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  addCollectionTriggerBtnLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+  },
+  addCollectionTriggerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  addCollectionTriggerIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+  },
+  addCollectionTriggerIconBoxLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
+  },
+  addCollectionTriggerText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  addCollectionTriggerTextLight: {
+    color: "#000000",
+  },
+  addCollectionModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 22,
+  },
+  addCollectionModalCard: {
+    width: "100%",
+    maxWidth: 380,
+    backgroundColor: "#161616",
+    borderRadius: 22,
+    padding: 22,
+  },
+  addCollectionModalCardLight: {
+    backgroundColor: "#FFFFFF",
+  },
+  addCollectionModalHeader: {
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    marginBottom: 4,
+  },
+  addCollectionModalTitle: {
+    fontSize: 19,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "left",
+  },
+  addCollectionModalTitleLight: {
+    color: "#000000",
+  },
+  addCollectionSectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  addCollectionSectionTitleLight: {
+    color: "#000000",
+  },
+  addCollectionPhotoBox: {
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: "rgba(255, 255, 255, 0.25)",
+  },
+  addCollectionPhotoBoxLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.02)",
+    borderColor: "rgba(0, 0, 0, 0.20)",
+  },
+  addCollectionPhotoIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  addCollectionPhotoTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 3,
+  },
+  addCollectionPhotoTitleLight: {
+    color: "#000000",
+  },
+  addCollectionPhotoSubtitle: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.5)",
+  },
+  addCollectionPhotoSubtitleLight: {
+    color: "rgba(0, 0, 0, 0.5)",
+  },
+  addCollectionModalActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 22,
+  },
+  addCollectionCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  addCollectionCancelBtnLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.06)",
+  },
+  addCollectionCancelText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  addCollectionCancelTextLight: {
+    color: "#000000",
+  },
+  addCollectionSaveBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addCollectionSaveText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#000000",
+  },
+  selectedCollectionImagesScroll: {
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  selectedCollectionImagesContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 2,
+  },
+  selectedCollectionImageWrapper: {
+    position: "relative",
+    width: 54,
+    height: 54,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  selectedCollectionImageThumbnail: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+  },
+  removeCollectionImageBadge: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  marginLeft8: {
+    marginLeft: 8,
+  },
+  centerPadding4: {
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  cardOpacity1: {
+    opacity: 1,
+  },
+  height0: {
+    height: 0,
+  },
+  centerPaddingVertical4: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  marginBottom4: {
+    marginBottom: 4,
+  },
+  marginBottom8: {
+    marginBottom: 8,
+  },
+  marginRight10: {
+    marginRight: 10,
+  },
+  addCollectionContent: {
+    width: "100%",
+    maxWidth: 380,
+    alignItems: "center",
+  },
+  scale075: {
+    transform: [{ scale: 0.75 }],
+  },
+});
+
+export const dialogStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+  },
+  dialogCard: {
+    width: "100%",
+    maxWidth: 275,
+    backgroundColor: "#000000",
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 0,
+    borderColor: "transparent",
+  },
+  dialogCardLight: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 0,
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  contentSection: {
+    paddingTop: 24,
+    paddingBottom: 20,
+    paddingHorizontal: 22,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  titleLight: {
+    color: "#000000",
+  },
+  message: {
+    fontSize: 13.5,
+    color: "#E5E5E5",
+    textAlign: "center",
+    lineHeight: 19,
+  },
+  messageLight: {
+    color: "#555555",
+  },
+  actionButton: {
+    width: "100%",
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "transparent",
+  },
+  actionButtonLight: {
+    borderTopColor: "rgba(0, 0, 0, 0.08)",
+  },
+  lastButton: {
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+  },
+  deleteText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FF3B30",
+  },
+  cancelText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  cancelTextLight: {
+    color: "#000000",
+  },
+  hideFavoritesSection: {
+    marginTop: 18,
+    marginBottom: 6,
+  },
+  hideFavoritesBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+  },
+  hideFavoritesBtnLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+    borderColor: "rgba(0, 0, 0, 0.10)",
+  },
+  hideFavoritesLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  hideFavoritesText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "500",
+  },
+  hideFavoritesTextLight: {
+    color: "#000000",
+  },
+  hideFavoritesBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+  },
+  hideFavoritesBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  layoutAnchor: {
+    height: 0,
+  },
+  centerFull: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullSize: {
+    width: "100%",
+    height: "100%",
+  },
+  modalAvoidingView: {
+    width: "100%",
+    maxWidth: 380,
+    alignItems: "center",
+  },
+  pickingPhotosWrapper: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  pickingPhotosIndicator: {
+    marginBottom: 8,
+  },
+  themeIndicator: {
+    transform: [{ scale: 0.75 }],
+  },
+  footerEmptyCountryWrapper: {
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  footerEmptyCountryTextDark: {
+    color: "rgba(255, 255, 255, 0.5)",
+    fontSize: 13,
+  },
+  footerEmptyCountryTextLight: {
+    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 13,
+  },
+  footerCountrySkeletonWrapper: {
+    marginLeft: 8,
+  },
+  hideFavoritesIcon: {
+    marginRight: 10,
+  },
+  hideFavoritesBadgeTextSelected: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#000000",
+  },
+  nationalityFocusedInput: {
+    marginBottom: 10,
+  },
+  bioInputMargin: {
+    marginBottom: 8,
+  },
+  addCollectionTriggerBtnSpacing: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  addCollectionTriggerBtnNoTopMargin: {
+    marginTop: 0,
+  },
+  labelMarginTop: {
+    marginTop: 14,
+  },
+  sectionTitleMargin: {
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  photosSectionTitleMargin: {
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  collectionNameInputSpacing: {
+    marginBottom: 4,
+  },
+});
+
+export const getAccentColorStyle = (color) => ({
+  color,
+});
+
+export const getAccentBgColorStyle = (color) => ({
+  backgroundColor: color,
+});
+
+export const getAccentBorderColorStyle = (color) => ({
+  borderColor: color,
+});
+
+export const getRotationStyle = (rotate) => ({
+  transform: [{ rotate }],
+});
+
+export const getContainerStyle = (isDarkMode) => ({
+  backgroundColor: isDarkMode ? "#0C0C0E" : "#FFFFFF",
+});
+
+export const getScrollContentContainerStyle = (canScroll, navBarHeight) => [
+  { flexGrow: 1 },
+  canScroll && { paddingBottom: navBarHeight + 20 },
+];
+
+export const getProfileBodyDynamicStyle = (isDarkMode, scale, bodyOverlap) => [
+  styles.newProfileBody,
+  isDarkMode ? styles.newProfileBodyDark : styles.newProfileBodyLight,
+  { opacity: 1, flex: 1, paddingBottom: 0 },
+  scale < 1 && { marginTop: -bodyOverlap },
+];
+
+export const getAvatarContainerDynamicStyle = (scale, avatarSize, avatarMarginTop, avatarMarginBottom) => [
+  styles.avatarContainer,
+  scale < 1 && {
+    width: avatarSize,
+    height: avatarSize,
+    marginTop: avatarMarginTop,
+    marginBottom: avatarMarginBottom,
+  },
+];
+
+export const getAvatarBorderedDynamicStyle = (isDarkMode, scale, avatarSize, avatarBorderWidth) => [
+  styles.avatarBordered,
+  {
+    borderColor: isDarkMode ? "#0C0C0E" : "#FFFFFF",
+    backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
+    overflow: "hidden",
+  },
+  scale < 1 && {
+    width: avatarSize,
+    height: avatarSize,
+    borderRadius: avatarSize / 2,
+    borderWidth: avatarBorderWidth,
+  },
+];
+
+export const getAvatarImageDynamicStyle = (scale, avatarSize) => [
+  styles.avatarImageBig,
+  scale < 1 && {
+    width: avatarSize,
+    height: avatarSize,
+    borderRadius: avatarSize / 2,
+  },
+];
+
+export const getSkeletonWrapperStyle = (height, marginTop = 0, marginBottom = 0) => ({
+  height,
+  marginTop,
+  marginBottom,
+  justifyContent: "center",
+  alignItems: "center",
+});
+
+export const getUserNameDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
+  styles.newUserName,
+  isDarkMode ? styles.newUserNameDark : styles.newUserNameLight,
+  scale < 1 && { fontSize, lineHeight },
+];
+
+export const getNationalityDynamicStyle = (accentColor, scale, fontSize, lineHeight, marginTop, marginBottom) => [
+  styles.newNationalityText,
+  { color: accentColor },
+  scale < 1 && {
+    fontSize,
+    lineHeight,
+    marginTop,
+    marginBottom,
+  },
+];
+
+export const getBioDynamicStyle = (isDarkMode, scale, fontSize, lineHeight, marginBottom) => [
+  styles.newBioText,
+  isDarkMode ? styles.newBioTextDark : styles.newBioTextLight,
+  scale < 1 && {
+    fontSize,
+    lineHeight,
+    marginBottom,
+  },
+];
+
+export const getStatsContainerDynamicStyle = (isDarkMode, scale, paddingVertical, marginBottom) => [
+  styles.statsContainer,
+  isDarkMode ? styles.statsContainerDark : styles.statsContainerLight,
+  scale < 1 && {
+    paddingVertical,
+    marginBottom,
+  },
+];
+
+export const getStatValueDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
+  styles.statValue,
+  isDarkMode ? styles.statValueDark : styles.statValueLight,
+  scale < 1 && { fontSize, lineHeight },
+];
+
+export const getStatLabelDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
+  styles.statLabelText,
+  isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
+  scale < 1 && { fontSize, lineHeight },
+];
+
+export const getStatDividerDynamicStyle = (isDarkMode, scale, height) => [
+  styles.statDividerLine,
+  {
+    backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)",
+  },
+  scale < 1 && { height },
+];
+
+export const getCollectionsSectionDynamicStyle = (scale, marginTop) => [
+  styles.collectionsSection,
+  scale < 1 && { marginTop },
+];
+
+export const getCollectionsHeaderDynamicStyle = (scale, marginBottom) => [
+  styles.collectionsHeader,
+  scale < 1 && { marginBottom },
+];
+
+export const getCollectionsHeadingDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
+  styles.collectionsHeading,
+  isDarkMode ? styles.collectionsHeadingDark : styles.collectionsHeadingLight,
+  scale < 1 && { fontSize, lineHeight },
+];
+
+export const getCollectionsScrollContentDynamicStyle = (scale) => [
+  styles.collectionsScrollContent,
+  scale < 1 && {
+    gap: Math.round(14 * scale),
+    paddingTop: Math.round(6 * scale),
+    paddingBottom: Math.round(14 * scale),
+  },
+];
+
+export const getAddCardItemDynamicStyle = (scale, width, height, borderRadius) => [
+  styles.addCardItem,
+  scale < 1 && {
+    width,
+    height,
+    borderRadius,
+  },
+];
+
+export const getAddCardCircleDynamicStyle = (scale, size, marginBottom) => [
+  styles.addCardCircle,
+  scale < 1 && {
+    width: size,
+    height: size,
+    borderRadius: size / 2,
+    marginBottom,
+  },
+];
+
+export const getAddCardTextDynamicStyle = (scale, fontSize, lineHeight) => [
+  styles.addCardText,
+  scale < 1 && {
+    fontSize,
+    lineHeight,
+  },
+];
+
+export const getCollectionCardItemDynamicStyle = (scale, width, height, borderRadius) => [
+  styles.collectionCardItem,
+  scale < 1 && {
+    width,
+    height,
+    borderRadius,
+  },
+];
+
+export const getCollectionCardGradientDynamicStyle = (scale, height, padding) => [
+  styles.collectionCardGradient,
+  scale < 1 && {
+    height,
+    padding,
+  },
+];
+
+export const getCollectionCardTitleDynamicStyle = (scale, fontSize) => [
+  styles.collectionCardTitle,
+  scale < 1 && { fontSize },
+];
+
+export const getCollectionCardSubDynamicStyle = (scale, fontSize) => [
+  styles.collectionCardSub,
+  scale < 1 && { fontSize },
+];
+
+export const getBottomNavBgContainerDynamicStyle = (opacity) => [
+  styles.bottomNavBgContainer,
+  { opacity },
+];
+
+export const getCoverBannerDynamicStyle = (scale, height) => [
+  styles.coverBanner,
+  scale < 1 && { height },
+];
+
+export const getModalContentDynamicStyle = (translateY, paddingBottom) => ({
+  transform: [{ translateY }],
+  paddingBottom,
+});
+
+export const getCountryListContainerDynamicStyle = (height, opacity, marginBottom) => ({
+  height,
+  opacity,
+  marginBottom,
+  overflow: "hidden",
+});
+
+export const getCountryPillStyle = (isSelected, accentColor, isDarkMode) => [
+  styles.countryPill,
+  !isDarkMode && styles.countryPillLight,
+  isSelected && { backgroundColor: accentColor },
+];
+
+export const getFlagIconContainerStyle = (isDarkMode) => [
+  styles.flagIcon,
+  {
+    backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)",
+    overflow: "hidden",
+  },
+];
+
+export const getCountryPillTextStyle = (isSelected, isDarkMode) => [
+  styles.countryPillText,
+  !isDarkMode && styles.countryPillTextLight,
+  isSelected && { color: "#000", fontWeight: "bold" },
+];
+
+export const getCollectionCountBtnStyle = (isSelected, accentColor, isDarkMode) => [
+  styles.collectionCountBtn,
+  !isDarkMode && styles.collectionCountBtnLight,
+  isSelected && { backgroundColor: accentColor },
+];
+
+export const getCollectionCountTextStyle = (isSelected, isDarkMode) => [
+  styles.collectionCountText,
+  !isDarkMode && styles.collectionCountTextLight,
+  isSelected && styles.collectionCountTextActive,
+];
+
+export const getHideFavoritesBtnDynamicStyle = (hideFavorites, accentColor, isDarkMode) => [
+  styles.hideFavoritesBtn,
+  !isDarkMode && styles.hideFavoritesBtnLight,
+  hideFavorites && {
+    borderColor: accentColor,
+    backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+  },
+];
+
+export const getHideFavoritesBadgeDynamicStyle = (hideFavorites, accentColor) => [
+  styles.hideFavoritesBadge,
+  hideFavorites && { backgroundColor: accentColor },
+];
+
+export const getHideFavoritesBadgeTextStyle = (hideFavorites) =>
+  hideFavorites ? styles.hideFavoritesBadgeTextSelected : styles.hideFavoritesBadgeText;
+
+export const getAvatarModalBadgeStyle = (isUploading, accentColor) => [
+  styles.avatarEditBadge,
+  {
+    backgroundColor: isUploading ? "rgba(120, 120, 120, 0.35)" : accentColor,
+    opacity: isUploading ? 0.6 : 1,
+  },
+];
+
+export const getAddCollectionPhotoBoxDynamicStyle = (hasPhotos, isDarkMode) => [
+  styles.addCollectionPhotoBox,
+  !isDarkMode && styles.addCollectionPhotoBoxLight,
+  hasPhotos && { paddingVertical: 14 },
+];
+
+export const getAddCollectionSaveBtnDynamicStyle = (accentColor, isDisabled) => [
+  styles.addCollectionSaveBtn,
+  { backgroundColor: accentColor },
+  isDisabled && { opacity: 0.7 },
+];
+
+export const getSaveButtonStyle = (accentColor) => ({
+  backgroundColor: accentColor,
+});

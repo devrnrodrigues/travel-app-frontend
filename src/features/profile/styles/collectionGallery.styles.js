@@ -186,6 +186,13 @@ export const styles = StyleSheet.create({
   captionPillLight: {
     backgroundColor: "#E5E5EA",
   },
+  captionPillContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  captionPillIcon: {
+    marginRight: 6,
+  },
   menuBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.25)",
@@ -498,6 +505,9 @@ export const styles = StyleSheet.create({
   modalSubmitButtonTextLight: {
     color: "#FFFFFF",
   },
+  sectionLabelNoMargin: {
+    marginBottom: 0,
+  },
   editPhotosHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -515,6 +525,9 @@ export const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 6,
     paddingHorizontal: 4,
+  },
+  scrollContentMarginTop10: {
+    marginTop: 10,
   },
   editPhotoThumbnailWrapper: {
     position: "relative",
@@ -663,4 +676,129 @@ export const styles = StyleSheet.create({
   bottomTranslucentBarLight: {
     backgroundColor: "rgba(255, 255, 255, 0.70)",
   },
+  touchableFill: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fullSize: {
+    width: "100%",
+    height: "100%",
+  },
+  gridRow: {
+    gap: 2,
+  },
+  emptyListContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 100,
+    paddingHorizontal: 32,
+  },
+  emptyListIcon: {
+    marginBottom: 14,
+  },
+  emptyListTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#8E8E93",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  emptyListTitleLight: {
+    color: "#666666",
+  },
+  emptyListSubtitle: {
+    fontSize: 13,
+    color: "#636366",
+    textAlign: "center",
+  },
+  emptyListSubtitleLight: {
+    color: "#8E8E93",
+  },
+});
+
+export const getViewerSlideAnimatedStyle = (scale) => ({
+  width: SCREEN_WIDTH,
+  height: "100%",
+  justifyContent: "center",
+  alignItems: "center",
+  transform: [{ scale }],
+});
+
+export const getModalCloseButtonAnimatedStyle = (top, opacity) => ({
+  top,
+  opacity,
+});
+
+export const getControlsOpacityAnimatedStyle = (opacity) => ({
+  opacity,
+});
+
+export const getMenuDropdownAnimatedStyle = (top, left, opacity, translateY, scale) => ({
+  top,
+  left,
+  opacity,
+  transform: [{ translateY }, { scale }],
+});
+
+export const getEditDialogAnimatedStyle = (translateY, scale) => ({
+  transform: [{ translateY }, { scale }],
+});
+
+export const getModalScaleAnimatedStyle = (scale) => ({
+  transform: [{ scale }],
+});
+
+export const getModalTranslateYScaleAnimatedStyle = (translateY, scale) => ({
+  transform: [{ translateY }, { scale }],
+});
+
+export const getPhotoSizeStyle = (size) => ({
+  width: size,
+  height: size,
+});
+
+export const getGridItemContainerStyle = (width, height, marginRight, marginBottom) => ({
+  width,
+  height,
+  marginRight,
+  marginBottom,
+  position: "relative",
+});
+
+export const getGridItemDynamicStyle = (borderRadius) => ({
+  width: "100%",
+  height: "100%",
+  borderRadius,
+});
+
+export const getHighlightBorderStyle = (borderRadius, borderColor, opacity) => ({
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  borderRadius,
+  borderWidth: 4,
+  borderColor,
+  opacity,
+  zIndex: 9999,
+  elevation: 0,
+  shadowColor: "transparent",
+  shadowOpacity: 0,
+});
+
+export const getGridPinchAnimatedStyle = (gridOpacity, pinchScale) => ({
+  flex: 1,
+  opacity: gridOpacity,
+  transform: [
+    {
+      scale: pinchScale.interpolate({
+        inputRange: [0.65, 1, 1.45],
+        outputRange: [0.88, 1, 1.12],
+        extrapolate: "clamp",
+      }),
+    },
+  ],
 });
