@@ -1,93 +1,44 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, Animated, StyleSheet, Easing, ActivityIndicator, Platform, Dimensions, RefreshControl, Image, useWindowDimensions } from "react-native";
+import React, { useState, useCallback, useMemo } from "react";
+import {
+  View,
+  ScrollView,
+  StatusBar,
+  ImageBackground,
+  Animated,
+  RefreshControl,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import Feather from "react-native-vector-icons/Feather";
-import styles, { getHomeDimensions } from "./home.styles";
+import styles, {
+  getHomeDimensions,
+  getScrollContentPadding,
+  getDimAnimStyle,
+} from "./styles/home.styles";
 import { useTheme } from "../../theme/ThemeContext";
-import { useAuth } from "../auth/context/AuthContext";
-import { HomeSkeletonList, HomeCategoriesSkeleton, TopDestinationsSkeletonList } from "../../shared/components/Skeleton";
-import FadeInView from "../../shared/components/FadeInView";
-import HomeCardItem from "./components/HomeCardItem";
-import TopDestinationCard from "./components/TopDestinationCard";
+import { useAuth } from "../../context/AuthContext";
+import HomeHeader from "./components/HomeHeader";
+import HomeCategoriesList from "./components/HomeCategoriesList";
+import HomeFeaturedList from "./components/HomeFeaturedList";
+import HomeRecommendationsList from "./components/HomeRecommendationsList";
 import SearchModal from "./components/SearchModal";
-import { getDestinations } from "../destinations/api/destinationService";
-
-const CategoryTabItem = React.memo(function CategoryTabItem({
-  cat,
-  index,
-  isActive,
-  accentColor,
-  isDarkMode = true,
-  onPress,
-  onLayout,
-}) {
-  const lineAnim = useRef(new Animated.Value(isActive ? 1 : 0.01)).current;
-
-  useEffect(() => {
-    if (isActive) {
-      lineAnim.setValue(0.01);
-      Animated.spring(lineAnim, {
-        toValue: 1,
-        damping: 15,
-        stiffness: 200,
-        mass: 0.6,
-        useNativeDriver: Platform.OS !== "web",
-      }).start();
-    }
-  }, [isActive]);
-
-  const lineScaleX = lineAnim.interpolate({
-    inputRange: [0.01, 1],
-    outputRange: [0.01, 1],
-  });
-
-  return (
-    <TouchableOpacity
-      style={styles.categoryItem}
-      onPress={onPress}
-      onLayout={onLayout}
-      activeOpacity={0.75}
-    >
-      <View style={styles.centerAligned}>
-        <View style={styles.rowCenter}>
-          <Text
-            style={[
-              styles.categoryText,
-              {
-                color: isActive
-                  ? accentColor
-                  : "#FFFFFF",
-              },
-              isActive && styles.categoryTextActive,
-            ]}
-          >
-            {cat}
-          </Text>
-        </View>
-        {isActive && (
-          <Animated.View
-            style={[
-              styles.activeLine,
-              {
-                backgroundColor: accentColor,
-                transform: [{ scaleX: lineScaleX }],
-              },
-            ]}
-          />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-});
+import useHomeData from "./hooks/useHomeData";
+import useHomeCategories from "./hooks/useHomeCategories";
+import useHomeAnimations from "./hooks/useHomeAnimations";
 
 export default function Home({ navigation }) {
   const { user } = useAuth();
-  const { categories = [], activeCategory, activeCat, setActiveCat, currentTheme, themesByCat, isDarkMode } = useTheme();
-  const queryClient = useQueryClient();
+  const {
+    categories = [],
+    activeCategory,
+    activeCat,
+    setActiveCat,
+    currentTheme,
+    themesByCat,
+    isDarkMode,
+  } = useTheme();
+
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -104,220 +55,34 @@ export default function Home({ navigation }) {
 
   const selectedCategoryObj = activeCategory || categories[activeCat] || categories[0];
   const selectedCategory = selectedCategoryObj?.slug || selectedCategoryObj?.name || "florestas";
-  const selectedTheme = themesByCat[activeCat] || currentTheme;
-
-  const categoryScrollRef = useRef(null);
-  const flatListRef = useRef(null);
-  const itemLayouts = useRef({});
-  const scrollWidthRef = useRef(Dimensions.get("window").width);
-  const contentWidthRef = useRef(0);
-  const [scrollWidth, setScrollWidth] = useState(Dimensions.get("window").width);
-  const [contentWidth, setContentWidth] = useState(0);
-
-  const centerCategory = useCallback((index, animated = true) => {
-    if (index === undefined || index === null) return;
-    const layout = itemLayouts.current[index];
-    const sWidth = scrollWidthRef.current || Dimensions.get("window").width;
-    const cWidth = contentWidthRef.current;
-    if (layout && categoryScrollRef.current && sWidth > 0) {
-      const targetX = layout.x - (sWidth / 2) + (layout.width / 2);
-      const maxScroll = cWidth > 0 ? Math.max(0, cWidth - sWidth) : Math.max(0, targetX);
-      const clampedX = Math.max(0, Math.min(targetX, maxScroll));
-      categoryScrollRef.current.scrollTo({ x: clampedX, animated });
-    }
-  }, []);
-
-  const handleCategoryPress = useCallback((index) => {
-    setActiveCat(index);
-    centerCategory(index, true);
-  }, [setActiveCat, centerCategory]);
-
-  useEffect(() => {
-    centerCategory(activeCat, true);
-  }, [activeCat, centerCategory]);
-
-  useEffect(() => {
-    scrollWidthRef.current = windowWidth;
-    setScrollWidth(windowWidth);
-    centerCategory(activeCat, false);
-  }, [windowWidth, activeCat, centerCategory]);
-
-  useEffect(() => {
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [selectedCategory]);
-
-  const PAGE_SIZE = 6;
 
   const {
-    data,
-    isLoading,
+    flatListRef,
+    destinations,
+    topDestinations,
+    isShowingSkeleton,
+    isShowingTopSkeleton,
     isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    refetch,
-    isRefetching,
-  } = useInfiniteQuery({
-    queryKey: ["destinations", "home", selectedCategory],
-    enabled: Boolean(selectedCategory),
-    queryFn: async ({ pageParam = 0 }) => {
-      const result = await getDestinations({
-        category: selectedCategory,
-        page: pageParam,
-        size: PAGE_SIZE,
-      });
-      return (result || []).map((destination) => ({
-        ...destination,
-        isLocalSource: false,
-      }));
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages, lastPageParam) => {
-      if (!lastPage || lastPage.length < PAGE_SIZE) {
-        return undefined;
-      }
-      return lastPageParam + 1;
-    },
-  });
-
-  const destinations = useMemo(() => {
-    if (!data?.pages) return [];
-    const flat = data.pages.flat();
-    const seen = new Set();
-    return flat.filter((item) => {
-      const key = item?.id;
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [data]);
-
-  const loading = isLoading && destinations.length === 0;
-  const isShowingSkeleton = loading;
-
-  const isFetchingNextPageRef = useRef(false);
-
-  useEffect(() => {
-    isFetchingNextPageRef.current = isFetchingNextPage;
-  }, [isFetchingNextPage]);
-
-  const loadNextPage = useCallback(async () => {
-    if (hasNextPage && !isFetchingNextPage && !isFetchingNextPageRef.current) {
-      isFetchingNextPageRef.current = true;
-      try {
-        await fetchNextPage({ cancelRefetch: false });
-      } finally {
-        isFetchingNextPageRef.current = false;
-      }
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const keyExtractor = useCallback((item) => (item?.id ? String(item.id) : String(Math.random())), []);
-
-  const TOP_PAGE_SIZE = 6;
+    isFetchingNextTopPage,
+    refreshing,
+    loadNextPage,
+    loadNextTopPage,
+    handleRefresh,
+  } = useHomeData(selectedCategory);
 
   const {
-    data: topDestinationsData,
-    isLoading: loadingTopDestinations,
-    isFetchingNextPage: isFetchingNextTopPage,
-    hasNextPage: hasNextTopPage,
-    fetchNextPage: fetchNextTopPage,
-    refetch: refetchTopDestinations,
-  } = useInfiniteQuery({
-    queryKey: ["destinations", "recommendations"],
-    queryFn: async ({ pageParam = 0 }) => {
-      const result = await getDestinations({
-        page: pageParam,
-        size: TOP_PAGE_SIZE,
-      });
-      return (result || []).map((destination) => ({
-        ...destination,
-        isLocalSource: false,
-      }));
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages, lastPageParam) => {
-      if (!lastPage || lastPage.length < TOP_PAGE_SIZE) {
-        return undefined;
-      }
-      return lastPageParam + 1;
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+    categoryScrollRef,
+    handleCategoryPress,
+    handleCategoryLayout,
+    handleContainerLayout,
+    handleContentSizeChange,
+  } = useHomeCategories(activeCat, setActiveCat, windowWidth);
 
-  const topDestinations = useMemo(() => {
-    if (!topDestinationsData?.pages) return [];
-    const flat = topDestinationsData.pages.flat();
-    const seen = new Set();
-    return flat.filter((item) => {
-      const key = item?.id;
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [topDestinationsData]);
-
-  const isShowingTopSkeleton = loadingTopDestinations && topDestinations.length === 0;
-
-  const isFetchingNextTopPageRef = useRef(false);
-
-  useEffect(() => {
-    isFetchingNextTopPageRef.current = isFetchingNextTopPage;
-  }, [isFetchingNextTopPage]);
-
-  const loadNextTopPage = useCallback(async () => {
-    if (hasNextTopPage && !isFetchingNextTopPage && !isFetchingNextTopPageRef.current) {
-      isFetchingNextTopPageRef.current = true;
-      try {
-        await fetchNextTopPage({ cancelRefetch: false });
-      } finally {
-        isFetchingNextTopPageRef.current = false;
-      }
-    }
-  }, [hasNextTopPage, isFetchingNextTopPage, fetchNextTopPage]);
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
-        refetch(),
-        refetchTopDestinations(),
-        queryClient.invalidateQueries({ queryKey: ["categories"] }),
-      ]);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetch, refetchTopDestinations, queryClient]);
+  const { bgDimAnim } = useHomeAnimations(activeCat);
 
   const bgSource = useMemo(() => {
     return typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
   }, [currentTheme.bg]);
-
-  const bgDimAnim = useRef(new Animated.Value(0)).current;
-  const isFirstCatRender = useRef(true);
-
-  useEffect(() => {
-    if (isFirstCatRender.current) {
-      isFirstCatRender.current = false;
-      return;
-    }
-    bgDimAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(bgDimAnim, {
-        toValue: 0.5,
-        duration: 130,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(bgDimAnim, {
-        toValue: 0,
-        duration: 260,
-        easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [activeCat]);
 
   const handleOpenSearch = useCallback(() => {
     setIsSearchVisible(true);
@@ -326,6 +91,17 @@ export default function Home({ navigation }) {
   const handleCloseSearch = useCallback(() => {
     setIsSearchVisible(false);
   }, []);
+
+  const gradientColors = useMemo(() => {
+    if (currentTheme?.colors && currentTheme.colors.length >= 3) {
+      return [
+        currentTheme.colors[0],
+        "rgba(0, 0, 0, 0.15)",
+        "rgba(0, 0, 0, 0.65)",
+      ];
+    }
+    return ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.15)", "rgba(0, 0, 0, 0.65)"];
+  }, [currentTheme?.colors]);
 
   return (
     <View style={styles.blackScreen}>
@@ -342,26 +118,15 @@ export default function Home({ navigation }) {
 
       <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
         <LinearGradient
-          colors={
-            currentTheme?.colors && currentTheme.colors.length >= 3
-              ? [
-                  currentTheme.colors[0],
-                  "rgba(0, 0, 0, 0.15)",
-                  "rgba(0, 0, 0, 0.65)",
-                ]
-              : ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.15)", "rgba(0, 0, 0, 0.65)"]
-          }
+          colors={gradientColors}
           locations={[0, 0.40, 1]}
           style={styles.flex1}
         >
           <Animated.View
             pointerEvents="none"
             style={[
-              StyleSheet.absoluteFillObject,
-              {
-                backgroundColor: "#000",
-                opacity: bgDimAnim,
-              },
+              styles.bgDimOverlay,
+              getDimAnimStyle(bgDimAnim),
             ]}
           />
 
@@ -371,7 +136,7 @@ export default function Home({ navigation }) {
               style={styles.flex1}
               contentContainerStyle={[
                 styles.scrollContent,
-                { paddingBottom: dims.bottomBarHeight + dims.bottomSpacing },
+                getScrollContentPadding(dims.bottomBarHeight + dims.bottomSpacing),
               ]}
               showsVerticalScrollIndicator={false}
               bounces={true}
@@ -380,7 +145,7 @@ export default function Home({ navigation }) {
               keyboardShouldPersistTaps="handled"
               refreshControl={
                 <RefreshControl
-                  refreshing={refreshing || isRefetching}
+                  refreshing={refreshing}
                   onRefresh={handleRefresh}
                   tintColor={currentTheme?.accent || "#4CAF50"}
                   colors={[currentTheme?.accent || "#4CAF50"]}
@@ -389,209 +154,55 @@ export default function Home({ navigation }) {
             >
               <View style={styles.homeContentWrapper}>
                 <View style={styles.topSection}>
-                  <View style={[styles.header, { paddingTop: dims.headerPaddingTop }]}>
-                    <Text
-                      style={[
-                        styles.headerTitle,
-                        styles.headerTitleDark,
-                        {
-                          color: "#FFF",
-                          fontSize: dims.headerTitleSize,
-                        },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {`Olá, ${userName}`}
-                    </Text>
-                    <View style={styles.headerIcons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.iconButton,
-                          isDarkMode ? styles.iconButtonDark : styles.iconButtonLight,
-                          { padding: dims.iconPadding },
-                        ]}
-                        onPress={handleOpenSearch}
-                      >
-                        <Feather
-                          name="search"
-                          size={20}
-                          color={currentTheme?.accent || "#FFD700"}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-              <View style={[styles.categoriesSection, { height: dims.categoriesHeight }]}>
-                {categories.length === 0 ? (
-                  <HomeCategoriesSkeleton isDarkMode={isDarkMode} />
-                ) : (
-                  <ScrollView
-                    ref={categoryScrollRef}
-                    horizontal
-                    nestedScrollEnabled={true}
-                    showsHorizontalScrollIndicator={false}
-                    onLayout={(e) => {
-                      const width = e.nativeEvent.layout.width;
-                      scrollWidthRef.current = width;
-                      setScrollWidth(width);
-                    }}
-                    onContentSizeChange={(w) => {
-                      contentWidthRef.current = w;
-                      setContentWidth(w);
-                      if (activeCat !== undefined && activeCat !== null) {
-                        centerCategory(activeCat, false);
-                      }
-                    }}
-                    contentContainerStyle={styles.categoriesContainer}
-                  >
-                    {categories.map((catItem, index) => {
-                      const theme = themesByCat[index] || currentTheme;
-                      return (
-                        <CategoryTabItem
-                          key={catItem.id || catItem.slug || catItem.name || String(index)}
-                          cat={catItem.name}
-                          index={index}
-                          isActive={activeCat === index}
-                          accentColor={theme.accent}
-                          isDarkMode={isDarkMode}
-                          onLayout={(e) => {
-                            const layout = e.nativeEvent.layout;
-                            itemLayouts.current[index] = layout;
-                            if (index === activeCat) {
-                              centerCategory(index, true);
-                            }
-                          }}
-                          onPress={() => handleCategoryPress(index)}
-                        />
-                      );
-                    })}
-                  </ScrollView>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.contentContainer}>
-              {isShowingSkeleton ? (
-                <HomeSkeletonList
-                  isDarkMode={isDarkMode}
-                  currentTheme={currentTheme}
-                  cardWidth={dims.cardWidth}
-                  cardHeight={dims.cardHeight}
-                  cardInfoBottom={dims.cardInfoBottom}
-                  cardInfoHeight={dims.cardInfoHeight}
-                />
-              ) : (
-                <FadeInView key={selectedCategory} duration={280} style={{ width: "100%" }}>
-                  <FlatList
-                    ref={flatListRef}
-                    data={destinations}
-                    keyExtractor={keyExtractor}
-                    horizontal
-                    nestedScrollEnabled={true}
-                    showsHorizontalScrollIndicator={false}
-                    style={{ width: "100%" }}
-                    contentContainerStyle={styles.cardsList}
-                    onEndReached={loadNextPage}
-                    onEndReachedThreshold={0.3}
-                    windowSize={11}
-                    maxToRenderPerBatch={8}
-                    initialNumToRender={8}
-                    removeClippedSubviews={false}
-                    renderItem={({ item }) => (
-                      <HomeCardItem
-                        item={item}
-                        currentTheme={currentTheme}
-                        isDarkMode={isDarkMode}
-                        navigation={navigation}
-                        cardWidth={dims.cardWidth}
-                        cardHeight={dims.cardHeight}
-                        cardInfoBottom={dims.cardInfoBottom}
-                        cardInfoHeight={dims.cardInfoHeight}
-                      />
-                    )}
-                    ListFooterComponent={
-                      isFetchingNextPage ? (
-                        <View style={{ justifyContent: "center", alignItems: "center", width: 80 }}>
-                          <ActivityIndicator size="small" color={currentTheme.accent || "#4CAF50"} />
-                        </View>
-                      ) : null
-                    }
+                  <HomeHeader
+                    userName={userName}
+                    dims={dims}
+                    isDarkMode={isDarkMode}
+                    currentTheme={currentTheme}
+                    onOpenSearch={handleOpenSearch}
                   />
-                </FadeInView>
-              )}
-            </View>
 
-            <View style={styles.topDestinationsSection}>
-              <View
-                style={[
-                  styles.topDestinationsHeader,
-                  { marginBottom: dims.topDestHeaderMarginBottom },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.topDestinationsTitle,
-                    styles.topDestinationsTitleDark,
-                    {
-                      color: "#FFF",
-                      fontSize: dims.topDestTitleSize,
-                    },
-                  ]}
-                >
-                  Recomendações
-                </Text>
-              </View>
+                  <HomeCategoriesList
+                    categories={categories}
+                    activeCat={activeCat}
+                    currentTheme={currentTheme}
+                    themesByCat={themesByCat}
+                    isDarkMode={isDarkMode}
+                    dims={dims}
+                    categoryScrollRef={categoryScrollRef}
+                    onCategoryPress={handleCategoryPress}
+                    onCategoryLayout={handleCategoryLayout}
+                    onContainerLayout={handleContainerLayout}
+                    onContentSizeChange={handleContentSizeChange}
+                  />
+                </View>
 
-              {isShowingTopSkeleton ? (
-                <TopDestinationsSkeletonList
+                <HomeFeaturedList
+                  flatListRef={flatListRef}
+                  destinations={destinations}
+                  selectedCategory={selectedCategory}
+                  currentTheme={currentTheme}
                   isDarkMode={isDarkMode}
-                  cardWidth={dims.topCardWidth}
-                  cardHeight={dims.topCardHeight}
-                  imageSize={dims.topCardImageSize}
-                  titleSize={dims.isSmallScreen ? 14 : dims.isTallScreen ? 17 : 16}
-                  locationSize={dims.isSmallScreen ? 11.5 : dims.isTallScreen ? 13.5 : 13}
+                  navigation={navigation}
+                  dims={dims}
+                  isShowingSkeleton={isShowingSkeleton}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onEndReached={loadNextPage}
                 />
-              ) : (
-                <FlatList
-                  data={topDestinations}
-                  keyExtractor={keyExtractor}
-                  horizontal
-                  nestedScrollEnabled={true}
-                  showsHorizontalScrollIndicator={false}
-                  style={{ width: "100%" }}
-                  contentContainerStyle={styles.topDestinationsList}
+
+                <HomeRecommendationsList
+                  topDestinations={topDestinations}
+                  currentTheme={currentTheme}
+                  isDarkMode={isDarkMode}
+                  navigation={navigation}
+                  dims={dims}
+                  isShowingTopSkeleton={isShowingTopSkeleton}
+                  isFetchingNextTopPage={isFetchingNextTopPage}
                   onEndReached={loadNextTopPage}
-                  onEndReachedThreshold={0.3}
-                  windowSize={11}
-                  maxToRenderPerBatch={8}
-                  initialNumToRender={8}
-                  removeClippedSubviews={false}
-                  renderItem={({ item }) => (
-                    <TopDestinationCard
-                      item={item}
-                      currentTheme={currentTheme}
-                      isDarkMode={isDarkMode}
-                      navigation={navigation}
-                      cardWidth={dims.topCardWidth}
-                      cardHeight={dims.topCardHeight}
-                      imageSize={dims.topCardImageSize}
-                      titleSize={dims.isSmallScreen ? 14 : dims.isTallScreen ? 17 : 16}
-                      locationSize={dims.isSmallScreen ? 11.5 : dims.isTallScreen ? 13.5 : 13}
-                    />
-                  )}
-                  ListFooterComponent={
-                    isFetchingNextTopPage ? (
-                      <View style={{ justifyContent: "center", alignItems: "center", width: 60, height: dims.topCardHeight }}>
-                        <ActivityIndicator size="small" color={currentTheme?.accent || "#4CAF50"} />
-                      </View>
-                    ) : null
-                  }
                 />
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
         </LinearGradient>
       </ImageBackground>
     </View>

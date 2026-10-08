@@ -1,9 +1,15 @@
-import React, { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, Animated, Platform } from "react-native";
-import Feather from "react-native-vector-icons/Feather";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import styles from "../home.styles";
+import React from "react";
+import { View, Text, TouchableOpacity, Animated } from "react-native";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import styles, {
+  getSearchCardContainerStyle,
+  getImageDimensionStyle,
+  getImageAnimStyle,
+  getBadgePaddingOffset,
+  getBadgeTextColor,
+} from "../styles/searchCardItem.styles";
 import { SkeletonBox } from "../../../shared/components/Skeleton";
+import useImageFadeIn from "../hooks/useImageFadeIn";
 
 const SearchCardItem = React.memo(function SearchCardItem({
   item,
@@ -11,24 +17,13 @@ const SearchCardItem = React.memo(function SearchCardItem({
   cardMarginBottom,
   currentTheme,
   isDarkMode,
-  isOverlayActive,
   showPrice = false,
   showRating = false,
   onPress,
 }) {
   const isLocal = item.isLocalSource || typeof item.image_url !== "string";
-  const [imageLoaded, setImageLoaded] = useState(isLocal);
-  const imgAnim = useRef(new Animated.Value(isLocal ? 1 : 0)).current;
+  const { imageLoaded, imgAnim, handleImageLoad } = useImageFadeIn(Boolean(isLocal), 220);
   const imageSize = Math.max(48, cardHeight - 20);
-
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-    Animated.timing(imgAnim, {
-      toValue: 1,
-      duration: 220,
-      useNativeDriver: Platform.OS !== "web",
-    }).start();
-  };
 
   const shouldShowPrice = Boolean(showPrice && !showRating && (item.priceRange || item.price != null));
   const shouldShowRating = Boolean(
@@ -37,38 +32,35 @@ const SearchCardItem = React.memo(function SearchCardItem({
 
   const badgeOffset = shouldShowPrice ? 95 : shouldShowRating ? 50 : 0;
 
+  const imageSource =
+    item.isLocalSource || typeof item.image_url !== "string"
+      ? item.image_url
+      : { uri: item.image_url };
+
   return (
-    <View style={styles.flex1}>
-      <TouchableOpacity
-        activeOpacity={0.85}
-        style={[
-          styles.searchCardBase,
-          !isDarkMode ? styles.searchCardLight : styles.searchCardDark,
-          { height: cardHeight, marginBottom: cardMarginBottom },
-        ]}
-        onPress={onPress}
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={[
+        styles.searchCardBase,
+        !isDarkMode ? styles.searchCardLight : styles.searchCardDark,
+        getSearchCardContainerStyle(cardHeight, cardMarginBottom),
+      ]}
+      onPress={onPress}
+    >
+      <View
+        style={[styles.searchCardImageWrapper, getImageDimensionStyle(imageSize)]}
       >
-        <View
-          style={[styles.searchCardImageWrapper, { width: imageSize, height: imageSize }]}
-        >
-          {item.image_url ? (
-            <>
-              <Animated.Image
-                source={
-                  item.isLocalSource || typeof item.image_url !== "string"
-                    ? item.image_url
-                    : { uri: item.image_url }
-                }
-                style={[
-                  {
-                    width: imageSize,
-                    height: imageSize,
-                    borderRadius: 13,
-                    opacity: imgAnim,
-                  },
-                ]}
-                onLoad={handleImageLoad}
-              />
+        {item.image_url ? (
+          <>
+            <Animated.Image
+              source={imageSource}
+              resizeMode="cover"
+              style={[
+                styles.searchCardImage,
+                getImageAnimStyle(imageSize, imgAnim),
+              ]}
+              onLoad={handleImageLoad}
+            />
               {!imageLoaded && (
                 <SkeletonBox
                   width={imageSize}
@@ -85,19 +77,16 @@ const SearchCardItem = React.memo(function SearchCardItem({
             </>
           ) : (
             <View
-              style={{
-                width: imageSize,
-                height: imageSize,
-                borderRadius: 13,
-                backgroundColor: isDarkMode ? "#252525" : "#E2E2E2",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
+              style={[
+                styles.searchCardEmptyFallback,
+                isDarkMode ? styles.searchCardEmptyFallbackDark : styles.searchCardEmptyFallbackLight,
+                getImageDimensionStyle(imageSize),
+              ]}
             >
               <Ionicons
                 name="image-outline"
                 size={Math.round(imageSize * 0.45)}
-                color={isDarkMode ? "#666" : "#999"}
+                color={isDarkMode ? "#666666" : "#999999"}
               />
             </View>
           )}
@@ -105,7 +94,7 @@ const SearchCardItem = React.memo(function SearchCardItem({
 
         <View style={styles.searchCardInfo}>
           <Text
-            style={[styles.searchCardTitle, { paddingRight: badgeOffset }]}
+            style={[styles.searchCardTitle, getBadgePaddingOffset(badgeOffset)]}
             numberOfLines={1}
           >
             {item.title}
@@ -125,13 +114,13 @@ const SearchCardItem = React.memo(function SearchCardItem({
               <View
                 style={[
                   styles.searchCardPriceBadge,
-                  !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+                  !isDarkMode ? styles.searchCardPriceBadgeLight : styles.searchCardPriceBadgeDark,
                 ]}
               >
                 <Text
                   style={[
                     styles.searchCardBadgeText,
-                    { color: currentTheme.accent },
+                    getBadgeTextColor(currentTheme.accent),
                   ]}
                 >
                   {item.priceRange ? `${item.priceRange}/dia` : `R$ ${item.price}/dia`}
@@ -142,7 +131,7 @@ const SearchCardItem = React.memo(function SearchCardItem({
               <View
                 style={[
                   styles.searchCardRatingBadge,
-                  !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+                  !isDarkMode ? styles.searchCardRatingBadgeLight : styles.searchCardRatingBadgeDark,
                 ]}
               >
                 <Ionicons
@@ -154,7 +143,7 @@ const SearchCardItem = React.memo(function SearchCardItem({
                 <Text
                   style={[
                     styles.searchCardRatingText,
-                    !isDarkMode && { color: "#000" },
+                    !isDarkMode ? styles.searchCardRatingTextLight : styles.searchCardRatingTextDark,
                   ]}
                 >
                   {item.realRating}
@@ -164,8 +153,7 @@ const SearchCardItem = React.memo(function SearchCardItem({
           </View>
         )}
       </TouchableOpacity>
-    </View>
-  );
-});
+    );
+  });
 
 export default SearchCardItem;

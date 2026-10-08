@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -7,22 +7,17 @@ import {
   Modal,
   Animated,
   TouchableWithoutFeedback,
-  PanResponder,
-  Dimensions,
-  Easing,
 } from "react-native";
-import Feather from "react-native-vector-icons/Feather";
-import styles, { countryModalStyles } from "../home.styles";
+import { Feather } from "@expo/vector-icons";
+import {
+  filterModalStyles,
+  getActiveItemBorderStyle,
+  getActiveItemTextStyle,
+  getModalTranslateStyle,
+} from "../styles/filterModal.styles";
+import useFilterModalSwipe from "../hooks/useFilterModalSwipe";
 
-const { height: WINDOW_HEIGHT } = Dimensions.get("window");
-const SCREEN_HEIGHT = Math.max(
-  WINDOW_HEIGHT,
-  Dimensions.get("screen").height || 0,
-  900
-);
-const MODAL_DISMISS_OFFSET = SCREEN_HEIGHT + 50;
-
-export default function CategoryFilterModal({
+const CategoryFilterModal = React.memo(function CategoryFilterModal({
   visible,
   onClose,
   categories = [],
@@ -31,64 +26,7 @@ export default function CategoryFilterModal({
   currentTheme,
   isDarkMode,
 }) {
-  const categoryModalSlideAnim = useRef(new Animated.Value(MODAL_DISMISS_OFFSET)).current;
-  const isClosingModal = useRef(false);
-
-  useEffect(() => {
-    if (visible) {
-      isClosingModal.current = false;
-      categoryModalSlideAnim.setValue(MODAL_DISMISS_OFFSET);
-      Animated.spring(categoryModalSlideAnim, {
-        toValue: 0,
-        damping: 24,
-        stiffness: 220,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible, categoryModalSlideAnim]);
-
-  const handleCloseCategoryModal = useCallback(() => {
-    if (isClosingModal.current) return;
-    isClosingModal.current = true;
-    Animated.timing(categoryModalSlideAnim, {
-      toValue: MODAL_DISMISS_OFFSET,
-      duration: 220,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start(() => {
-      onClose();
-      isClosingModal.current = false;
-    });
-  }, [categoryModalSlideAnim, onClose]);
-
-  const categoryPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return gestureState.dy > 5;
-      },
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        return gestureState.dy > 5;
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          categoryModalSlideAnim.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 80 || gestureState.vy > 0.4) {
-          handleCloseCategoryModal();
-        } else {
-          Animated.spring(categoryModalSlideAnim, {
-            toValue: 0,
-            damping: 24,
-            stiffness: 220,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
+  const { slideAnim, panResponder, handleCloseModal } = useFilterModalSwipe(visible, onClose);
 
   const orderedCategories = useMemo(() => {
     const allOption = { key: null, name: "Todas as categorias" };
@@ -97,7 +35,6 @@ export default function CategoryFilterModal({
     }
 
     const normalizedSelected = selectedCategory ? String(selectedCategory).toLowerCase() : null;
-
     let activeItem = null;
     const others = [];
 
@@ -130,48 +67,39 @@ export default function CategoryFilterModal({
       animationType="fade"
       statusBarTranslucent={true}
       navigationBarTranslucent={true}
-      onRequestClose={handleCloseCategoryModal}
+      onRequestClose={handleCloseModal}
     >
-      <TouchableWithoutFeedback onPress={handleCloseCategoryModal}>
-        <View style={countryModalStyles.overlay}>
+      <TouchableWithoutFeedback onPress={handleCloseModal}>
+        <View style={filterModalStyles.overlay}>
           <TouchableWithoutFeedback>
             <Animated.View
               style={[
-                countryModalStyles.sheet,
-                {
-                  transform: [{ translateY: categoryModalSlideAnim }],
-                },
-                !isDarkMode && {
-                  backgroundColor: "#FFFFFF",
-                  borderWidth: 0,
-                  shadowColor: "transparent",
-                  shadowOpacity: 0,
-                  shadowRadius: 0,
-                  elevation: 0,
-                },
+                filterModalStyles.sheet,
+                isDarkMode ? filterModalStyles.sheetDark : filterModalStyles.sheetLight,
+                getModalTranslateStyle(slideAnim),
               ]}
             >
-              <View {...categoryPanResponder.panHandlers} style={countryModalStyles.dragHandleArea}>
+              <View {...panResponder.panHandlers} style={filterModalStyles.dragHandleArea}>
                 <View
                   style={[
-                    countryModalStyles.indicator,
-                    !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.2)" },
+                    filterModalStyles.indicator,
+                    isDarkMode ? filterModalStyles.indicatorDark : filterModalStyles.indicatorLight,
                   ]}
                 />
-                <View style={countryModalStyles.header}>
+                <View style={filterModalStyles.header}>
                   <View>
                     <Text
                       style={[
-                        countryModalStyles.title,
-                        !isDarkMode && { color: "#000000" },
+                        filterModalStyles.title,
+                        isDarkMode ? filterModalStyles.titleDark : filterModalStyles.titleLight,
                       ]}
                     >
                       Filtrar por Categoria
                     </Text>
                     <Text
                       style={[
-                        countryModalStyles.subtitle,
-                        !isDarkMode && { color: "rgba(0, 0, 0, 0.5)" },
+                        filterModalStyles.subtitle,
+                        isDarkMode ? filterModalStyles.subtitleDark : filterModalStyles.subtitleLight,
                       ]}
                     >
                       Selecione o tipo de experiência que busca
@@ -182,7 +110,7 @@ export default function CategoryFilterModal({
 
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                style={styles.countryListScroll}
+                style={filterModalStyles.countryListScroll}
               >
                 {orderedCategories.map((item) => {
                   const isSelected =
@@ -196,31 +124,33 @@ export default function CategoryFilterModal({
                       key={item.key || "all-categories"}
                       onPress={() => {
                         onSelectCategory(item.key);
-                        handleCloseCategoryModal();
+                        handleCloseModal();
                       }}
                       activeOpacity={0.7}
                       style={[
-                        countryModalStyles.countryItem,
-                        !isDarkMode && { backgroundColor: "#F7F7F9" },
+                        filterModalStyles.countryItem,
+                        isDarkMode ? filterModalStyles.countryItemDark : filterModalStyles.countryItemLight,
                         isSelected && [
-                          styles.countryItemActive,
-                          !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
-                          { borderColor: currentTheme.accent },
+                          isDarkMode ? filterModalStyles.countryItemActiveDark : filterModalStyles.countryItemActiveLight,
+                          getActiveItemBorderStyle(currentTheme.accent),
                         ],
                       ]}
                     >
-                      <View style={styles.rowCenter}>
+                      <View style={filterModalStyles.rowCenter}>
                         <Feather
                           name={item.key === null ? "compass" : "grid"}
                           size={16}
-                          color={isSelected ? currentTheme.accent : !isDarkMode ? "#000" : "#FFF"}
-                          style={styles.marginRight6}
+                          color={isSelected ? currentTheme.accent : !isDarkMode ? "#000000" : "#FFFFFF"}
+                          style={filterModalStyles.marginRight6}
                         />
                         <Text
                           style={[
-                            countryModalStyles.countryName,
-                            !isDarkMode && { color: "#000000" },
-                            isSelected && { color: currentTheme.accent, fontWeight: "bold" },
+                            filterModalStyles.countryName,
+                            isDarkMode ? filterModalStyles.countryNameDark : filterModalStyles.countryNameLight,
+                            isSelected && [
+                              filterModalStyles.countryNameActive,
+                              getActiveItemTextStyle(currentTheme.accent),
+                            ],
                           ]}
                         >
                           {item.name}
@@ -239,4 +169,6 @@ export default function CategoryFilterModal({
       </TouchableWithoutFeedback>
     </Modal>
   );
-}
+});
+
+export default CategoryFilterModal;

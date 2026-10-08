@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -7,20 +7,15 @@ import {
   Modal,
   Animated,
   TouchableWithoutFeedback,
-  PanResponder,
-  Dimensions,
-  Easing,
 } from "react-native";
-import Feather from "react-native-vector-icons/Feather";
-import styles, { countryModalStyles } from "../home.styles";
-
-const { height: WINDOW_HEIGHT } = Dimensions.get("window");
-const SCREEN_HEIGHT = Math.max(
-  WINDOW_HEIGHT,
-  Dimensions.get("screen").height || 0,
-  900
-);
-const MODAL_DISMISS_OFFSET = SCREEN_HEIGHT + 50;
+import { Feather } from "@expo/vector-icons";
+import {
+  filterModalStyles,
+  getActiveItemBorderStyle,
+  getActiveItemTextStyle,
+  getModalTranslateStyle,
+} from "../styles/filterModal.styles";
+import useFilterModalSwipe from "../hooks/useFilterModalSwipe";
 
 const POPULAR_COUNTRIES = [
   "Todos os países",
@@ -41,7 +36,7 @@ const POPULAR_COUNTRIES = [
   "Canadá",
 ];
 
-export default function CountryFilterModal({
+const CountryFilterModal = React.memo(function CountryFilterModal({
   visible,
   onClose,
   destinations = [],
@@ -50,64 +45,7 @@ export default function CountryFilterModal({
   currentTheme,
   isDarkMode,
 }) {
-  const countryModalSlideAnim = useRef(new Animated.Value(MODAL_DISMISS_OFFSET)).current;
-  const isClosingModal = useRef(false);
-
-  useEffect(() => {
-    if (visible) {
-      isClosingModal.current = false;
-      countryModalSlideAnim.setValue(MODAL_DISMISS_OFFSET);
-      Animated.spring(countryModalSlideAnim, {
-        toValue: 0,
-        damping: 24,
-        stiffness: 220,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible, countryModalSlideAnim]);
-
-  const handleCloseCountryModal = useCallback(() => {
-    if (isClosingModal.current) return;
-    isClosingModal.current = true;
-    Animated.timing(countryModalSlideAnim, {
-      toValue: MODAL_DISMISS_OFFSET,
-      duration: 220,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start(() => {
-      onClose();
-      isClosingModal.current = false;
-    });
-  }, [countryModalSlideAnim, onClose]);
-
-  const countryPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return gestureState.dy > 5;
-      },
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        return gestureState.dy > 5;
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          countryModalSlideAnim.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 80 || gestureState.vy > 0.4) {
-          handleCloseCountryModal();
-        } else {
-          Animated.spring(countryModalSlideAnim, {
-            toValue: 0,
-            damping: 24,
-            stiffness: 220,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
+  const { slideAnim, panResponder, handleCloseModal } = useFilterModalSwipe(visible, onClose);
 
   const countriesList = useMemo(() => {
     const list = [...POPULAR_COUNTRIES];
@@ -132,48 +70,39 @@ export default function CountryFilterModal({
       animationType="fade"
       statusBarTranslucent={true}
       navigationBarTranslucent={true}
-      onRequestClose={handleCloseCountryModal}
+      onRequestClose={handleCloseModal}
     >
-      <TouchableWithoutFeedback onPress={handleCloseCountryModal}>
-        <View style={countryModalStyles.overlay}>
+      <TouchableWithoutFeedback onPress={handleCloseModal}>
+        <View style={filterModalStyles.overlay}>
           <TouchableWithoutFeedback>
             <Animated.View
               style={[
-                countryModalStyles.sheet,
-                {
-                  transform: [{ translateY: countryModalSlideAnim }],
-                },
-                !isDarkMode && {
-                  backgroundColor: "#FFFFFF",
-                  borderWidth: 0,
-                  shadowColor: "transparent",
-                  shadowOpacity: 0,
-                  shadowRadius: 0,
-                  elevation: 0,
-                },
+                filterModalStyles.sheet,
+                isDarkMode ? filterModalStyles.sheetDark : filterModalStyles.sheetLight,
+                getModalTranslateStyle(slideAnim),
               ]}
             >
-              <View {...countryPanResponder.panHandlers} style={countryModalStyles.dragHandleArea}>
+              <View {...panResponder.panHandlers} style={filterModalStyles.dragHandleArea}>
                 <View
                   style={[
-                    countryModalStyles.indicator,
-                    !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.2)" },
+                    filterModalStyles.indicator,
+                    isDarkMode ? filterModalStyles.indicatorDark : filterModalStyles.indicatorLight,
                   ]}
                 />
-                <View style={countryModalStyles.header}>
+                <View style={filterModalStyles.header}>
                   <View>
                     <Text
                       style={[
-                        countryModalStyles.title,
-                        !isDarkMode && { color: "#000000" },
+                        filterModalStyles.title,
+                        isDarkMode ? filterModalStyles.titleDark : filterModalStyles.titleLight,
                       ]}
                     >
                       Filtrar por País
                     </Text>
                     <Text
                       style={[
-                        countryModalStyles.subtitle,
-                        !isDarkMode && { color: "rgba(0, 0, 0, 0.5)" },
+                        filterModalStyles.subtitle,
+                        isDarkMode ? filterModalStyles.subtitleDark : filterModalStyles.subtitleLight,
                       ]}
                     >
                       Escolha um destino pelo mundo
@@ -184,7 +113,7 @@ export default function CountryFilterModal({
 
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                style={styles.countryListScroll}
+                style={filterModalStyles.countryListScroll}
               >
                 {countriesList.map((countryName) => {
                   const isSelected =
@@ -199,32 +128,34 @@ export default function CountryFilterModal({
                         } else {
                           onSelectCountry(countryName);
                         }
-                        handleCloseCountryModal();
+                        handleCloseModal();
                       }}
                       activeOpacity={0.7}
                       style={[
-                        countryModalStyles.countryItem,
-                        !isDarkMode && { backgroundColor: "#F7F7F9" },
+                        filterModalStyles.countryItem,
+                        isDarkMode ? filterModalStyles.countryItemDark : filterModalStyles.countryItemLight,
                         isSelected && [
-                          styles.countryItemActive,
-                          !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
-                          { borderColor: currentTheme.accent },
+                          isDarkMode ? filterModalStyles.countryItemActiveDark : filterModalStyles.countryItemActiveLight,
+                          getActiveItemBorderStyle(currentTheme.accent),
                         ],
                       ]}
                     >
-                      <View style={styles.rowCenter}>
+                      <View style={filterModalStyles.rowCenter}>
                         {countryName === "Todos os países" ? (
-                          <Text style={styles.flag18}>🌍</Text>
+                          <Text style={filterModalStyles.flag18}>🌍</Text>
                         ) : (
                           isSelected && (
-                            <Text style={styles.flag16}>📍</Text>
+                            <Text style={filterModalStyles.flag16}>📍</Text>
                           )
                         )}
                         <Text
                           style={[
-                            countryModalStyles.countryName,
-                            !isDarkMode && { color: "#000000" },
-                            isSelected && { color: currentTheme.accent, fontWeight: "bold" },
+                            filterModalStyles.countryName,
+                            isDarkMode ? filterModalStyles.countryNameDark : filterModalStyles.countryNameLight,
+                            isSelected && [
+                              filterModalStyles.countryNameActive,
+                              getActiveItemTextStyle(currentTheme.accent),
+                            ],
                           ]}
                         >
                           {countryName}
@@ -243,4 +174,6 @@ export default function CountryFilterModal({
       </TouchableWithoutFeedback>
     </Modal>
   );
-}
+});
+
+export default CountryFilterModal;
