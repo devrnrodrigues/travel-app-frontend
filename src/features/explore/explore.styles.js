@@ -23,6 +23,27 @@ export const exploreStyles = StyleSheet.create({
   columnWrapper: {
     gap: GAP,
   },
+  gridItem: {
+    width: COLUMN_WIDTH,
+    height: CARD_HEIGHT,
+    position: "relative",
+    backgroundColor: "#000000",
+    overflow: "hidden",
+  },
+  gridItemLight: {
+    backgroundColor: "rgba(180, 180, 180, 0.45)",
+  },
+  bottomOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    minHeight: 46,
+    justifyContent: "flex-end",
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+    paddingTop: 16,
+  },
   flatListContent: {
     flexGrow: 1,
     gap: GAP,

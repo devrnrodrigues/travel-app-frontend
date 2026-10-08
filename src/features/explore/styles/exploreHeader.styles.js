@@ -1,6 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { StyleSheet } from "react-native";
 
 export const exploreHeaderStyles = StyleSheet.create({
   headerBar: {
@@ -19,38 +17,6 @@ export const exploreHeaderStyles = StyleSheet.create({
   headerBarLight: {
     backgroundColor: "rgba(100, 100, 100, 1)",
   },
-  headerFoliageWrapper: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    overflow: "hidden",
-  },
-  headerFoliage: {
-    width: "124%",
-    height: Math.min(320, Math.round(width * 0.82)),
-    position: "absolute",
-    top: -6,
-    left: "-8%",
-  },
-  headerFoliageDark: {
-    opacity: 0.85,
-  },
-  headerFoliageLight: {
-    opacity: 0.85,
-  },
-  headerFoliageGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    height: "100%",
-    zIndex: 2,
-    elevation: 2,
-  },
   searchBarRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -63,15 +29,13 @@ export const exploreHeaderStyles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
     paddingHorizontal: 12,
-    borderWidth: 1,
+    borderWidth: 0,
   },
   searchBarInputDark: {
     backgroundColor: "rgba(38, 38, 38, 0.72)",
-    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   searchBarInputLight: {
     backgroundColor: "rgba(255, 255, 255, 0.75)",
-    borderColor: "rgba(0, 0, 0, 0.08)",
   },
   searchBarInputFocusedDark: {
     backgroundColor: "#1F1F1F",
@@ -107,15 +71,13 @@ export const exploreHeaderStyles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 0,
   },
   photoIconButtonDark: {
     backgroundColor: "rgba(38, 38, 38, 0.72)",
-    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   photoIconButtonLight: {
     backgroundColor: "rgba(255, 255, 255, 0.75)",
-    borderColor: "rgba(0, 0, 0, 0.08)",
   },
 });
 

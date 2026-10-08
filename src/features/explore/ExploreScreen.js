@@ -139,6 +139,7 @@ export default function Explore({ navigation }) {
 
           {isShowingSkeleton ? (
             <ScrollView
+              style={styles.flex1}
               contentContainerStyle={dynamicContentContainerStyle}
               showsVerticalScrollIndicator={false}
               scrollEnabled={false}

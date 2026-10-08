@@ -4,15 +4,11 @@ import {
   TextInput,
   TouchableOpacity,
   Pressable,
-  Image,
   ActivityIndicator,
   Animated,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import styles from "../styles/exploreHeader.styles";
-
-const foliageImage = require("../../../../assets/images/image.png");
 
 export const ExploreHeader = React.memo(function ExploreHeader({
   headerPaddingTop,
@@ -44,57 +40,16 @@ export const ExploreHeader = React.memo(function ExploreHeader({
         },
       ]}
     >
-      <View
-        pointerEvents="none"
-        style={[
-          styles.headerFoliageWrapper,
-          { top: Math.max(0, headerPaddingTop - 10) },
-        ]}
-      >
-        <Image
-          source={foliageImage}
-          style={[
-            styles.headerFoliage,
-            isDarkMode ? styles.headerFoliageDark : styles.headerFoliageLight,
-          ]}
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={
-            isDarkMode
-              ? [
-                  "#000000",
-                  "rgba(0, 0, 0, 0)",
-                  "rgba(0, 0, 0, 0)",
-                  "rgba(0, 0, 0, 0.45)",
-                  "#000000",
-                ]
-              : [
-                  "rgba(100, 100, 100, 1)",
-                  "rgba(100, 100, 100, 0)",
-                  "rgba(100, 100, 100, 0)",
-                  "rgba(100, 100, 100, 0.45)",
-                  "rgba(100, 100, 100, 1)",
-                ]
-          }
-          locations={[0, 0.16, 0.6, 0.88, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.headerFoliageGradient}
-        />
-      </View>
-
       <View style={styles.searchBarRow}>
         <Pressable
           style={[
             styles.searchBarInputWrapper,
             isDarkMode ? styles.searchBarInputDark : styles.searchBarInputLight,
-            isSearchFocused && [
-              { borderColor: accentColor },
+            isSearchFocused && (
               isDarkMode
                 ? styles.searchBarInputFocusedDark
-                : styles.searchBarInputFocusedLight,
-            ],
+                : styles.searchBarInputFocusedLight
+            ),
           ]}
           onPress={() => searchInputRef.current?.focus()}
         >
