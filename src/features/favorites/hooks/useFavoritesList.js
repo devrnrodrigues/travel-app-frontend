@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Animated } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useFocusEffect } from "@react-navigation/native";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { getFavoritesApi } from "../api/favoriteService";
 
 const PAGE_SIZE = 10;
 
 export function useFavoritesList(user) {
-  const queryClient = useQueryClient();
   const userId = user?.id || user?._id || "anon";
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,6 +69,7 @@ export function useFavoritesList(user) {
       }
       return lastPageParam + 1;
     },
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: isFavoritesHidden } = useQuery({
@@ -80,6 +79,7 @@ export function useFavoritesList(user) {
       return val === "true";
     },
     initialData: false,
+    staleTime: Infinity,
   });
 
   const favorites = useMemo(() => {
@@ -102,13 +102,6 @@ export function useFavoritesList(user) {
 
   const loading = isLoading && favorites.length === 0;
   const isShowingSkeleton = loading;
-
-  useFocusEffect(
-    useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: ["hideFavorites"] });
-      queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
-    }, [queryClient, userId])
-  );
 
   return {
     searchQuery,

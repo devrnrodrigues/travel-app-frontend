@@ -78,4 +78,38 @@ export default StyleSheet.create({
   overflowVisible: {
     overflow: "visible",
   },
+  listContent: {
+    width: "100%",
+  },
+  card: {
+    borderRadius: 18,
+    position: "relative",
+    overflow: "hidden",
+  },
+  cardDark: {
+    backgroundColor: "rgba(26, 26, 26, 0.78)",
+  },
+  cardLight: {
+    backgroundColor: "rgba(250, 250, 250, 0.30)",
+  },
+  cardInner: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  cardOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 12,
+    paddingTop: 36,
+    paddingBottom: 10,
+    justifyContent: "flex-end",
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 });
