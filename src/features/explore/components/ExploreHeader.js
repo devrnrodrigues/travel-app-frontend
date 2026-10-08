@@ -45,11 +45,12 @@ export const ExploreHeader = React.memo(function ExploreHeader({
           style={[
             styles.searchBarInputWrapper,
             isDarkMode ? styles.searchBarInputDark : styles.searchBarInputLight,
-            isSearchFocused && (
+            isSearchFocused && [
+              { borderColor: accentColor },
               isDarkMode
                 ? styles.searchBarInputFocusedDark
-                : styles.searchBarInputFocusedLight
-            ),
+                : styles.searchBarInputFocusedLight,
+            ],
           ]}
           onPress={() => searchInputRef.current?.focus()}
         >

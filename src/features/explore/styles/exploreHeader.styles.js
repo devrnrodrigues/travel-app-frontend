@@ -29,7 +29,8 @@ export const exploreHeaderStyles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
     paddingHorizontal: 12,
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   searchBarInputDark: {
     backgroundColor: "rgba(38, 38, 38, 0.72)",
