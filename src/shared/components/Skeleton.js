@@ -165,13 +165,16 @@ export function HomeCardSkeleton({
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "#181818" : "#E2E2E2";
+  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
-    : "rgba(0, 0, 0, 0.12)";
+    : "rgba(255, 255, 255, 0.20)";
   const placeholderBg2 = isDarkMode
     ? "rgba(255, 255, 255, 0.06)"
-    : "rgba(0, 0, 0, 0.06)";
+    : "rgba(255, 255, 255, 0.10)";
+  const cardInfoOverlayBg = isDarkMode
+    ? "rgba(12, 12, 12, 0.75)"
+    : "rgba(250, 250, 250, 0.30)";
 
   const actualWidth = cardWidth || CARD_WIDTH;
   const actualHeight = cardHeight || CARD_HEIGHT;
@@ -215,8 +218,6 @@ export function HomeCardSkeleton({
         },
       ]}
     >
-      <View style={{ flex: 1 }} />
-
       <View
         style={[
           homeStyles.cardInfo,
@@ -239,9 +240,7 @@ export function HomeCardSkeleton({
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isDarkMode
-                ? "rgba(12, 12, 12, 0.82)"
-                : "rgba(255, 255, 255, 0.85)",
+              backgroundColor: cardInfoOverlayBg,
               borderRadius: 25,
             },
           ]}
@@ -533,28 +532,24 @@ export function ExploreCardSkeleton({
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "rgba(22, 22, 22, 0.95)" : "rgba(215, 215, 215, 0.45)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.50)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.35)";
-  const badgeBg = isDarkMode ? "rgba(0, 0, 0, 0.60)" : "rgba(100, 100, 100, 0.40)";
+  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(180, 180, 180, 0.45)";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.28)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.16)";
 
   return (
     <View
       style={[
         exploreStyles.gridItem,
         {
-          width: COLUMN_WIDTH,
+          flex: 1,
           height,
           backgroundColor: cardBg,
           overflow: "hidden",
         },
-        !isDarkMode && exploreStyles.gridItemLight,
       ]}
     >
-      <View style={{ flex: 1 }} />
-
       <LinearGradient
-        colors={["transparent", isDarkMode ? "rgba(0, 0, 0, 0.86)" : "rgba(80, 80, 80, 0.65)"]}
+        colors={["transparent", isDarkMode ? "rgba(0, 0, 0, 0.86)" : "rgba(0, 0, 0, 0.45)"]}
         style={exploreStyles.bottomOverlay}
       >
         <View
@@ -563,7 +558,7 @@ export function ExploreCardSkeleton({
             width: "75%",
             borderRadius: 3,
             backgroundColor: placeholderBg1,
-            marginBottom: 5,
+            marginBottom: 4,
           }}
         />
         <View
@@ -590,11 +585,11 @@ export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 
   const anim = useShimmerAnimation();
 
   return (
-    <View style={{ gap: GAP, backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" }}>
+    <View style={{ width: "100%", gap: GAP, backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" }}>
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <View
           key={`skel-row-${rowIndex}`}
-          style={{ flexDirection: "row", gap: GAP }}
+          style={{ flexDirection: "row", width: "100%", gap: GAP }}
         >
           <ExploreCardSkeleton
             isDarkMode={isDarkMode}
@@ -626,22 +621,28 @@ export function FavoriteCardSkeleton({
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const actualWidth = cardWidth || favoritesStyles.card?.width || 170;
-  const actualHeight = cardHeight || favoritesStyles.card?.height || 200;
+  const actualWidth = cardWidth || 170;
+  const actualHeight = cardHeight || 200;
 
+  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
-    : "rgba(0, 0, 0, 0.10)";
+    : "rgba(255, 255, 255, 0.20)";
   const placeholderBg2 = isDarkMode
     ? "rgba(255, 255, 255, 0.06)"
-    : "rgba(0, 0, 0, 0.06)";
+    : "rgba(255, 255, 255, 0.10)";
 
   return (
     <View
       style={[
         favoritesStyles.card,
-        isDarkMode ? favoritesStyles.cardDark : favoritesStyles.cardLight,
-        cardWidth && cardHeight ? { width: cardWidth, height: cardHeight } : null,
+        {
+          width: actualWidth,
+          height: actualHeight,
+          backgroundColor: cardBg,
+          borderRadius: 18,
+          overflow: "hidden",
+        },
       ]}
     >
       <View style={favoritesStyles.cardInner}>
@@ -649,7 +650,7 @@ export function FavoriteCardSkeleton({
           colors={
             isDarkMode
               ? ["transparent", "rgba(0, 0, 0, 0.35)", "rgba(0, 0, 0, 0.75)"]
-              : ["transparent", "rgba(0, 0, 0, 0.08)", "rgba(0, 0, 0, 0.20)"]
+              : ["transparent", "rgba(0, 0, 0, 0.15)", "rgba(0, 0, 0, 0.45)"]
           }
           locations={[0, 0.42, 1]}
           style={favoritesStyles.cardOverlay}
@@ -728,7 +729,7 @@ export function FavoritesSkeletonList({
       {pairs.map(([first, second], rowIndex) => (
         <View
           key={`fav-row-${rowIndex}`}
-          style={[favoritesStyles.columnWrapper, { flexDirection: "row" }]}
+          style={favoritesStyles.columnWrapper}
         >
           <FavoriteCardSkeleton
             key={`fav-card-${first}`}
@@ -757,18 +758,16 @@ export function SearchCardSkeleton({
   cardMarginBottom = 10,
   titleWidth = "60%",
   locationWidth = "38%",
-  showBadge = true,
   isDarkMode = true,
   animatedValue,
 }) {
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = !isDarkMode ? "rgba(100, 100, 100, 0.25)" : "rgba(12, 12, 12, 0.85)";
-  const thumbBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.20)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(255, 255, 255, 0.30)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.16)";
-  const badgeBg = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.14)";
+  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
+  const thumbBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.16)";
+  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.20)";
+  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.10)";
 
   const imageSize = Math.max(48, cardHeight - 20);
   const cardWidth = width - 40;
@@ -776,6 +775,7 @@ export function SearchCardSkeleton({
   return (
     <View
       style={{
+        width: "100%",
         backgroundColor: cardBg,
         borderRadius: 18,
         paddingVertical: 10,
@@ -788,7 +788,6 @@ export function SearchCardSkeleton({
         position: "relative",
       }}
     >
-      { }
       <View
         style={{
           width: imageSize,
@@ -798,7 +797,6 @@ export function SearchCardSkeleton({
         }}
       />
 
-      { }
       <View style={{ marginLeft: 14, flex: 1, justifyContent: "center" }}>
         <View
           style={{
@@ -806,35 +804,30 @@ export function SearchCardSkeleton({
             width: titleWidth,
             borderRadius: 4,
             backgroundColor: placeholderBg1,
-            marginBottom: 8,
+            marginBottom: 6,
           }}
         />
-        <View
-          style={{
-            height: 10,
-            width: locationWidth,
-            borderRadius: 3,
-            backgroundColor: placeholderBg2,
-          }}
-        />
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 3,
+              backgroundColor: placeholderBg2,
+              marginRight: 5,
+            }}
+          />
+          <View
+            style={{
+              height: 10,
+              width: locationWidth,
+              borderRadius: 3,
+              backgroundColor: placeholderBg2,
+            }}
+          />
+        </View>
       </View>
 
-      { }
-      {showBadge && (
-        <View
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 14,
-            width: 44,
-            height: 16,
-            borderRadius: 6,
-            backgroundColor: badgeBg,
-          }}
-        />
-      )}
-
-      { }
       <ShimmerOverlay
         animatedValue={anim}
         width={cardWidth}
@@ -849,20 +842,20 @@ export function SearchSkeletonList({
   isDarkMode = true,
   cardHeight = 72,
   cardMarginBottom = 10,
-  count = 6,
+  count = 7,
 }) {
   const anim = useShimmerAnimation();
   const variations = [
-    { title: "65%", loc: "40%", badge: true },
-    { title: "52%", loc: "34%", badge: false },
-    { title: "72%", loc: "46%", badge: true },
-    { title: "58%", loc: "30%", badge: true },
-    { title: "64%", loc: "42%", badge: false },
-    { title: "48%", loc: "36%", badge: true },
+    { title: "65%", loc: "40%" },
+    { title: "52%", loc: "34%" },
+    { title: "72%", loc: "46%" },
+    { title: "58%", loc: "30%" },
+    { title: "64%", loc: "42%" },
+    { title: "48%", loc: "36%" },
   ];
 
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 6 }}>
+    <View style={{ width: "100%", paddingHorizontal: 20, paddingTop: 6 }}>
       {Array.from({ length: count }).map((_, i) => {
         const v = variations[i % variations.length];
         return (
@@ -872,7 +865,6 @@ export function SearchSkeletonList({
             cardMarginBottom={cardMarginBottom}
             titleWidth={v.title}
             locationWidth={v.loc}
-            showBadge={v.badge}
             isDarkMode={isDarkMode}
             animatedValue={anim}
           />
