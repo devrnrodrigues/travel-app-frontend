@@ -42,14 +42,14 @@ export default StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#FFFFFF",
     textAlign: "center",
     marginBottom: 10,
     lineHeight: 44,
   },
   subtitle: {
     fontSize: 16,
-    color: "#fff",
+    color: "#FFFFFF",
     opacity: 0.9,
     textAlign: "center",
   },
@@ -58,7 +58,7 @@ export default StyleSheet.create({
     marginBottom: Platform.OS === "android" ? 12 : 6,
   },
   swipeTrack: {
-    backgroundColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(255, 255, 255, 0.22)",
     width: 70,
     height: 150,
     borderRadius: 35,
@@ -71,20 +71,20 @@ export default StyleSheet.create({
     marginBottom: 15,
   },
   arrow: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 20,
     lineHeight: 12,
     textAlign: "center",
   },
   button: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     width: 58,
     height: 58,
     borderRadius: 29,
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,
-    shadowColor: "#000",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -92,6 +92,29 @@ export default StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#000",
+    color: "#000000",
   },
+});
+
+export const getBgScaleStyle = (scale) => ({
+  transform: [{ scale }],
+});
+
+export const getTextAnimatedStyle = (opacity, translateY) => ({
+  opacity,
+  transform: [{ translateY }],
+});
+
+export const getBottomAnimatedStyle = (opacity, translateY) => ({
+  opacity,
+  transform: [{ translateY }],
+});
+
+export const getArrowAnimatedStyle = (translateY, opacity) => ({
+  transform: [{ translateY }],
+  opacity,
+});
+
+export const getButtonTranslateStyle = (translateY) => ({
+  transform: [{ translateY }],
 });

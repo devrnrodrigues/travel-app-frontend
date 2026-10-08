@@ -68,7 +68,7 @@ export default StyleSheet.create({
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.28,
     shadowRadius: 12,
@@ -102,4 +102,23 @@ export default StyleSheet.create({
     fontWeight: "800",
     textDecorationLine: "underline",
   },
+});
+
+export const getBgScaleStyle = (scale) => ({
+  transform: [{ scale }],
+});
+
+export const getTitleAnimatedStyle = (opacity, translateY, scale) => ({
+  opacity,
+  transform: [{ translateY }, { scale }],
+});
+
+export const getTaglineAnimatedStyle = (opacity, translateY) => ({
+  opacity,
+  transform: [{ translateY }],
+});
+
+export const getButtonsAnimatedStyle = (opacity, translateY) => ({
+  opacity,
+  transform: [{ translateY }],
 });
