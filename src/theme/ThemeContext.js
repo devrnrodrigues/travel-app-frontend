@@ -8,7 +8,11 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [activeCat, setActiveCat] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const { data: categories = [] } = useCategories();
+  const {
+    data: categories = [],
+    isLoading: isLoadingCategories,
+    isError: isCategoriesError,
+  } = useCategories();
 
   useEffect(() => {
     async function loadThemeMode() {
@@ -60,6 +64,8 @@ export function ThemeProvider({ children }) {
         isDarkMode,
         setIsDarkMode,
         toggleThemeMode,
+        isLoadingCategories,
+        isCategoriesError,
       }}
     >
       {children}
@@ -80,6 +86,8 @@ export function useTheme() {
       isDarkMode: true,
       setIsDarkMode: () => {},
       toggleThemeMode: () => {},
+      isLoadingCategories: false,
+      isCategoriesError: false,
     };
   }
   return context;
