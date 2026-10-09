@@ -14,7 +14,6 @@ import { useAuth } from "../context/AuthContext";
 import useAuthFlip from "../hooks/useAuthFlip";
 import useLoginForm from "../hooks/useLoginForm";
 import useRegisterForm from "../hooks/useRegisterForm";
-import usePasswordValidation from "../hooks/usePasswordValidation";
 import LoginForm from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
 import AuthBackground from "../components/AuthBackground";
@@ -30,11 +29,6 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
 
   const loginForm = useLoginForm({ login, loginWithGoogle });
   const registerForm = useRegisterForm({ register, loginWithGoogle });
-
-  const { requirements: passwordRequirements } = usePasswordValidation(
-    registerForm.password,
-    registerForm.confirmPassword
-  );
 
   const handleFaceChange = useCallback(() => {
     loginForm.resetFeedback();
@@ -148,7 +142,6 @@ export default function AuthScreen({ navigation, route, initialMode = "login" })
                 onToggleShowConfirmPassword={() =>
                   registerForm.setShowConfirmPassword(!registerForm.showConfirmPassword)
                 }
-                passwordRequirements={passwordRequirements}
                 loading={registerForm.loading}
                 googleLoading={registerForm.googleLoading}
                 isAnyLoading={isAnyLoading}

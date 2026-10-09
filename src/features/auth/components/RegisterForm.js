@@ -10,7 +10,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../auth.styles";
 import AnimatedInputContainer from "./AnimatedInputContainer";
-import PasswordRequirements from "./PasswordRequirements";
 import Message from "../../../shared/components/Message";
 
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
@@ -29,7 +28,6 @@ function RegisterFormComponent({
   onToggleShowPassword,
   showConfirmPassword,
   onToggleShowConfirmPassword,
-  passwordRequirements,
   loading,
   googleLoading,
   isAnyLoading,
@@ -161,8 +159,6 @@ function RegisterFormComponent({
           />
         </TouchableOpacity>
       </AnimatedInputContainer>
-
-      <PasswordRequirements requirements={passwordRequirements} />
 
       <TouchableOpacity
         style={[styles.button, isAnyLoading && styles.buttonDisabled]}
