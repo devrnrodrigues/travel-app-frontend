@@ -64,6 +64,8 @@ export default function Favorites({ navigation }) {
     refetch,
     loadNextPage,
     isFetchingNextPage,
+    isError,
+    error,
   } = useFavoritesList(user);
 
   const {
@@ -84,6 +86,10 @@ export default function Favorites({ navigation }) {
     setIsFocused(false);
     searchInputRef.current?.blur();
   }, []);
+
+  const handleExplorePress = useCallback(() => {
+    navigation.navigate("Explore");
+  }, [navigation]);
 
   useEffect(() => {
     const onHide = () => {
@@ -251,10 +257,14 @@ export default function Favorites({ navigation }) {
                   }
                   ListEmptyComponent={
                     <FavoriteEmptyState
+                      isError={isError}
+                      error={error}
                       searchQuery={searchQuery}
+                      onRetry={refetch}
+                      onClearSearch={handleClearSearch}
+                      onExplorePress={handleExplorePress}
+                      accentColor={accentColor}
                       isDarkMode={isDarkMode}
-                      primaryTextColor={primaryTextColor}
-                      secondaryTextColor={secondaryTextColor}
                     />
                   }
                 />

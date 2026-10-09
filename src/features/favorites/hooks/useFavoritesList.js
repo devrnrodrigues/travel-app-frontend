@@ -52,6 +52,8 @@ export function useFavoritesList(user) {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    isError,
+    error,
   } = useInfiniteQuery({
     queryKey: ["favorites", userId, normalizedSearch],
     enabled: !!user,
@@ -101,7 +103,7 @@ export function useFavoritesList(user) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const loading = isLoading && favorites.length === 0;
-  const isShowingSkeleton = loading;
+  const isShowingSkeleton = loading && !isError;
 
   return {
     searchQuery,
@@ -117,6 +119,8 @@ export function useFavoritesList(user) {
     refetch,
     loadNextPage,
     isFetchingNextPage,
+    isError: isError && favorites.length === 0,
+    error,
   };
 }
 

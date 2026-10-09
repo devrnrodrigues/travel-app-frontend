@@ -1,77 +1,79 @@
 import React from "react";
-import { View, Text } from "react-native";
-import { Feather, Ionicons } from "@expo/vector-icons";
-import styles from "../styles/favoriteEmptyState.styles";
+import StateFeedbackView from "../../../shared/components/StateFeedbackView";
 
 export const FavoriteEmptyState = React.memo(function FavoriteEmptyState({
+  isError,
+  error,
   searchQuery,
-  isDarkMode,
-  primaryTextColor,
-  secondaryTextColor,
+  onRetry,
+  onClearSearch,
+  onExplorePress,
+  isDarkMode = true,
 }) {
+  if (isError) {
+    if (error?.status === 404) {
+      return (
+        <StateFeedbackView
+          icon="alert-circle-outline"
+          title="Favoritos não encontrados"
+          message="Não foi possível localizar seus favoritos salvos."
+          buttonText="Tentar novamente"
+          onButtonPress={onRetry}
+          isDarkMode={isDarkMode}
+        />
+      );
+    }
+
+    if (error?.status >= 500) {
+      return (
+        <StateFeedbackView
+          icon="server-outline"
+          title="Falha ao carregar favoritos"
+          message="Ocorreu uma instabilidade ao carregar seus dados salvos. Tente novamente em instantes."
+          buttonText="Tentar novamente"
+          onButtonPress={onRetry}
+          isDarkMode={isDarkMode}
+        />
+      );
+    }
+
+    return (
+      <StateFeedbackView
+        icon="cloud-offline-outline"
+        title="Sem conexão"
+        message="Não foi possível acessar seus favoritos salvos. Verifique sua conexão com a internet."
+        buttonText="Tentar novamente"
+        onButtonPress={onRetry}
+        isDarkMode={isDarkMode}
+      />
+    );
+  }
+
   const isSearchActive = searchQuery && searchQuery.trim().length > 0;
 
+  if (isSearchActive) {
+    return (
+      <StateFeedbackView
+        icon="search"
+        iconType="feather"
+        title="Nenhum favorito encontrado"
+        message={`Nenhum dos seus favoritos salvos corresponde a "${searchQuery}".`}
+        buttonText="Limpar filtro"
+        onButtonPress={onClearSearch}
+        isDarkMode={isDarkMode}
+      />
+    );
+  }
+
   return (
-    <View style={styles.emptyContainer}>
-      {isSearchActive ? (
-        <>
-          <View
-            style={[
-              styles.emptyIconContainer,
-              isDarkMode ? styles.emptyIconDark : styles.emptyIconLight,
-            ]}
-          >
-            <Feather
-              name="search"
-              size={32}
-              color={secondaryTextColor}
-            />
-          </View>
-          <Text
-            style={[styles.emptyTitle, { color: primaryTextColor }]}
-          >
-            Nenhum resultado
-          </Text>
-          <Text
-            style={[
-              styles.emptySubtitle,
-              { color: secondaryTextColor },
-            ]}
-          >
-            Nenhum destino salvo corresponde a "{searchQuery}".
-          </Text>
-        </>
-      ) : (
-        <>
-          <View
-            style={[
-              styles.emptyIconContainer,
-              isDarkMode ? styles.emptyIconDark : styles.emptyIconLight,
-            ]}
-          >
-            <Ionicons
-              name="heart-outline"
-              size={34}
-              color={secondaryTextColor}
-            />
-          </View>
-          <Text
-            style={[styles.emptyTitle, { color: primaryTextColor }]}
-          >
-            Nenhum favorito ainda
-          </Text>
-          <Text
-            style={[
-              styles.emptySubtitle,
-              { color: secondaryTextColor },
-            ]}
-          >
-            Toque no coração nos destinos que você mais gostar para
-            guardá-los aqui.
-          </Text>
-        </>
-      )}
-    </View>
+    <StateFeedbackView
+      icon="heart-outline"
+      title="Nenhum favorito salvo"
+      message="Você ainda não adicionou nenhum destino à sua lista de favoritos."
+      buttonText={onExplorePress ? "Explorar destinos" : undefined}
+      onButtonPress={onExplorePress}
+      isDarkMode={isDarkMode}
+    />
   );
 });
 
