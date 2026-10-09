@@ -22,6 +22,8 @@ export default function useHomeData(selectedCategory) {
     fetchNextPage,
     refetch,
     isRefetching,
+    isError,
+    error,
   } = useInfiniteQuery({
     queryKey: ["destinations", "home", selectedCategory],
     enabled: Boolean(selectedCategory),
@@ -80,6 +82,8 @@ export default function useHomeData(selectedCategory) {
     hasNextPage: hasNextTopPage,
     fetchNextPage: fetchNextTopPage,
     refetch: refetchTopDestinations,
+    isError: isTopError,
+    error: topError,
   } = useInfiniteQuery({
     queryKey: ["destinations", "recommendations"],
     queryFn: async ({ pageParam = 0 }) => {
@@ -147,6 +151,8 @@ export default function useHomeData(selectedCategory) {
 
   const isShowingSkeleton = isLoading && destinations.length === 0;
   const isShowingTopSkeleton = loadingTopDestinations && topDestinations.length === 0;
+  const isErrorCombined = (isError || isTopError) && destinations.length === 0 && topDestinations.length === 0;
+  const currentError = error || topError;
 
   return {
     flatListRef,
@@ -160,5 +166,7 @@ export default function useHomeData(selectedCategory) {
     loadNextPage,
     loadNextTopPage,
     handleRefresh,
+    isError: isErrorCombined,
+    error: currentError,
   };
 }

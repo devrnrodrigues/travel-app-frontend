@@ -6,6 +6,7 @@ import styles, { getCategoriesHeight } from "../styles/home.styles";
 
 const HomeCategoriesList = React.memo(function HomeCategoriesList({
   categories = [],
+  isLoadingCategories,
   activeCat,
   currentTheme,
   themesByCat,
@@ -17,37 +18,45 @@ const HomeCategoriesList = React.memo(function HomeCategoriesList({
   onContainerLayout,
   onContentSizeChange,
 }) {
+  if (categories.length === 0 && isLoadingCategories) {
+    return (
+      <View style={[styles.categoriesSection, getCategoriesHeight(dims.categoriesHeight)]}>
+        <HomeCategoriesSkeleton isDarkMode={isDarkMode} />
+      </View>
+    );
+  }
+
+  if (categories.length === 0) {
+    return null;
+  }
+
   return (
     <View style={[styles.categoriesSection, getCategoriesHeight(dims.categoriesHeight)]}>
-      {categories.length === 0 ? (
-        <HomeCategoriesSkeleton isDarkMode={isDarkMode} />
-      ) : (
-        <ScrollView
-          ref={categoryScrollRef}
-          horizontal
-          nestedScrollEnabled={true}
-          showsHorizontalScrollIndicator={false}
-          onLayout={onContainerLayout}
-          onContentSizeChange={onContentSizeChange}
-          contentContainerStyle={styles.categoriesContainer}
-        >
-          {categories.map((catItem, index) => {
-            const theme = themesByCat[index] || currentTheme;
-            return (
-              <CategoryTabItem
-                key={catItem.id || catItem.slug || catItem.name || String(index)}
-                cat={catItem.name}
-                index={index}
-                isActive={activeCat === index}
-                accentColor={theme.accent}
-                isDarkMode={isDarkMode}
-                onLayout={(e) => onCategoryLayout(index, e.nativeEvent.layout)}
-                onPress={() => onCategoryPress(index)}
-              />
-            );
-          })}
-        </ScrollView>
-      )}
+      <ScrollView
+        ref={categoryScrollRef}
+        horizontal
+        nestedScrollEnabled={true}
+        showsHorizontalScrollIndicator={false}
+        onLayout={onContainerLayout}
+        onContentSizeChange={onContentSizeChange}
+        contentContainerStyle={styles.categoriesContainer}
+      >
+        {categories.map((catItem, index) => {
+          const theme = themesByCat[index] || currentTheme;
+          return (
+            <CategoryTabItem
+              key={catItem.id || catItem.slug || catItem.name || String(index)}
+              cat={catItem.name}
+              index={index}
+              isActive={activeCat === index}
+              accentColor={theme.accent}
+              isDarkMode={isDarkMode}
+              onLayout={(e) => onCategoryLayout(index, e.nativeEvent.layout)}
+              onPress={() => onCategoryPress(index)}
+            />
+          );
+        })}
+      </ScrollView>
     </View>
   );
 });

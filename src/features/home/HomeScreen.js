@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   ScrollView,
@@ -22,6 +22,7 @@ import HomeCategoriesList from "./components/HomeCategoriesList";
 import HomeFeaturedList from "./components/HomeFeaturedList";
 import HomeRecommendationsList from "./components/HomeRecommendationsList";
 import SearchModal from "./components/SearchModal";
+import StateFeedbackView from "../../shared/components/StateFeedbackView";
 import useHomeData from "./hooks/useHomeData";
 import useHomeCategories from "./hooks/useHomeCategories";
 import useHomeAnimations from "./hooks/useHomeAnimations";
@@ -30,6 +31,7 @@ export default function Home({ navigation }) {
   const { user } = useAuth();
   const {
     categories = [],
+    isLoadingCategories,
     activeCategory,
     activeCat,
     setActiveCat,
@@ -68,6 +70,8 @@ export default function Home({ navigation }) {
     loadNextPage,
     loadNextTopPage,
     handleRefresh,
+    isError,
+    error,
   } = useHomeData(selectedCategory);
 
   const {
@@ -83,6 +87,32 @@ export default function Home({ navigation }) {
   const bgSource = useMemo(() => {
     return typeof currentTheme.bg === "string" ? { uri: currentTheme.bg } : currentTheme.bg;
   }, [currentTheme.bg]);
+
+  const errorConfig = useMemo(() => {
+    if (!isError) return null;
+    if (error?.status === 404) {
+      return {
+        title: "Conteúdo não encontrado",
+        message: "A categoria ou seção solicitada não foi encontrada.",
+        buttonText: "Recarregar início",
+        icon: "alert-circle-outline",
+      };
+    }
+    if (error?.status >= 500) {
+      return {
+        title: "Serviço indisponível",
+        message: "Nossos serviços estão passando por instabilidade no momento. Por favor, tente novamente em alguns instantes.",
+        buttonText: "Tentar novamente",
+        icon: "server-outline",
+      };
+    }
+    return {
+      title: "Sem conexão",
+      message: "Não foi possível conectar. Verifique sua conexão com a internet e tente novamente.",
+      buttonText: "Tentar novamente",
+      icon: "cloud-offline-outline",
+    };
+  }, [isError, error]);
 
   const handleOpenSearch = useCallback(() => {
     setIsSearchVisible(true);
@@ -164,6 +194,7 @@ export default function Home({ navigation }) {
 
                   <HomeCategoriesList
                     categories={categories}
+                    isLoadingCategories={isLoadingCategories}
                     activeCat={activeCat}
                     currentTheme={currentTheme}
                     themesByCat={themesByCat}
@@ -177,29 +208,44 @@ export default function Home({ navigation }) {
                   />
                 </View>
 
-                <HomeFeaturedList
-                  flatListRef={flatListRef}
-                  destinations={destinations}
-                  selectedCategory={selectedCategory}
-                  currentTheme={currentTheme}
-                  isDarkMode={isDarkMode}
-                  navigation={navigation}
-                  dims={dims}
-                  isShowingSkeleton={isShowingSkeleton}
-                  isFetchingNextPage={isFetchingNextPage}
-                  onEndReached={loadNextPage}
-                />
+                {errorConfig ? (
+                  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", minHeight: dims.availableHeight - 120 }}>
+                    <StateFeedbackView
+                      icon={errorConfig.icon}
+                      title={errorConfig.title}
+                      message={errorConfig.message}
+                      buttonText={errorConfig.buttonText}
+                      onButtonPress={handleRefresh}
+                      isDarkMode={isDarkMode}
+                    />
+                  </View>
+                ) : (
+                  <>
+                    <HomeFeaturedList
+                      flatListRef={flatListRef}
+                      destinations={destinations}
+                      selectedCategory={selectedCategory}
+                      currentTheme={currentTheme}
+                      isDarkMode={isDarkMode}
+                      navigation={navigation}
+                      dims={dims}
+                      isShowingSkeleton={isShowingSkeleton}
+                      isFetchingNextPage={isFetchingNextPage}
+                      onEndReached={loadNextPage}
+                    />
 
-                <HomeRecommendationsList
-                  topDestinations={topDestinations}
-                  currentTheme={currentTheme}
-                  isDarkMode={isDarkMode}
-                  navigation={navigation}
-                  dims={dims}
-                  isShowingTopSkeleton={isShowingTopSkeleton}
-                  isFetchingNextTopPage={isFetchingNextTopPage}
-                  onEndReached={loadNextTopPage}
-                />
+                    <HomeRecommendationsList
+                      topDestinations={topDestinations}
+                      currentTheme={currentTheme}
+                      isDarkMode={isDarkMode}
+                      navigation={navigation}
+                      dims={dims}
+                      isShowingTopSkeleton={isShowingTopSkeleton}
+                      isFetchingNextTopPage={isFetchingNextTopPage}
+                      onEndReached={loadNextTopPage}
+                    />
+                  </>
+                )}
               </View>
             </ScrollView>
           </SafeAreaView>
