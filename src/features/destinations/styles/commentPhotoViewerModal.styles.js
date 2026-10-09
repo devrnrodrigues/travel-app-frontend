@@ -11,7 +11,15 @@ export const viewerStyles = StyleSheet.create({
   },
   contentArea: {
     flex: 1,
+    width: "100%",
     justifyContent: "center",
+    alignItems: "center",
+  },
+  flatList: {
+    flex: 1,
+    width: "100%",
+  },
+  flatListContent: {
     alignItems: "center",
   },
   webContainer: {
@@ -20,6 +28,18 @@ export const viewerStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
+  },
+  closeBtn: {
+    position: "absolute",
+    top: 24,
+    right: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 50,
   },
   webCloseBtn: {
     position: "absolute",
@@ -52,7 +72,13 @@ export const viewerStyles = StyleSheet.create({
     right: 24,
   },
   slide: {
-    flex: 1,
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageWrapper: {
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
   },

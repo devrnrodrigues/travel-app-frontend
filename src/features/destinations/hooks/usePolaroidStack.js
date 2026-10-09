@@ -37,7 +37,12 @@ export function usePolaroidStack(photos = [], onOpenViewer) {
   }, [total]);
 
   const handlePress = useCallback(() => {
-    if (total <= 1) return;
+    if (total <= 1) {
+      if (onOpenViewer) {
+        onOpenViewer(photos, 0);
+      }
+      return;
+    }
 
     const nextIndex = (currentIndex + 1) % total;
     setCurrentIndex(nextIndex);

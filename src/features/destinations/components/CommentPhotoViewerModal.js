@@ -7,16 +7,14 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   FlatList,
-  Dimensions,
   Platform,
   StatusBar,
+  useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import viewerStyles from "../styles/commentPhotoViewerModal.styles";
 import useCommentPhotoViewer from "../hooks/useCommentPhotoViewer";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function CommentPhotoViewerModal({
   visible,
@@ -24,6 +22,9 @@ export default function CommentPhotoViewerModal({
   initialIndex = 0,
   onClose,
 }) {
+  const { width: screenWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
   const {
     activeIndex,
     flatListRef,
@@ -40,6 +41,12 @@ export default function CommentPhotoViewerModal({
   if (!visible || !photos || photos.length === 0) return null;
 
   const currentPhoto = photos[activeIndex] || photos[0];
+  const currentPhotoUrl =
+    currentPhoto?.url ||
+    currentPhoto?.uri ||
+    (typeof currentPhoto === "string" ? currentPhoto : "");
+
+  const closeButtonTop = Math.max(insets.top + 8, 20);
 
   return (
     <Modal
@@ -51,16 +58,15 @@ export default function CommentPhotoViewerModal({
     >
       <StatusBar barStyle="light-content" backgroundColor="#000000" translucent={true} />
       <View style={viewerStyles.container}>
-        {Platform.OS === "web" && (
-          <TouchableOpacity
-            style={viewerStyles.webCloseBtn}
-            onPress={onClose}
-            activeOpacity={0.7}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Ionicons name="close" size={26} color="#FFFFFF" />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[viewerStyles.closeBtn, { top: closeButtonTop }]}
+          onPress={onClose}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Ionicons name="close" size={26} color="#FFFFFF" />
+        </TouchableOpacity>
+
         <SafeAreaView style={viewerStyles.safeArea} edges={["top", "bottom"]}>
           <View style={viewerStyles.contentArea}>
             {Platform.OS === "web" ? (
@@ -77,7 +83,7 @@ export default function CommentPhotoViewerModal({
 
                 <TouchableWithoutFeedback onPress={onClose}>
                   <Image
-                    source={{ uri: currentPhoto?.url }}
+                    source={{ uri: currentPhotoUrl }}
                     style={viewerStyles.mainImage}
                     resizeMode="contain"
                   />
@@ -100,25 +106,55 @@ export default function CommentPhotoViewerModal({
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
-                initialScrollIndex={initialIndex}
+                style={viewerStyles.flatList}
+                contentContainerStyle={viewerStyles.flatListContent}
+                initialScrollIndex={
+                  initialIndex > 0 && initialIndex < photos.length
+                    ? initialIndex
+                    : undefined
+                }
                 getItemLayout={(_, index) => ({
-                  length: SCREEN_WIDTH,
-                  offset: SCREEN_WIDTH * index,
+                  length: screenWidth,
+                  offset: screenWidth * index,
                   index,
                 })}
-                onMomentumScrollEnd={(e) => handleMomentumScrollEnd(e, SCREEN_WIDTH)}
-                keyExtractor={(item) => item.id || item.url}
-                renderItem={({ item }) => (
-                  <TouchableWithoutFeedback onPress={onClose}>
-                    <View style={viewerStyles.slide}>
-                      <Image
-                        source={{ uri: item.url }}
-                        style={viewerStyles.mainImage}
-                        resizeMode="contain"
-                      />
+                onScrollToIndexFailed={(info) => {
+                  setTimeout(() => {
+                    flatListRef.current?.scrollToIndex({
+                      index: info.index,
+                      animated: false,
+                    });
+                  }, 100);
+                }}
+                onMomentumScrollEnd={(e) =>
+                  handleMomentumScrollEnd(e, screenWidth)
+                }
+                keyExtractor={(item, index) => {
+                  if (item && item.id) return String(item.id);
+                  if (item && item.url) return item.url;
+                  if (typeof item === "string") return item;
+                  return String(index);
+                }}
+                renderItem={({ item }) => {
+                  const photoUrl =
+                    item?.url ||
+                    item?.uri ||
+                    (typeof item === "string" ? item : "");
+
+                  return (
+                    <View style={[viewerStyles.slide, { width: screenWidth }]}>
+                      <TouchableWithoutFeedback onPress={onClose}>
+                        <View style={viewerStyles.imageWrapper}>
+                          <Image
+                            source={{ uri: photoUrl }}
+                            style={viewerStyles.mainImage}
+                            resizeMode="contain"
+                          />
+                        </View>
+                      </TouchableWithoutFeedback>
                     </View>
-                  </TouchableWithoutFeedback>
-                )}
+                  );
+                }}
               />
             )}
           </View>

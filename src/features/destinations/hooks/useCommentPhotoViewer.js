@@ -12,15 +12,21 @@ export function useCommentPhotoViewer({
 
   useEffect(() => {
     if (visible) {
-      setActiveIndex(initialIndex);
-      setTimeout(() => {
-        if (flatListRef.current && photos.length > 0 && initialIndex < photos.length) {
-          flatListRef.current.scrollToIndex({
-            index: initialIndex,
-            animated: false,
-          });
-        }
-      }, 50);
+      const validIndex = Math.max(0, Math.min(initialIndex || 0, photos.length - 1));
+      setActiveIndex(validIndex);
+      if (validIndex > 0) {
+        setTimeout(() => {
+          if (flatListRef.current && photos.length > 0 && validIndex < photos.length) {
+            try {
+              flatListRef.current.scrollToIndex({
+                index: validIndex,
+                animated: false,
+              });
+            } catch (err) {
+            }
+          }
+        }, 60);
+      }
     }
   }, [visible, initialIndex, photos.length]);
 
