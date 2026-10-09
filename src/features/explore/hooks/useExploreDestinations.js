@@ -26,6 +26,8 @@ export function useExploreDestinations() {
     fetchNextPage,
     refetch,
     isRefetching,
+    isError,
+    error,
   } = useInfiniteQuery({
     queryKey: ["destinations", "explore", normalizedSearch],
     queryFn: ({ pageParam = 0 }) =>
@@ -56,7 +58,7 @@ export function useExploreDestinations() {
   }, [data]);
 
   const loading = (isLoading || (isFetching && !isFetchingNextPage && destinations.length === 0)) && destinations.length === 0;
-  const isShowingSkeleton = loading;
+  const isShowingSkeleton = loading && !isError;
   const loadingMore = isFetchingNextPage;
   const isLoadingMoreRef = useRef(false);
   isLoadingMoreRef.current = isFetchingNextPage;
@@ -86,6 +88,8 @@ export function useExploreDestinations() {
     isSearching,
     loadNextPage,
     handleRefresh,
+    isError: isError && destinations.length === 0,
+    error,
   };
 }
 

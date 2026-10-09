@@ -44,6 +44,8 @@ export default function Explore({ navigation }) {
     isSearching,
     loadNextPage,
     handleRefresh,
+    isError,
+    error,
   } = useExploreDestinations();
 
   const {
@@ -105,8 +107,13 @@ export default function Explore({ navigation }) {
       paddingTop: headerHeight,
       paddingBottom: bottomPadding,
     },
+    destinations.length === 0 && {
+      flexGrow: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
     isDarkMode ? styles.bgDark : styles.bgLight,
-  ], [headerHeight, bottomPadding, isDarkMode]);
+  ], [headerHeight, bottomPadding, isDarkMode, destinations.length]);
 
   return (
     <ImageBackground source={bgSource} style={styles.screenDarkBg} resizeMode="cover">
@@ -181,7 +188,15 @@ export default function Explore({ navigation }) {
                   />
                 }
                 ListEmptyComponent={
-                  <ExploreEmptyState searchFilter={normalizedSearch} />
+                  <ExploreEmptyState
+                    isError={isError}
+                    error={error}
+                    searchFilter={normalizedSearch}
+                    onRetry={handleRefresh}
+                    onClearSearch={() => setSearchQuery("")}
+                    accentColor={currentTheme?.accent || "#4CAF50"}
+                    isDarkMode={isDarkMode}
+                  />
                 }
                 ListFooterComponent={
                   loadingMore ? (
