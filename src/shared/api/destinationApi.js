@@ -13,18 +13,18 @@ export async function resolveDestinationImage(destination) {
 }
 
 export async function normalizeDestination(destination, fallbackCategory = "") {
-  const imageUrl = await resolveDestinationImage(destination, fallbackCategory);
+  const imageUrl = await resolveDestinationImage(destination);
 
-  const title = destination.name || destination.title || "";
-  const location = destination.country || destination.location || "";
+  const title = destination.name || "";
+  const location = destination.country || "";
 
   const category =
     Array.isArray(destination.categories) && destination.categories.length > 0
       ? destination.categories[0]
-      : destination.category || fallbackCategory;
+      : fallbackCategory;
 
   const realRating =
-    destination.rating !== null && destination.rating !== undefined && Number(destination.rating) > 0
+    Number(destination.rating) > 0
       ? Number(destination.rating).toFixed(1)
       : "0.0";
 
@@ -69,7 +69,7 @@ export async function normalizeDestination(destination, fallbackCategory = "") {
     country: destination.country,
     category,
     categories: destination.categories || (category ? [category] : []),
-    coverImageUrl: destination.coverImageUrl || imageUrl,
+    coverImageUrl: imageUrl,
     photoQuery: destination.photoQuery,
     image_url: imageUrl,
     avgColor,

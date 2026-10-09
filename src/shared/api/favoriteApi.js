@@ -44,12 +44,12 @@ export async function getFavoritesApi({ page = 0, size = 10, search } = {}) {
         city: fav.destinationCity,
       };
 
-      const imageUrl = await resolveDestinationImage(destinationLike, destinationLike.category);
+      const imageUrl = await resolveDestinationImage(destinationLike);
 
-      const rawRating = fav.destinationRating ?? fav.rating ?? 0.0;
-      const reviewCount = Number(fav.destinationReviewCount ?? fav.reviewCount ?? 0);
+      const rawRating = fav.destinationRating ?? 0.0;
+      const reviewCount = Number(fav.destinationReviewCount ?? 0);
       const realRating =
-        rawRating !== null && rawRating !== undefined && Number(rawRating) > 0
+        Number(rawRating) > 0
           ? Number(rawRating).toFixed(1)
           : "0.0";
 
@@ -62,7 +62,7 @@ export async function getFavoritesApi({ page = 0, size = 10, search } = {}) {
         location: fav.destinationCountry || fav.destinationCity || "",
         category: fav.destinationCategories?.[0] || "",
         categories: fav.destinationCategories || [],
-        coverImageUrl: fav.destinationCoverImageUrl || imageUrl,
+        coverImageUrl: imageUrl,
         image_url: imageUrl,
         rating: rawRating,
         reviewCount,
