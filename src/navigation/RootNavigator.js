@@ -31,10 +31,11 @@ export default function RootNavigator({ session, hasSeenWelcome }) {
 
   return (
     <NavigationContainer
-      key={session ? "authenticated" : "unauthenticated"}
+      key={session ? (hasSeenWelcome ? "auth-main" : "auth-welcome") : "unauthenticated"}
       theme={navigationTheme}
     >
       <Stack.Navigator
+        initialRouteName={session ? (hasSeenWelcome ? "Main" : "Welcome") : "GetStarted"}
         screenOptions={{
           headerShown: false,
           animation: "none",
@@ -44,31 +45,15 @@ export default function RootNavigator({ session, hasSeenWelcome }) {
       >
         {session ? (
           <>
-            {hasSeenWelcome ? (
-              <>
-                <Stack.Screen name="Main" component={AppNavigator} />
-                <Stack.Screen
-                  name="Welcome"
-                  component={WelcomeScreen}
-                  options={{
-                    animation: "fade",
-                    animationDuration: 200,
-                  }}
-                />
-              </>
-            ) : (
-              <>
-                <Stack.Screen
-                  name="Welcome"
-                  component={WelcomeScreen}
-                  options={{
-                    animation: "fade",
-                    animationDuration: 200,
-                  }}
-                />
-                <Stack.Screen name="Main" component={AppNavigator} />
-              </>
-            )}
+            <Stack.Screen name="Main" component={AppNavigator} />
+            <Stack.Screen
+              name="Welcome"
+              component={WelcomeScreen}
+              options={{
+                animation: "fade",
+                animationDuration: 200,
+              }}
+            />
             <Stack.Screen
               name="Details"
               component={DetailsScreen}

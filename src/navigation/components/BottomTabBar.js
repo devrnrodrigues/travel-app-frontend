@@ -23,7 +23,7 @@ import {
 export default function BottomTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
   const { currentTheme, isDarkMode } = useTheme();
-  const activeAccent = currentTheme?.accent || "#4CAF50";
+  const activeAccent = currentTheme.accent;
 
   const currentRouteName = state.routes[state.index]?.name;
   const isHome = currentRouteName === "Home";
@@ -181,12 +181,10 @@ export default function BottomTabBar({ state, navigation }) {
         {
           backgroundColor: isTranslucentTab
             ? "transparent"
-            : isFavorites
-            ? isDarkMode
-              ? "#000000"
-              : "rgba(100, 100, 100, 1)"
             : isDarkMode
             ? "#000000"
+            : isFavorites
+            ? "rgba(100, 100, 100, 1)"
             : "#FFFFFF",
           height: TAB_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom,
