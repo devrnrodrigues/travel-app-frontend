@@ -15,6 +15,36 @@ const CollectionGalleryHeader = memo(function CollectionGalleryHeader({
 }) {
   return (
     <View style={styles.header}>
+      <View style={styles.headerInfo}>
+        <View style={styles.titleRow}>
+          <TouchableOpacity
+            ref={menuButtonRef}
+            style={styles.titleTouchable}
+            onPress={onOpenMenu}
+            activeOpacity={0.7}
+            hitSlop={HIT_SLOP_8}
+          >
+            <Text
+              style={[
+                styles.headerTitle,
+                !isDarkMode && styles.headerTitleLight,
+              ]}
+              numberOfLines={1}
+            >
+              {collectionTitle}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Text
+          style={[
+            styles.headerSubtitle,
+            !isDarkMode && styles.headerSubtitleLight,
+          ]}
+        >
+          {photoCount} {photoCount === 1 ? "foto" : "fotos"}
+        </Text>
+      </View>
+
       <TouchableOpacity
         style={[styles.backButton, !isDarkMode && styles.backButtonLight]}
         onPress={onGoBack}
@@ -27,44 +57,6 @@ const CollectionGalleryHeader = memo(function CollectionGalleryHeader({
           color={isDarkMode ? "#FFFFFF" : "#000000"}
         />
       </TouchableOpacity>
-
-      <View style={styles.headerInfo}>
-        <View style={styles.titleRow}>
-          <Text
-            style={[
-              styles.headerTitle,
-              !isDarkMode && styles.headerTitleLight,
-            ]}
-            numberOfLines={1}
-          >
-            {collectionTitle}
-          </Text>
-          <TouchableOpacity
-            ref={menuButtonRef}
-            style={[
-              styles.titleMenuButton,
-              !isDarkMode && styles.titleMenuButtonLight,
-            ]}
-            onPress={onOpenMenu}
-            activeOpacity={0.7}
-            hitSlop={HIT_SLOP_8}
-          >
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={18}
-              color={isDarkMode ? "#FFFFFF" : "#000000"}
-            />
-          </TouchableOpacity>
-        </View>
-        <Text
-          style={[
-            styles.headerSubtitle,
-            !isDarkMode && styles.headerSubtitleLight,
-          ]}
-        >
-          {photoCount} {photoCount === 1 ? "foto" : "fotos"}
-        </Text>
-      </View>
     </View>
   );
 });

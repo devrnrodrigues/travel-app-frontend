@@ -4,8 +4,11 @@ import {
   StatusBar,
   Animated,
   Keyboard,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 import { useTheme } from "../../../theme/ThemeContext";
 import useCollectionGallery from "../hooks/useCollectionGallery";
 import useGalleryGrid from "../hooks/useGalleryGrid";
@@ -86,7 +89,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   const [areViewerControlsVisible, setAreViewerControlsVisible] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isEditTitleFocused, setIsEditTitleFocused] = useState(false);
-  const [menuCoords, setMenuCoords] = useState({ top: 68, left: 16 });
+  const [menuCoords, setMenuCoords] = useState({ top: 68, left: 20 });
 
   const menuButtonRef = useRef(null);
   const viewerFlatListRef = useRef(null);
@@ -139,9 +142,9 @@ export default function CollectionGalleryScreen({ route, navigation }) {
     const node = menuButtonRef.current;
     if (node && typeof node.measureInWindow === "function") {
       node.measureInWindow((x, y, width, height) => {
-        if (typeof x === "number" && !isNaN(x) && x > 0) {
+        if (typeof x === "number" && !isNaN(x) && x >= 0) {
           const menuWidth = 175;
-          const targetLeft = Math.max(16, x + width - menuWidth + 4);
+          const targetLeft = Math.max(16, Math.min(x, SCREEN_WIDTH - menuWidth - 16));
           setMenuCoords({
             top: y + height + 6,
             left: targetLeft,

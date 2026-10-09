@@ -40,6 +40,10 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  titleTouchable: {
+    alignSelf: "flex-start",
+    maxWidth: "100%",
+  },
   titleMenuButton: {
     marginLeft: 8,
     width: 32,
@@ -200,7 +204,7 @@ export const styles = StyleSheet.create({
   menuDropdown: {
     position: "absolute",
     top: 68,
-    left: 16,
+    left: 20,
     width: 175,
     backgroundColor: "#1C1C1E",
     borderRadius: 14,
