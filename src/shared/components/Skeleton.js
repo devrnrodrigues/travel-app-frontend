@@ -342,15 +342,94 @@ export function HomeSkeletonList({
   );
 }
 
-export function HomeCategoriesSkeleton({
-  isDarkMode = true,
-  animatedValue,
-}) {
-  const localAnim = useShimmerAnimation();
-  const anim = animatedValue || localAnim;
+function CategoryPillSkeleton({ width: w, isDarkMode = true, delay = 0 }) {
+  const anim = useRef(new Animated.Value(0)).current;
 
-  const bg = isDarkMode ? "rgba(255, 255, 255, 0.10)" : "rgba(0, 0, 0, 0.08)";
+  useEffect(() => {
+    let animation;
+    const timeout = setTimeout(() => {
+      animation = Animated.loop(
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.bezier(0.4, 0, 0.2, 1),
+          useNativeDriver: Platform.OS !== "web",
+        })
+      );
+      animation.start();
+    }, delay);
 
+    return () => {
+      clearTimeout(timeout);
+      if (animation) animation.stop();
+      anim.stopAnimation();
+    };
+  }, [anim, delay]);
+
+  const translateX = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-w, w * 1.6],
+  });
+
+  const bg = isDarkMode
+    ? "rgba(26, 26, 26, 0.85)"
+    : "rgba(255, 255, 255, 0.26)";
+
+  const shimmerColors = isDarkMode
+    ? [
+        "rgba(255, 255, 255, 0)",
+        "rgba(255, 255, 255, 0.04)",
+        "rgba(255, 255, 255, 0.11)",
+        "rgba(255, 255, 255, 0.04)",
+        "rgba(255, 255, 255, 0)",
+      ]
+    : [
+        "rgba(255, 255, 255, 0)",
+        "rgba(255, 255, 255, 0.22)",
+        "rgba(255, 255, 255, 0.42)",
+        "rgba(255, 255, 255, 0.22)",
+        "rgba(255, 255, 255, 0)",
+      ];
+
+  return (
+    <View style={homeStyles.categoryItem}>
+      <View style={homeStyles.centerAligned}>
+        <View style={homeStyles.rowCenter}>
+          <View
+            style={{
+              width: w,
+              height: 16,
+              borderRadius: 8,
+              backgroundColor: bg,
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            <Animated.View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                width: w,
+                transform: [{ translateX }],
+              }}
+            >
+              <LinearGradient
+                colors={shimmerColors}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={{ flex: 1 }}
+              />
+            </Animated.View>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export function HomeCategoriesSkeleton({ isDarkMode = true }) {
   const tabWidths = [74, 88, 66, 92, 78];
 
   return (
@@ -362,28 +441,14 @@ export function HomeCategoriesSkeleton({
         contentContainerStyle={homeStyles.categoriesContainer}
       >
         {tabWidths.map((w, index) => (
-          <View key={`cat-skel-${index}`} style={homeStyles.categoryItem}>
-            <View style={homeStyles.centerAligned}>
-              <View style={homeStyles.rowCenter}>
-                <View
-                  style={{
-                    width: w,
-                    height: 16,
-                    borderRadius: 5,
-                    backgroundColor: bg,
-                  }}
-                />
-              </View>
-            </View>
-          </View>
+          <CategoryPillSkeleton
+            key={`cat-skel-${index}`}
+            width={w}
+            isDarkMode={isDarkMode}
+            delay={index * 130}
+          />
         ))}
       </ScrollView>
-      <ShimmerOverlay
-        animatedValue={anim}
-        width={width}
-        height={32}
-        isDarkMode={isDarkMode}
-      />
     </View>
   );
 }
