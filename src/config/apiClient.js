@@ -12,8 +12,7 @@ async function request(endpoint, options = {}, isRetry = false) {
 
   const isFormData =
     options.body instanceof FormData ||
-    Boolean(options.body && typeof options.body.append === "function") ||
-    Boolean(options.body && options.body._parts !== undefined);
+    Boolean(options.body && typeof options.body.append === "function");
 
   const headers = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
@@ -23,7 +22,6 @@ async function request(endpoint, options = {}, isRetry = false) {
 
   if (isFormData) {
     delete headers["Content-Type"];
-    delete headers["content-type"];
   }
 
   const config = {
@@ -80,9 +78,17 @@ async function request(endpoint, options = {}, isRetry = false) {
     }
 
     if (!response.ok) {
-      const errorMessage =
+      let errorMessage =
         (data && typeof data === "object" && (data.message || data.error)) ||
         "Não foi possível completar a solicitação. Tente novamente mais tarde.";
+
+      if (data && typeof data === "object" && data.fieldErrors && typeof data.fieldErrors === "object") {
+        const errorValues = Object.values(data.fieldErrors).filter(Boolean);
+        if (errorValues.length > 0) {
+          errorMessage = errorValues[0];
+        }
+      }
+
       const error = new Error(errorMessage);
       error.status = response.status;
       error.data = data;
