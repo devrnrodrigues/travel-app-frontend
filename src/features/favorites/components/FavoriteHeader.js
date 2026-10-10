@@ -21,6 +21,7 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
   setIsFocused,
   searchInputRef,
   handleClearSearch,
+  isMinimalist,
 }) {
   const iconColor = isFocused
     ? accentColor
@@ -64,7 +65,11 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
         <View
           style={[
             styles.searchBox,
-            isDarkMode ? styles.searchBoxDark : styles.searchBoxLight,
+            isMinimalist
+              ? styles.searchBoxMinimalist
+              : isDarkMode
+              ? styles.searchBoxDark
+              : styles.searchBoxLight,
             isFocused && { borderColor: accentColor },
           ]}
         >

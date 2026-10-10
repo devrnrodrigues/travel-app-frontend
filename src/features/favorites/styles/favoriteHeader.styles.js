@@ -54,6 +54,9 @@ export const favoriteHeaderStyles = StyleSheet.create({
   searchBoxLight: {
     backgroundColor: "rgba(255, 255, 255, 0.80)",
   },
+  searchBoxMinimalist: {
+    backgroundColor: "#F5F5F7",
+  },
   searchIcon: {
     marginRight: 8,
   },

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   View,
+  Image,
   ImageBackground,
   StatusBar,
   ActivityIndicator,
@@ -24,6 +25,7 @@ import FavoriteEmptyState from "./components/FavoriteEmptyState";
 import useFavoritesList from "./hooks/useFavoritesList";
 import useFavoriteDelete from "./hooks/useFavoriteDelete";
 
+const foliageImage = require("../../../assets/images/image.png");
 const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)", "rgba(0, 0, 0, 0.98)"];
 const GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
 
@@ -49,7 +51,8 @@ export default function Favorites({ navigation }) {
     );
   }, [windowWidth, windowHeight, insets.bottom, insets.top, containerHeight]);
 
-  const { currentTheme, isDarkMode } = useTheme();
+  const { currentTheme, isDarkMode, aestheticMode } = useTheme();
+  const isMinimalist = !isDarkMode && aestheticMode === "minimalista";
   const { user } = useAuth();
 
   const {
@@ -117,8 +120,11 @@ export default function Favorites({ navigation }) {
     return () => sub.remove();
   }, [handleDeactivateSearch]);
 
-  const primaryTextColor = "#FFFFFF";
-  const secondaryTextColor = "rgba(255, 255, 255, 0.70)";
+  const isErrorBg = Boolean(isError);
+  const isWhiteBg = isMinimalist || (isErrorBg && !isDarkMode);
+
+  const primaryTextColor = isWhiteBg ? "#111827" : "#FFFFFF";
+  const secondaryTextColor = isWhiteBg ? "rgba(0, 0, 0, 0.60)" : "rgba(255, 255, 255, 0.70)";
   const accentColor = currentTheme.accent || "#007AFF";
   const bgSource = typeof currentTheme?.bg === "string" ? { uri: currentTheme.bg } : currentTheme?.bg;
 
@@ -179,100 +185,130 @@ export default function Favorites({ navigation }) {
     []
   );
 
-  return (
-    <View style={styles.root}>
-      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
-        <LinearGradient
-          colors={gradientColors}
-          locations={GRADIENT_LOCATIONS}
-          style={styles.flex1}
-        >
-          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-          <SafeAreaView edges={["top"]} style={styles.container}>
-            <FavoriteHeader
-              navigation={navigation}
-              accentColor={accentColor}
-              primaryTextColor={primaryTextColor}
-              isDarkMode={isDarkMode}
-              isRefetching={isRefetching}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              isFocused={isFocused}
-              setIsFocused={setIsFocused}
-              searchInputRef={searchInputRef}
-              handleClearSearch={handleClearSearch}
-            />
+  const favoritesBody = (
+    <SafeAreaView edges={["top"]} style={styles.container}>
+      <FavoriteHeader
+        navigation={navigation}
+        accentColor={accentColor}
+        primaryTextColor={primaryTextColor}
+        isDarkMode={isDarkMode}
+        isRefetching={isRefetching}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        isFocused={isFocused}
+        setIsFocused={setIsFocused}
+        searchInputRef={searchInputRef}
+        handleClearSearch={handleClearSearch}
+        isMinimalist={isMinimalist}
+      />
 
-            <View
-              style={[styles.flex1, styles.overflowVisible]}
-              onLayout={handleContainerLayout}
-            >
-              {isShowingSkeleton ? (
-                <FavoritesSkeletonList
-                  isDarkMode={isDarkMode}
-                  count={cardDimensions.isSmallScreen ? 4 : 6}
-                  cardWidth={cardDimensions.cardWidth}
-                  cardHeight={cardDimensions.cardHeight}
-                />
-              ) : (
-                <Animated.FlatList
-                  ref={flatListRef}
-                  data={favorites}
-                  key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
-                  numColumns={2}
-                  columnWrapperStyle={styles.columnWrapper}
-                  contentContainerStyle={contentContainerStyle}
-                  onScrollBeginDrag={handleDeactivateSearch}
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                  keyExtractor={keyExtractor}
-                  onEndReached={loadNextPage}
-                  onEndReachedThreshold={0.5}
-                  initialNumToRender={cardDimensions.targetRows * 2}
-                  maxToRenderPerBatch={cardDimensions.targetRows * 2}
-                  windowSize={7}
-                  bounces={true}
-                  overScrollMode="always"
-                  scrollEventThrottle={16}
-                  onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: Platform.OS !== "web" }
-                  )}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={isRefetching}
-                      onRefresh={refetch}
-                      tintColor={accentColor}
-                      colors={[accentColor]}
-                      progressViewOffset={-90}
-                    />
-                  }
-                  renderItem={renderItem}
-                  ListFooterComponent={
-                    isFetchingNextPage ? (
-                      <View style={styles.listFooterWrapper}>
-                        <ActivityIndicator size="small" color={accentColor} />
-                      </View>
-                    ) : null
-                  }
-                  ListEmptyComponent={
-                    <FavoriteEmptyState
-                      isError={isError}
-                      error={error}
-                      searchQuery={searchQuery}
-                      onRetry={refetch}
-                      onClearSearch={handleClearSearch}
-                      onExplorePress={handleExplorePress}
-                      accentColor={accentColor}
-                      isDarkMode={isDarkMode}
-                    />
-                  }
-                />
-              )}
-            </View>
-          </SafeAreaView>
-        </LinearGradient>
-      </ImageBackground>
+      <View
+        style={[styles.flex1, styles.overflowVisible]}
+        onLayout={handleContainerLayout}
+      >
+        {isShowingSkeleton ? (
+          <FavoritesSkeletonList
+            isDarkMode={isDarkMode}
+            count={cardDimensions.isSmallScreen ? 4 : 6}
+            cardWidth={cardDimensions.cardWidth}
+            cardHeight={cardDimensions.cardHeight}
+          />
+        ) : (
+          <Animated.FlatList
+            ref={flatListRef}
+            data={favorites}
+            key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
+            numColumns={2}
+            columnWrapperStyle={styles.columnWrapper}
+            contentContainerStyle={contentContainerStyle}
+            onScrollBeginDrag={handleDeactivateSearch}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            keyExtractor={keyExtractor}
+            onEndReached={loadNextPage}
+            onEndReachedThreshold={0.5}
+            initialNumToRender={cardDimensions.targetRows * 2}
+            maxToRenderPerBatch={cardDimensions.targetRows * 2}
+            windowSize={7}
+            bounces={true}
+            overScrollMode="always"
+            scrollEventThrottle={16}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: Platform.OS !== "web" }
+            )}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+                tintColor={accentColor}
+                colors={[accentColor]}
+                progressViewOffset={-90}
+              />
+            }
+            renderItem={renderItem}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={styles.listFooterWrapper}>
+                  <ActivityIndicator size="small" color={accentColor} />
+                </View>
+              ) : null
+            }
+            ListEmptyComponent={
+              <FavoriteEmptyState
+                isError={isError}
+                error={error}
+                searchQuery={searchQuery}
+                onRetry={refetch}
+                onClearSearch={handleClearSearch}
+                onExplorePress={handleExplorePress}
+                accentColor={accentColor}
+                isDarkMode={isError ? isDarkMode : !isMinimalist}
+              />
+            }
+          />
+        )}
+      </View>
+    </SafeAreaView>
+  );
+
+  return (
+    <View style={isWhiteBg ? styles.whiteScreen : styles.root}>
+      <StatusBar
+        barStyle={isWhiteBg ? "dark-content" : "light-content"}
+        backgroundColor="transparent"
+        translucent
+      />
+      {isMinimalist ? (
+        <>
+          <View pointerEvents="none" style={styles.foliageContainer}>
+            <Image
+              source={foliageImage}
+              style={styles.foliageHeader}
+              resizeMode="cover"
+            />
+            <View style={styles.foliageWhiteFilter} />
+            <LinearGradient
+              colors={["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.6)", "#FFFFFF"]}
+              locations={[0, 0.45, 1]}
+              style={styles.foliageGradient}
+            />
+          </View>
+          {favoritesBody}
+        </>
+      ) : isErrorBg ? (
+        favoritesBody
+      ) : (
+        <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
+          <LinearGradient
+            colors={gradientColors}
+            locations={GRADIENT_LOCATIONS}
+            style={styles.flex1}
+          >
+            {favoritesBody}
+          </LinearGradient>
+        </ImageBackground>
+      )}
 
       <FavoriteDeleteModal
         itemToDelete={itemToDelete}
