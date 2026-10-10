@@ -8,6 +8,7 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [activeCat, setActiveCat] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [aestheticMode, setAestheticMode] = useState("minimalista");
   const {
     data: categories = [],
     isLoading: isLoadingCategories,
@@ -20,6 +21,10 @@ export function ThemeProvider({ children }) {
         const saved = await AsyncStorage.getItem("@app_theme_mode");
         if (saved !== null) {
           setIsDarkMode(JSON.parse(saved));
+        }
+        const savedAesthetic = await AsyncStorage.getItem("@profile_aesthetic_mode");
+        if (savedAesthetic) {
+          setAestheticMode(savedAesthetic);
         }
       } catch (e) {
         console.log("Erro ao carregar tema:", e);
@@ -35,6 +40,15 @@ export function ThemeProvider({ children }) {
       await AsyncStorage.setItem("@app_theme_mode", JSON.stringify(nextMode));
     } catch (e) {
       console.log("Erro ao salvar tema:", e);
+    }
+  };
+
+  const updateAestheticMode = async (mode) => {
+    try {
+      setAestheticMode(mode);
+      await AsyncStorage.setItem("@profile_aesthetic_mode", mode);
+    } catch (e) {
+      console.log("Erro ao salvar modo estetico:", e);
     }
   };
 
@@ -64,6 +78,8 @@ export function ThemeProvider({ children }) {
         isDarkMode,
         setIsDarkMode,
         toggleThemeMode,
+        aestheticMode,
+        setAestheticMode: updateAestheticMode,
         isLoadingCategories,
         isCategoriesError,
       }}
@@ -86,6 +102,8 @@ export function useTheme() {
       isDarkMode: true,
       setIsDarkMode: () => {},
       toggleThemeMode: () => {},
+      aestheticMode: "minimalista",
+      setAestheticMode: () => {},
       isLoadingCategories: false,
       isCategoriesError: false,
     };

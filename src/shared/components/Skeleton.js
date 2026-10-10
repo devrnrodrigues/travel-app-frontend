@@ -14,6 +14,17 @@ import {
   Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTheme } from "../../theme/ThemeContext";
+
+function useIsMinimalist(propIsDarkMode) {
+  try {
+    const theme = useTheme();
+    const isDark = propIsDarkMode !== undefined ? propIsDarkMode : theme?.isDarkMode;
+    return !isDark && theme?.aestheticMode === "minimalista";
+  } catch {
+    return false;
+  }
+}
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.75;
@@ -50,6 +61,7 @@ export function ShimmerOverlay({
   isDarkMode = true,
   customColors,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const shimmerWidth =
     compWidth < 80
       ? Math.max(48, Math.round(compWidth * 2.2))
@@ -71,6 +83,18 @@ export function ShimmerOverlay({
         "rgba(255, 255, 255, 0.04)",
         "rgba(255, 255, 255, 0.01)",
         "rgba(255, 255, 255, 0)",
+      ]
+    : isMinimalist
+    ? [
+        "rgba(0, 0, 0, 0)",
+        "rgba(0, 0, 0, 0.02)",
+        "rgba(0, 0, 0, 0.05)",
+        "rgba(0, 0, 0, 0.10)",
+        "rgba(0, 0, 0, 0.15)",
+        "rgba(0, 0, 0, 0.10)",
+        "rgba(0, 0, 0, 0.05)",
+        "rgba(0, 0, 0, 0.02)",
+        "rgba(0, 0, 0, 0)",
       ]
     : [
         "rgba(0, 0, 0, 0)",
@@ -121,11 +145,14 @@ export function SkeletonBox({
   isDarkMode = true,
   animatedValue,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
   const baseBg = isDarkMode
     ? "rgba(255, 255, 255, 0.07)"
+    : isMinimalist
+    ? "#E5E7EB"
     : "rgba(0, 0, 0, 0.06)";
 
   const numericWidth = typeof boxWidth === "number" ? boxWidth : 200;
@@ -161,20 +188,25 @@ export function HomeCardSkeleton({
   cardHeight,
   cardInfoBottom,
   cardInfoHeight,
+  isMinimalist: propIsMinimalist,
 }) {
+  const hookIsMinimalist = useIsMinimalist(isDarkMode);
+  const isMinimalist = propIsMinimalist !== undefined ? propIsMinimalist : hookIsMinimalist;
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
+  const cardBg = isDarkMode
+    ? "rgba(26, 26, 26, 0.78)"
+    : "#FFFFFF";
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
-    : "rgba(255, 255, 255, 0.20)";
+    : "rgba(0, 0, 0, 0.08)";
   const placeholderBg2 = isDarkMode
     ? "rgba(255, 255, 255, 0.06)"
-    : "rgba(255, 255, 255, 0.10)";
+    : "rgba(0, 0, 0, 0.04)";
   const cardInfoOverlayBg = isDarkMode
     ? "rgba(12, 12, 12, 0.75)"
-    : "rgba(250, 250, 250, 0.30)";
+    : "#F9FAFB";
 
   const actualWidth = cardWidth || CARD_WIDTH;
   const actualHeight = cardHeight || CARD_HEIGHT;
@@ -202,6 +234,7 @@ export function HomeCardSkeleton({
     <View
       style={[
         homeStyles.card,
+        isDarkMode ? homeStyles.cardDark : homeStyles.cardLight,
         cardWidth ? { width: cardWidth } : null,
         cardHeight ? { height: cardHeight } : null,
         {
@@ -300,6 +333,7 @@ export function HomeSkeletonList({
   cardHeight,
   cardInfoBottom,
   cardInfoHeight,
+  isMinimalist,
 }) {
   const anim = useShimmerAnimation();
 
@@ -319,6 +353,7 @@ export function HomeSkeletonList({
         cardHeight={cardHeight}
         cardInfoBottom={cardInfoBottom}
         cardInfoHeight={cardInfoHeight}
+        isMinimalist={isMinimalist}
       />
       <HomeCardSkeleton
         isDarkMode={isDarkMode}
@@ -328,6 +363,7 @@ export function HomeSkeletonList({
         cardHeight={cardHeight}
         cardInfoBottom={cardInfoBottom}
         cardInfoHeight={cardInfoHeight}
+        isMinimalist={isMinimalist}
       />
       <HomeCardSkeleton
         isDarkMode={isDarkMode}
@@ -337,12 +373,14 @@ export function HomeSkeletonList({
         cardHeight={cardHeight}
         cardInfoBottom={cardInfoBottom}
         cardInfoHeight={cardInfoHeight}
+        isMinimalist={isMinimalist}
       />
     </ScrollView>
   );
 }
 
 function CategoryPillSkeleton({ width: w, isDarkMode = true, delay = 0 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -373,6 +411,8 @@ function CategoryPillSkeleton({ width: w, isDarkMode = true, delay = 0 }) {
 
   const bg = isDarkMode
     ? "rgba(26, 26, 26, 0.85)"
+    : isMinimalist
+    ? "#F3F4F6"
     : "rgba(255, 255, 255, 0.26)";
 
   const shimmerColors = isDarkMode
@@ -381,6 +421,14 @@ function CategoryPillSkeleton({ width: w, isDarkMode = true, delay = 0 }) {
         "rgba(255, 255, 255, 0.04)",
         "rgba(255, 255, 255, 0.11)",
         "rgba(255, 255, 255, 0.04)",
+        "rgba(255, 255, 255, 0)",
+      ]
+    : isMinimalist
+    ? [
+        "rgba(255, 255, 255, 0)",
+        "rgba(255, 255, 255, 0.30)",
+        "rgba(255, 255, 255, 0.55)",
+        "rgba(255, 255, 255, 0.30)",
         "rgba(255, 255, 255, 0)",
       ]
     : [
@@ -462,13 +510,28 @@ export function TopDestinationCardSkeleton({
   titleSize = 16,
   locationSize = 13,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
-  const imgBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.16)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.20)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.10)";
+  const cardBg = isDarkMode
+    ? "rgba(26, 26, 26, 0.78)"
+    : "#FFFFFF";
+  const imgBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.08)"
+    : isMinimalist
+    ? "#E5E7EB"
+    : "rgba(255, 255, 255, 0.16)";
+  const placeholderBg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.12)"
+    : isMinimalist
+    ? "#CBD5E1"
+    : "rgba(255, 255, 255, 0.20)";
+  const placeholderBg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.06)"
+    : isMinimalist
+    ? "#E2E8F0"
+    : "rgba(255, 255, 255, 0.10)";
 
   const actualWidth = cardWidth || 270;
   const actualHeight = cardHeight || 98;
@@ -594,12 +657,25 @@ export function ExploreCardSkeleton({
   currentTheme,
   animatedValue,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(180, 180, 180, 0.45)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.28)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.16)";
+  const cardBg = isDarkMode
+    ? "rgba(26, 26, 26, 0.78)"
+    : isMinimalist
+    ? "#E5E7EB"
+    : "rgba(180, 180, 180, 0.45)";
+  const placeholderBg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.12)"
+    : isMinimalist
+    ? "#CBD5E1"
+    : "rgba(255, 255, 255, 0.28)";
+  const placeholderBg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.06)"
+    : isMinimalist
+    ? "#E2E8F0"
+    : "rgba(255, 255, 255, 0.16)";
 
   return (
     <View
@@ -647,10 +723,11 @@ export function ExploreCardSkeleton({
 }
 
 export function ExploreSkeletonGrid({ isDarkMode = true, currentTheme, rows = 5 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const anim = useShimmerAnimation();
 
   return (
-    <View style={{ width: "100%", gap: GAP, backgroundColor: isDarkMode ? "#000000" : "#E5E7EB" }}>
+    <View style={{ width: "100%", gap: GAP, backgroundColor: isDarkMode ? "#000000" : isMinimalist ? "#FFFFFF" : "#E5E7EB" }}>
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <View
           key={`skel-row-${rowIndex}`}
@@ -683,18 +760,27 @@ export function FavoriteCardSkeleton({
   cardWidth,
   cardHeight,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
   const actualWidth = cardWidth || 170;
   const actualHeight = cardHeight || 200;
 
-  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
+  const cardBg = isDarkMode
+    ? "rgba(26, 26, 26, 0.78)"
+    : isMinimalist
+    ? "#E5E7EB"
+    : "rgba(250, 250, 250, 0.30)";
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
+    : isMinimalist
+    ? "#CBD5E1"
     : "rgba(255, 255, 255, 0.20)";
   const placeholderBg2 = isDarkMode
     ? "rgba(255, 255, 255, 0.06)"
+    : isMinimalist
+    ? "#E2E8F0"
     : "rgba(255, 255, 255, 0.10)";
 
   return (
@@ -826,13 +912,30 @@ export function SearchCardSkeleton({
   isDarkMode = true,
   animatedValue,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = animatedValue || localAnim;
 
-  const cardBg = isDarkMode ? "rgba(26, 26, 26, 0.78)" : "rgba(250, 250, 250, 0.30)";
-  const thumbBg = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.16)";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.20)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.10)";
+  const cardBg = isDarkMode
+    ? "rgba(26, 26, 26, 0.78)"
+    : isMinimalist
+    ? "#F3F4F6"
+    : "rgba(250, 250, 250, 0.30)";
+  const thumbBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.08)"
+    : isMinimalist
+    ? "#E5E7EB"
+    : "rgba(255, 255, 255, 0.16)";
+  const placeholderBg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.12)"
+    : isMinimalist
+    ? "#CBD5E1"
+    : "rgba(255, 255, 255, 0.20)";
+  const placeholderBg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.06)"
+    : isMinimalist
+    ? "#E2E8F0"
+    : "rgba(255, 255, 255, 0.10)";
 
   const imageSize = Math.max(48, cardHeight - 20);
   const cardWidth = width - 40;
@@ -940,6 +1043,7 @@ export function SearchSkeletonList({
 }
 
 export function ProfileAvatarSkeleton({ size = 102, isDarkMode = true }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const anim = useShimmerAnimation();
 
   return (
@@ -948,7 +1052,7 @@ export function ProfileAvatarSkeleton({ size = 102, isDarkMode = true }) {
         width: "100%",
         height: "100%",
         borderRadius: size / 2,
-        backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
+        backgroundColor: isDarkMode ? "#1A1A1E" : isMinimalist ? "#D1D5DB" : "#E5E7EB",
         overflow: "hidden",
         position: "relative",
       }}
@@ -972,9 +1076,14 @@ export function ProfileSkeletonBar({
   anim: externalAnim,
   style,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = externalAnim || localAnim;
-  const defaultBg = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "#E5E7EB";
+  const defaultBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.09)"
+    : isMinimalist
+    ? "#D1D5DB"
+    : "#E5E7EB";
 
   const numW = typeof barW === "number" ? barW : 150;
   const numH = typeof barH === "number" ? barH : 20;
@@ -1015,12 +1124,25 @@ export function ProfileCollectionCardSkeleton({
   cardTitleFontSize = 15,
   cardSubFontSize = 12,
 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = externalAnim || localAnim;
 
-  const cardBg = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "#E2E2E2";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(0, 0, 0, 0.12)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
+  const cardBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : isMinimalist
+    ? "#F3F4F6"
+    : "#E2E2E2";
+  const placeholderBg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.09)"
+    : isMinimalist
+    ? "#CBD5E1"
+    : "rgba(0, 0, 0, 0.12)";
+  const placeholderBg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : isMinimalist
+    ? "#E2E8F0"
+    : "rgba(0, 0, 0, 0.06)";
 
   return (
     <View
@@ -1119,6 +1241,7 @@ export function ProfileCollectionsSkeletonList({
 
 
 export function ProfileSkeleton({ isDarkMode = true, scale: customScale }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const anim = useShimmerAnimation();
 
   const screenH = Dimensions.get("window").height;
@@ -1168,13 +1291,37 @@ export function ProfileSkeleton({ isDarkMode = true, scale: customScale }) {
   const cardGradientPadding = Math.round(14 * scale);
 
   const bgColor = isDarkMode ? "#0C0C0E" : "#FFFFFF";
-  const bannerBg = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
+  const bannerBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : isMinimalist
+    ? "#F3F4F6"
+    : "rgba(0, 0, 0, 0.06)";
   const avatarBorderColor = isDarkMode ? "#0C0C0E" : "#FFFFFF";
-  const avatarBg = isDarkMode ? "#1A1A1E" : "#E5E7EB";
-  const placeholderBg1 = isDarkMode ? "rgba(255, 255, 255, 0.09)" : "rgba(0, 0, 0, 0.09)";
-  const placeholderBg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
-  const dividerBg = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)";
-  const cardBg = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)";
+  const avatarBg = isDarkMode
+    ? "#1A1A1E"
+    : isMinimalist
+    ? "#E5E7EB"
+    : "#E5E7EB";
+  const placeholderBg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.09)"
+    : isMinimalist
+    ? "#CBD5E1"
+    : "rgba(0, 0, 0, 0.09)";
+  const placeholderBg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : isMinimalist
+    ? "#E2E8F0"
+    : "rgba(0, 0, 0, 0.06)";
+  const dividerBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.12)"
+    : isMinimalist
+    ? "#E5E7EB"
+    : "rgba(0, 0, 0, 0.08)";
+  const cardBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : isMinimalist
+    ? "#F3F4F6"
+    : "rgba(0, 0, 0, 0.05)";
   const iconBtnBg = isDarkMode ? "rgba(0, 0, 0, 0.42)" : "rgba(0, 0, 0, 0.25)";
 
   const SkeletonBar = ({ width: barW, height: barH, borderRadius = 4, bg = placeholderBg1, style }) => (
@@ -1668,9 +1815,18 @@ export function ProfileSkeleton({ isDarkMode = true, scale: customScale }) {
 }
 
 export function DetailsDescriptionSkeleton({ isDarkMode = true }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const anim = useShimmerAnimation();
-  const bg1 = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.09)";
-  const bg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
+  const bg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.08)"
+    : isMinimalist
+    ? "#CBD5E1"
+    : "rgba(0, 0, 0, 0.09)";
+  const bg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : isMinimalist
+    ? "#E2E8F0"
+    : "rgba(0, 0, 0, 0.06)";
 
   return (
     <View style={{ marginVertical: 6, overflow: "hidden", position: "relative" }}>
@@ -1684,10 +1840,19 @@ export function DetailsDescriptionSkeleton({ isDarkMode = true }) {
 }
 
 export function DetailsReviewsSkeleton({ isDarkMode = true, count = 2 }) {
+  const isMinimalist = useIsMinimalist(isDarkMode);
   const anim = useShimmerAnimation();
-  const bg1 = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.09)";
-  const bg2 = isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.06)";
-  const borderCol = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)";
+  const bg1 = isDarkMode
+    ? "rgba(255, 255, 255, 0.08)"
+    : isMinimalist
+    ? "#CBD5E1"
+    : "rgba(0, 0, 0, 0.09)";
+  const bg2 = isDarkMode
+    ? "rgba(255, 255, 255, 0.05)"
+    : isMinimalist
+    ? "#E2E8F0"
+    : "rgba(0, 0, 0, 0.06)";
+  const borderCol = isDarkMode ? "rgba(255, 255, 255, 0.08)" : isMinimalist ? "#E5E7EB" : "rgba(0, 0, 0, 0.08)";
 
   return (
     <View style={{ marginTop: 6, overflow: "hidden", position: "relative" }}>
