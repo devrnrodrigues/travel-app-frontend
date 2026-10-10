@@ -22,6 +22,7 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
   imageSize,
   titleSize,
   locationSize,
+  isMinimalist,
 }) {
   const hasImage = Boolean(item?.image_url && typeof item.image_url === "string" && item.image_url.startsWith("http"));
   const isLocal = !hasImage && Boolean(item?.isLocalSource && item?.image_url);
@@ -47,7 +48,13 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
       activeOpacity={0.88}
       style={[
         styles.cardContainer,
-        isDarkMode ? styles.cardContainerDark : styles.cardContainerLight,
+        isMinimalist
+          ? isDarkMode
+            ? styles.cardContainerMinimalistDark
+            : styles.cardContainerMinimalist
+          : isDarkMode
+          ? styles.cardContainerDark
+          : styles.cardContainerLight,
         getTopCardContainerStyle(cardWidth, cardHeight),
       ]}
       onPress={handlePress}
@@ -87,7 +94,13 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
             style={[
               styles.thumbnail,
               getTopCardThumbnailRadius(imageSize),
-              isDarkMode ? styles.fallbackDark : styles.fallbackLight,
+              isMinimalist
+                ? isDarkMode
+                  ? styles.fallbackMinimalistDark
+                  : styles.fallbackMinimalist
+                : isDarkMode
+                ? styles.fallbackDark
+                : styles.fallbackLight,
             ]}
           >
             <Ionicons
@@ -103,6 +116,8 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
         <Text
           style={[
             styles.title,
+            isMinimalist &&
+              (isDarkMode ? styles.titleMinimalistDark : styles.titleMinimalist),
             getTopCardTitleStyle(titleSize),
           ]}
           numberOfLines={1}
@@ -114,6 +129,8 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
           <Text
             style={[
               styles.location,
+              isMinimalist &&
+                (isDarkMode ? styles.locationMinimalistDark : styles.locationMinimalist),
               getTopCardLocationStyle(locationSize),
             ]}
             numberOfLines={1}

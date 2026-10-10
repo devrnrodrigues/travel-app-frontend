@@ -3,8 +3,8 @@ import { Animated, Keyboard, Easing, Platform, Dimensions } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getDestinations } from "../../../shared/api/destinationApi";
 
-const SCREEN_HEIGHT = Dimensions.get("screen").height;
 const SEARCH_PAGE_SIZE = 12;
+const ENTRANCE_OFFSET = -35;
 
 export default function useSearchModal({
   visible,
@@ -23,10 +23,11 @@ export default function useSearchModal({
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isReadyToFetch, setIsReadyToFetch] = useState(false);
 
   const searchFocusAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef(null);
-  const searchSlideAnim = useRef(new Animated.Value(-SCREEN_HEIGHT)).current;
+  const searchSlideAnim = useRef(new Animated.Value(ENTRANCE_OFFSET)).current;
   const searchFadeAnim = useRef(new Animated.Value(0)).current;
   const filterAnim = useRef(new Animated.Value(0)).current;
   const searchScrollY = useRef(new Animated.Value(0)).current;
@@ -55,13 +56,15 @@ export default function useSearchModal({
 
   useEffect(() => {
     if (visible) {
-      setSelectedCategory(initialCategory || null);
-      setSearchQuery("");
-      setDebouncedSearch("");
-      setAlphaSort(null);
-      setPriceSort(null);
-      setRatingSort(null);
-      setSelectedCountry(null);
+      setSelectedCategory((prev) => (prev !== (initialCategory || null) ? (initialCategory || null) : prev));
+      setSearchQuery((prev) => (prev !== "" ? "" : prev));
+      setDebouncedSearch((prev) => (prev !== "" ? "" : prev));
+      setAlphaSort((prev) => (prev !== null ? null : prev));
+      setPriceSort((prev) => (prev !== null ? null : prev));
+      setRatingSort((prev) => (prev !== null ? null : prev));
+      setSelectedCountry((prev) => (prev !== null ? null : prev));
+    } else {
+      setIsReadyToFetch(false);
     }
   }, [visible, initialCategory]);
 
@@ -77,6 +80,9 @@ export default function useSearchModal({
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    isError,
+    error,
+    refetch,
   } = useInfiniteQuery({
     queryKey: [
       "destinations",
@@ -85,7 +91,7 @@ export default function useSearchModal({
       normalizedSearch,
       activeSortBy,
     ],
-    enabled: visible,
+    enabled: Boolean(visible && isReadyToFetch),
     queryFn: ({ pageParam = 0 }) =>
       getDestinations({
         category: activeCategoryParam,
@@ -127,7 +133,7 @@ export default function useSearchModal({
 
   const isSearching = (isFetching && !isFetchingNextPage) || searchQuery !== debouncedSearch;
   const isSearchLoading =
-    (isQueryLoading || (isFetching && !isFetchingNextPage && apiDestinations.length === 0)) &&
+    (!isReadyToFetch || isQueryLoading || (isFetching && !isFetchingNextPage && apiDestinations.length === 0)) &&
     apiDestinations.length === 0;
 
   const loadNextSearchPage = useCallback(() => {
@@ -224,30 +230,32 @@ export default function useSearchModal({
   useEffect(() => {
     if (visible) {
       isClosingSearch.current = false;
-      searchSlideAnim.setValue(-SCREEN_HEIGHT);
+      searchSlideAnim.setValue(ENTRANCE_OFFSET);
       searchFadeAnim.setValue(0);
 
-      Animated.sequence([
+      Animated.parallel([
         Animated.timing(searchFadeAnim, {
           toValue: 1,
-          duration: 140,
-          easing: Easing.out(Easing.quad),
+          duration: 180,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.spring(searchSlideAnim, {
           toValue: 0,
           damping: 24,
-          stiffness: 220,
+          stiffness: 240,
           mass: 0.8,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        setIsReadyToFetch(true);
+      });
 
       const focusTimer = setTimeout(() => {
         if (!isClosingSearch.current) {
           searchInputRef.current?.focus();
         }
-      }, 260);
+      }, 240);
 
       return () => clearTimeout(focusTimer);
     }
@@ -261,69 +269,32 @@ export default function useSearchModal({
     setIsSearchFocused(false);
     searchFocusAnim.setValue(0);
 
-    const keyboardWasOpen = isKeyboardVisible.current;
     Keyboard.dismiss();
 
-    let finishedAnim = false;
-    let finishedKeyboard = !keyboardWasOpen;
-
-    let hideListener = null;
-    let fallbackTimeout = null;
-
     const finalizeClose = () => {
-      if (finishedAnim && finishedKeyboard) {
-        if (hideListener) {
-          hideListener.remove();
-          hideListener = null;
-        }
-        if (fallbackTimeout) {
-          clearTimeout(fallbackTimeout);
-          fallbackTimeout = null;
-        }
-        setIsFilterVisible(false);
-        filterAnim.setValue(0);
-        isClosingSearch.current = false;
-        onClose();
-      }
+      setIsFilterVisible(false);
+      filterAnim.setValue(0);
+      isClosingSearch.current = false;
+      onClose();
     };
-
-    if (keyboardWasOpen) {
-      hideListener = Keyboard.addListener(
-        Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-        () => {
-          hideListener?.remove();
-          hideListener = null;
-          if (fallbackTimeout) clearTimeout(fallbackTimeout);
-          finishedKeyboard = true;
-          finalizeClose();
-        }
-      );
-
-      fallbackTimeout = setTimeout(() => {
-        hideListener?.remove();
-        hideListener = null;
-        finishedKeyboard = true;
-        finalizeClose();
-      }, 300);
-    }
 
     Animated.parallel([
       Animated.timing(searchSlideAnim, {
-        toValue: -SCREEN_HEIGHT,
-        duration: 280,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        toValue: ENTRANCE_OFFSET,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(searchFadeAnim, {
         toValue: 0,
-        duration: 220,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start(() => {
-      finishedAnim = true;
       finalizeClose();
     });
-  }, [searchSlideAnim, searchFadeAnim, searchFocusAnim, onClose]);
+  }, [searchSlideAnim, searchFadeAnim, searchFocusAnim, filterAnim, onClose]);
 
   useEffect(() => {
     searchScrollY.setValue(0);
@@ -379,5 +350,8 @@ export default function useSearchModal({
     dismissSearchFocus,
     toggleFilter,
     handleCloseSearch,
+    isError: isError && apiDestinations.length === 0,
+    error,
+    refetch,
   };
 }

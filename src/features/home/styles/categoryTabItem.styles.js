@@ -29,8 +29,12 @@ export default StyleSheet.create({
   },
 });
 
-export const getCategoryTextColor = (isActive, accentColor) => ({
-  color: isActive ? accentColor : "#FFFFFF",
+export const getCategoryTextColor = (isActive, accentColor, isMinimalist, isDarkMode) => ({
+  color: isActive
+    ? accentColor
+    : isMinimalist && !isDarkMode
+    ? "#6B7280"
+    : "#FFFFFF",
 });
 
 export const getActiveLineStyle = (accentColor, scaleX) => ({

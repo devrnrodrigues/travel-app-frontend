@@ -105,10 +105,23 @@ export default StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
+  headerTitleMinimalist: {
+    color: "#111827",
+    textShadowColor: "transparent",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 0,
+  },
+  headerTitleMinimalistDark: {
+    color: "#FFFFFF",
+    textShadowColor: "transparent",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 0,
+  },
   headerIcons: { flexDirection: "row" },
   iconButton: {
     borderRadius: 15,
     marginLeft: 12,
+    borderWidth: 0,
     shadowColor: "transparent",
     shadowOpacity: 0,
     shadowRadius: 0,
@@ -116,9 +129,19 @@ export default StyleSheet.create({
   },
   iconButtonDark: {
     backgroundColor: "rgba(0, 0, 0, 0.70)",
+    borderWidth: 0,
   },
   iconButtonLight: {
     backgroundColor: "rgba(100, 100, 100, 0.40)",
+    borderWidth: 0,
+  },
+  iconButtonMinimalist: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 0,
+  },
+  iconButtonMinimalistDark: {
+    backgroundColor: "#1C1C1E",
+    borderWidth: 0,
   },
   categoriesSection: { justifyContent: "center" },
   categoriesContainer: { paddingHorizontal: 25, alignItems: "center" },
@@ -128,13 +151,21 @@ export default StyleSheet.create({
     marginHorizontal: 10,
     borderRadius: 40,
     overflow: "hidden",
-    backgroundColor: "#121212",
     flexShrink: 0,
+    borderWidth: 0,
     elevation: 0,
     shadowColor: "transparent",
     shadowOpacity: 0,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 0,
+  },
+  cardDark: {
+    backgroundColor: "#121212",
+    borderWidth: 0,
+  },
+  cardLight: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 0,
   },
   cardInfo: {
     position: "absolute",
@@ -200,6 +231,12 @@ export default StyleSheet.create({
   topDestinationsTitleLight: {
     color: "#1A1A1A",
   },
+  topDestinationsTitleMinimalistDark: {
+    color: "#FFFFFF",
+    textShadowColor: "transparent",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 0,
+  },
   topDestinationsList: {
     paddingHorizontal: 25,
     paddingBottom: 0,
@@ -211,9 +248,17 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
+  whiteScreen: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   bgDimOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "#000000",
+  },
+  bgDimOverlayLight: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#FFFFFF",
   },
   fullWidth: {
     width: "100%",

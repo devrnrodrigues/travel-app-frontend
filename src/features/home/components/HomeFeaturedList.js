@@ -16,6 +16,7 @@ const HomeFeaturedList = React.memo(function HomeFeaturedList({
   isShowingSkeleton,
   isFetchingNextPage,
   onEndReached,
+  isMinimalist,
 }) {
   const keyExtractor = useCallback((item) => (item?.id ? String(item.id) : String(Math.random())), []);
 
@@ -30,9 +31,10 @@ const HomeFeaturedList = React.memo(function HomeFeaturedList({
         cardHeight={dims.cardHeight}
         cardInfoBottom={dims.cardInfoBottom}
         cardInfoHeight={dims.cardInfoHeight}
+        isMinimalist={isMinimalist}
       />
     ),
-    [currentTheme, isDarkMode, navigation, dims]
+    [currentTheme, isDarkMode, navigation, dims, isMinimalist]
   );
 
   const renderFooter = useCallback(() => {
@@ -54,6 +56,7 @@ const HomeFeaturedList = React.memo(function HomeFeaturedList({
           cardHeight={dims.cardHeight}
           cardInfoBottom={dims.cardInfoBottom}
           cardInfoHeight={dims.cardInfoHeight}
+          isMinimalist={isMinimalist}
         />
       </View>
     );

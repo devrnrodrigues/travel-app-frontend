@@ -9,6 +9,7 @@ import styles, {
   getBadgeTextColor,
 } from "../styles/searchCardItem.styles";
 import { SkeletonBox } from "../../../shared/components/Skeleton";
+import { getOptimizedImageUrl } from "../../../shared/utils/imageUrl";
 import useImageFadeIn from "../hooks/useImageFadeIn";
 
 const SearchCardItem = React.memo(function SearchCardItem({
@@ -17,6 +18,7 @@ const SearchCardItem = React.memo(function SearchCardItem({
   cardMarginBottom,
   currentTheme,
   isDarkMode,
+  isMinimalist = false,
   showPrice = false,
   showRating = false,
   onPress,
@@ -33,16 +35,22 @@ const SearchCardItem = React.memo(function SearchCardItem({
   const badgeOffset = shouldShowPrice ? 95 : shouldShowRating ? 50 : 0;
 
   const imageSource =
-    item.isLocalSource || typeof item.image_url !== "string"
+    isLocal || typeof item.image_url !== "string"
       ? item.image_url
-      : { uri: item.image_url };
+      : { uri: getOptimizedImageUrl(item.image_url, 350) };
 
   return (
     <TouchableOpacity
       activeOpacity={0.85}
       style={[
         styles.searchCardBase,
-        !isDarkMode ? styles.searchCardLight : styles.searchCardDark,
+        isMinimalist
+          ? isDarkMode
+            ? styles.searchCardMinimalistDark
+            : styles.searchCardMinimalist
+          : !isDarkMode
+          ? styles.searchCardLight
+          : styles.searchCardDark,
         getSearchCardContainerStyle(cardHeight, cardMarginBottom),
       ]}
       onPress={onPress}
@@ -67,6 +75,7 @@ const SearchCardItem = React.memo(function SearchCardItem({
                   height={imageSize}
                   borderRadius={13}
                   isDarkMode={isDarkMode}
+                  isMinimalist={isMinimalist}
                   style={
                     isDarkMode
                       ? styles.searchCardSkeletonDark
@@ -94,7 +103,14 @@ const SearchCardItem = React.memo(function SearchCardItem({
 
         <View style={styles.searchCardInfo}>
           <Text
-            style={[styles.searchCardTitle, getBadgePaddingOffset(badgeOffset)]}
+            style={[
+              styles.searchCardTitle,
+              isMinimalist &&
+                (isDarkMode
+                  ? styles.searchCardTitleMinimalistDark
+                  : styles.searchCardTitleMinimalist),
+              getBadgePaddingOffset(badgeOffset),
+            ]}
             numberOfLines={1}
           >
             {item.title}
@@ -102,7 +118,16 @@ const SearchCardItem = React.memo(function SearchCardItem({
 
           <View style={styles.searchCardLocationRow}>
             <Feather name="map-pin" size={12} color={currentTheme.accent} />
-            <Text style={styles.searchCardLocationText} numberOfLines={1}>
+            <Text
+              style={[
+                styles.searchCardLocationText,
+                isMinimalist &&
+                  (isDarkMode
+                    ? styles.searchCardLocationTextMinimalistDark
+                    : styles.searchCardLocationTextMinimalist),
+              ]}
+              numberOfLines={1}
+            >
               {item.location}
             </Text>
           </View>

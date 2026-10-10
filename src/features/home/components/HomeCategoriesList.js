@@ -17,6 +17,7 @@ const HomeCategoriesList = React.memo(function HomeCategoriesList({
   onCategoryLayout,
   onContainerLayout,
   onContentSizeChange,
+  isMinimalist,
 }) {
   if (categories.length === 0 && isLoadingCategories) {
     return (
@@ -51,6 +52,7 @@ const HomeCategoriesList = React.memo(function HomeCategoriesList({
               isActive={activeCat === index}
               accentColor={theme.accent}
               isDarkMode={isDarkMode}
+              isMinimalist={isMinimalist}
               onLayout={(e) => onCategoryLayout(index, e.nativeEvent.layout)}
               onPress={() => onCategoryPress(index)}
             />

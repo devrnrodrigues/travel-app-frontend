@@ -11,6 +11,8 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
   accentColor,
   onPress,
   onLayout,
+  isMinimalist,
+  isDarkMode,
 }) {
   const lineAnim = useRef(new Animated.Value(isActive ? 1 : 0.01)).current;
 
@@ -44,7 +46,7 @@ const CategoryTabItem = React.memo(function CategoryTabItem({
           <Text
             style={[
               styles.categoryText,
-              getCategoryTextColor(isActive, accentColor),
+              getCategoryTextColor(isActive, accentColor, isMinimalist, isDarkMode),
               isActive && styles.categoryTextActive,
             ]}
           >

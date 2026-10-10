@@ -24,6 +24,14 @@ export default StyleSheet.create({
     backgroundColor: "rgba(100, 100, 100, 0.80)",
     borderWidth: 0,
   },
+  cardContainerMinimalist: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 0,
+  },
+  cardContainerMinimalistDark: {
+    backgroundColor: "#161616",
+    borderWidth: 0,
+  },
   imageWrapper: {
     width: 78,
     height: 78,
@@ -50,11 +58,25 @@ export default StyleSheet.create({
     backgroundColor: "#202020",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 0,
   },
   fallbackLight: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 0,
+  },
+  fallbackMinimalist: {
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 0,
+  },
+  fallbackMinimalistDark: {
+    backgroundColor: "#202020",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 0,
   },
   infoWrapper: {
     flex: 1,
@@ -72,6 +94,12 @@ export default StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 0,
   },
+  titleMinimalist: {
+    color: "#111827",
+  },
+  titleMinimalistDark: {
+    color: "#FFFFFF",
+  },
   location: {
     fontSize: 13,
     fontWeight: "500",
@@ -79,6 +107,12 @@ export default StyleSheet.create({
     textShadowColor: "transparent",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 0,
+  },
+  locationMinimalist: {
+    color: "#6B7280",
+  },
+  locationMinimalistDark: {
+    color: "#9CA3AF",
   },
 });
 

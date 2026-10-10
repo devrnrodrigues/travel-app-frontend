@@ -6,11 +6,11 @@ import {
   Modal,
   Animated,
   Keyboard,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles, { getModalSlideStyle } from "../styles/searchModal.styles";
 import { SearchSkeletonList, SearchCardSkeleton } from "../../../shared/components/Skeleton";
-import FadeInView from "../../../shared/components/FadeInView";
 import SearchCardItem from "./SearchCardItem";
 import SearchModalHeader from "./SearchModalHeader";
 import SearchFilterBar from "./SearchFilterBar";
@@ -19,6 +19,7 @@ import SearchEmptyState from "./SearchEmptyState";
 import CountryFilterModal from "./CountryFilterModal";
 import CategoryFilterModal from "./CategoryFilterModal";
 import useSearchModal from "../hooks/useSearchModal";
+import { useTheme } from "../../../theme/ThemeContext";
 
 export default function SearchModal({
   visible,
@@ -29,7 +30,11 @@ export default function SearchModal({
   isDarkMode,
   navigation,
   bgSource,
+  isMinimalist: isMinimalistProp = false,
 }) {
+  const theme = useTheme();
+  const activeIsDarkMode = isDarkMode !== undefined ? isDarkMode : theme?.isDarkMode;
+  const isMinimalist = isMinimalistProp || theme?.aestheticMode === "minimalista";
   const {
     searchQuery,
     setSearchQuery,
@@ -72,6 +77,9 @@ export default function SearchModal({
     dismissSearchFocus,
     toggleFilter,
     handleCloseSearch,
+    isError,
+    error,
+    refetch,
   } = useSearchModal({
     visible,
     onClose,
@@ -84,6 +92,16 @@ export default function SearchModal({
   const searchCardSlot = Math.floor(baseSearchHeight / 6);
   const searchCardHeight = Math.max(72, searchCardSlot - 10);
   const searchCardMarginBottom = Math.max(8, searchCardSlot - searchCardHeight);
+  const itemTotalHeight = searchCardHeight + searchCardMarginBottom;
+
+  const getItemLayout = useCallback(
+    (_, index) => ({
+      length: itemTotalHeight,
+      offset: 6 + itemTotalHeight * index,
+      index,
+    }),
+    [itemTotalHeight]
+  );
 
   const resolvedBgSource = useMemo(() => {
     if (bgSource) return bgSource;
@@ -113,6 +131,7 @@ export default function SearchModal({
         cardMarginBottom={searchCardMarginBottom}
         currentTheme={currentTheme}
         isDarkMode={isDarkMode}
+        isMinimalist={isMinimalist}
         isOverlayActive={isCountryModalVisible || isCategoryModalVisible}
         showPrice={Boolean(priceSort)}
         showRating={Boolean(ratingSort)}
@@ -124,6 +143,7 @@ export default function SearchModal({
       searchCardMarginBottom,
       currentTheme,
       isDarkMode,
+      isMinimalist,
       isCountryModalVisible,
       isCategoryModalVisible,
       priceSort,
@@ -140,19 +160,30 @@ export default function SearchModal({
           cardHeight={searchCardHeight}
           cardMarginBottom={searchCardMarginBottom}
           isDarkMode={isDarkMode}
+          isMinimalist={isMinimalist}
         />
         <SearchCardSkeleton
           cardHeight={searchCardHeight}
           cardMarginBottom={searchCardMarginBottom}
           isDarkMode={isDarkMode}
+          isMinimalist={isMinimalist}
         />
       </View>
     );
-  }, [isFetchingNextPage, searchCardHeight, searchCardMarginBottom, isDarkMode]);
+  }, [isFetchingNextPage, searchCardHeight, searchCardMarginBottom, isDarkMode, isMinimalist]);
 
   const renderListEmpty = useCallback(
-    () => <SearchEmptyState normalizedSearch={normalizedSearch} />,
-    [normalizedSearch]
+    () => (
+      <SearchEmptyState
+        normalizedSearch={normalizedSearch}
+        isError={isError}
+        error={error}
+        onRetry={refetch}
+        isDarkMode={isDarkMode}
+        isMinimalist={isMinimalist}
+      />
+    ),
+    [normalizedSearch, isError, error, refetch, isDarkMode, isMinimalist]
   );
 
   const handleToggleAlphaSort = useCallback(() => {
@@ -223,10 +254,15 @@ export default function SearchModal({
         <SearchModalBackground
           resolvedBgSource={resolvedBgSource}
           searchFadeAnim={searchFadeAnim}
-          isDarkMode={isDarkMode}
+          isDarkMode={activeIsDarkMode}
+          isMinimalist={isMinimalist}
         />
 
-        <StatusBar barStyle="light-content" translucent={true} backgroundColor="transparent" />
+        <StatusBar
+          barStyle={activeIsDarkMode ? "light-content" : isMinimalist ? "dark-content" : "light-content"}
+          translucent={true}
+          backgroundColor={isMinimalist ? (activeIsDarkMode ? "#000000" : "#FFFFFF") : "transparent"}
+        />
 
         <Animated.View
           style={[
@@ -242,7 +278,8 @@ export default function SearchModal({
               isSearching={isSearching}
               isSearchFocused={isSearchFocused}
               isFilterVisible={isFilterVisible}
-              isDarkMode={isDarkMode}
+              isDarkMode={activeIsDarkMode}
+              isMinimalist={isMinimalist}
               currentTheme={currentTheme}
               searchFocusAnim={searchFocusAnim}
               filterIconRotate={filterIconRotate}
@@ -262,6 +299,8 @@ export default function SearchModal({
               priceSort={priceSort}
               ratingSort={ratingSort}
               currentTheme={currentTheme}
+              isDarkMode={activeIsDarkMode}
+              isMinimalist={isMinimalist}
               onDismissSearchFocus={dismissSearchFocus}
               onOpenCategoryModal={handleOpenCategoryModal}
               onClearCategory={handleClearCategory}
@@ -276,23 +315,25 @@ export default function SearchModal({
               <View style={styles.searchListWrapper}>
                 <SearchSkeletonList
                   isDarkMode={isDarkMode}
+                  isMinimalist={isMinimalist}
                   cardHeight={searchCardHeight}
                   cardMarginBottom={searchCardMarginBottom}
                   count={7}
                 />
               </View>
             ) : (
-              <FadeInView duration={240} style={styles.searchListWrapper}>
+              <View style={styles.searchListWrapper}>
                 <Animated.FlatList
                   ref={searchFlatListRef}
                   data={filteredData}
                   extraData={[alphaSort, priceSort, ratingSort, selectedCountry, selectedCategory, currentTheme, isDarkMode]}
                   keyExtractor={keyExtractor}
+                  getItemLayout={getItemLayout}
                   showsVerticalScrollIndicator={false}
-                  removeClippedSubviews={false}
-                  initialNumToRender={12}
-                  maxToRenderPerBatch={12}
-                  windowSize={10}
+                  removeClippedSubviews={Platform.OS === "android"}
+                  initialNumToRender={8}
+                  maxToRenderPerBatch={8}
+                  windowSize={5}
                   onScrollBeginDrag={dismissSearchFocus}
                   keyboardDismissMode="on-drag"
                   keyboardShouldPersistTaps="handled"
@@ -311,30 +352,34 @@ export default function SearchModal({
                   ListFooterComponent={renderListFooter}
                   ListEmptyComponent={renderListEmpty}
                 />
-              </FadeInView>
+              </View>
             )}
           </SafeAreaView>
         </Animated.View>
 
-        <CountryFilterModal
-          visible={isCountryModalVisible}
-          onClose={() => setIsCountryModalVisible(false)}
-          destinations={apiDestinations}
-          selectedCountry={selectedCountry}
-          onSelectCountry={setSelectedCountry}
-          currentTheme={currentTheme}
-          isDarkMode={isDarkMode}
-        />
+        {isCountryModalVisible && (
+          <CountryFilterModal
+            visible={isCountryModalVisible}
+            onClose={() => setIsCountryModalVisible(false)}
+            destinations={apiDestinations}
+            selectedCountry={selectedCountry}
+            onSelectCountry={setSelectedCountry}
+            currentTheme={currentTheme}
+            isDarkMode={isDarkMode}
+          />
+        )}
 
-        <CategoryFilterModal
-          visible={isCategoryModalVisible}
-          onClose={() => setIsCategoryModalVisible(false)}
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          currentTheme={currentTheme}
-          isDarkMode={isDarkMode}
-        />
+        {isCategoryModalVisible && (
+          <CategoryFilterModal
+            visible={isCategoryModalVisible}
+            onClose={() => setIsCategoryModalVisible(false)}
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            currentTheme={currentTheme}
+            isDarkMode={isDarkMode}
+          />
+        )}
       </View>
     </Modal>
   );

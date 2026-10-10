@@ -27,6 +27,10 @@ import useHomeData from "./hooks/useHomeData";
 import useHomeCategories from "./hooks/useHomeCategories";
 import useHomeAnimations from "./hooks/useHomeAnimations";
 
+const errorImage = require("../../../assets/images/error.png");
+const notFoundImage = require("../../../assets/images/not-found.png");
+const noConnectionImage = require("../../../assets/images/no-connection.png");
+
 export default function Home({ navigation }) {
   const { user } = useAuth();
   const {
@@ -38,7 +42,10 @@ export default function Home({ navigation }) {
     currentTheme,
     themesByCat,
     isDarkMode,
+    aestheticMode,
   } = useTheme();
+
+  const isMinimalist = aestheticMode === "minimalista";
 
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
@@ -95,7 +102,7 @@ export default function Home({ navigation }) {
         title: "Conteúdo não encontrado",
         message: "A categoria ou seção solicitada não foi encontrada.",
         buttonText: "Recarregar início",
-        icon: "alert-circle-outline",
+        imageSource: notFoundImage,
       };
     }
     if (error?.status >= 500) {
@@ -103,14 +110,14 @@ export default function Home({ navigation }) {
         title: "Serviço indisponível",
         message: "Nossos serviços estão passando por instabilidade no momento. Por favor, tente novamente em alguns instantes.",
         buttonText: "Tentar novamente",
-        icon: "server-outline",
+        imageSource: errorImage,
       };
     }
     return {
       title: "Sem conexão",
       message: "Não foi possível conectar. Verifique sua conexão com a internet e tente novamente.",
       buttonText: "Tentar novamente",
-      icon: "cloud-offline-outline",
+      imageSource: noConnectionImage,
     };
   }, [isError, error]);
 
@@ -133,8 +140,115 @@ export default function Home({ navigation }) {
     return ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.15)", "rgba(0, 0, 0, 0.65)"];
   }, [currentTheme?.colors]);
 
+  const isErrorBg = Boolean(errorConfig);
+  const isWhiteBg = !isDarkMode && (isMinimalist || isErrorBg);
+
+  const homeBody = (
+    <>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : isWhiteBg ? "dark-content" : "light-content"}
+        backgroundColor="transparent"
+        translucent
+      />
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <ScrollView
+          style={styles.flex1}
+          contentContainerStyle={[
+            styles.scrollContent,
+            getScrollContentPadding(dims.bottomBarHeight + dims.bottomSpacing),
+          ]}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          alwaysBounceVertical={true}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={currentTheme?.accent || "#4CAF50"}
+              colors={[currentTheme?.accent || "#4CAF50"]}
+            />
+          }
+        >
+          <View style={styles.homeContentWrapper}>
+            <View style={styles.topSection}>
+              <HomeHeader
+                userName={userName}
+                dims={dims}
+                isDarkMode={isDarkMode}
+                currentTheme={currentTheme}
+                onOpenSearch={handleOpenSearch}
+                isMinimalist={isMinimalist}
+              />
+
+              <HomeCategoriesList
+                categories={categories}
+                isLoadingCategories={isLoadingCategories}
+                activeCat={activeCat}
+                currentTheme={currentTheme}
+                themesByCat={themesByCat}
+                isDarkMode={isDarkMode}
+                dims={dims}
+                categoryScrollRef={categoryScrollRef}
+                onCategoryPress={handleCategoryPress}
+                onCategoryLayout={handleCategoryLayout}
+                onContainerLayout={handleContainerLayout}
+                onContentSizeChange={handleContentSizeChange}
+                isMinimalist={isMinimalist}
+              />
+            </View>
+
+            {errorConfig ? (
+              <View style={{ flex: 1, justifyContent: "center", alignItems: "center", minHeight: dims.availableHeight - 120 }}>
+                <StateFeedbackView
+                  imageSource={errorConfig.imageSource}
+                  icon={errorConfig.icon}
+                  title={errorConfig.title}
+                  message={errorConfig.message}
+                  buttonText={errorConfig.buttonText}
+                  onButtonPress={handleRefresh}
+                  isDarkMode={isDarkMode}
+                  showDarkFilter={false}
+                />
+              </View>
+            ) : (
+              <>
+                <HomeFeaturedList
+                  flatListRef={flatListRef}
+                  destinations={destinations}
+                  selectedCategory={selectedCategory}
+                  currentTheme={currentTheme}
+                  isDarkMode={isDarkMode}
+                  navigation={navigation}
+                  dims={dims}
+                  isShowingSkeleton={isShowingSkeleton}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onEndReached={loadNextPage}
+                  isMinimalist={isMinimalist}
+                />
+
+                <HomeRecommendationsList
+                  topDestinations={topDestinations}
+                  currentTheme={currentTheme}
+                  isDarkMode={isDarkMode}
+                  navigation={navigation}
+                  dims={dims}
+                  isShowingTopSkeleton={isShowingTopSkeleton}
+                  isFetchingNextTopPage={isFetchingNextTopPage}
+                  onEndReached={loadNextTopPage}
+                  isMinimalist={isMinimalist}
+                />
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </>
+  );
+
   return (
-    <View style={styles.blackScreen}>
+    <View style={isWhiteBg ? styles.whiteScreen : styles.blackScreen}>
       <SearchModal
         visible={isSearchVisible}
         onClose={handleCloseSearch}
@@ -144,113 +258,29 @@ export default function Home({ navigation }) {
         isDarkMode={isDarkMode}
         navigation={navigation}
         bgSource={bgSource}
+        isMinimalist={isMinimalist}
       />
 
-      <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
-        <LinearGradient
-          colors={gradientColors}
-          locations={[0, 0.40, 1]}
-          style={styles.flex1}
-        >
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.bgDimOverlay,
-              getDimAnimStyle(bgDimAnim),
-            ]}
-          />
-
-          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-          <SafeAreaView edges={["top"]} style={styles.container}>
-            <ScrollView
-              style={styles.flex1}
-              contentContainerStyle={[
-                styles.scrollContent,
-                getScrollContentPadding(dims.bottomBarHeight + dims.bottomSpacing),
+      {isMinimalist || isErrorBg ? (
+        <View style={styles.flex1}>{homeBody}</View>
+      ) : (
+        <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
+          <LinearGradient
+            colors={gradientColors}
+            locations={[0, 0.40, 1]}
+            style={styles.flex1}
+          >
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                isDarkMode ? styles.bgDimOverlay : styles.bgDimOverlayLight,
+                getDimAnimStyle(bgDimAnim),
               ]}
-              showsVerticalScrollIndicator={false}
-              bounces={true}
-              alwaysBounceVertical={true}
-              nestedScrollEnabled={true}
-              keyboardShouldPersistTaps="handled"
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
-                  tintColor={currentTheme?.accent || "#4CAF50"}
-                  colors={[currentTheme?.accent || "#4CAF50"]}
-                />
-              }
-            >
-              <View style={styles.homeContentWrapper}>
-                <View style={styles.topSection}>
-                  <HomeHeader
-                    userName={userName}
-                    dims={dims}
-                    isDarkMode={isDarkMode}
-                    currentTheme={currentTheme}
-                    onOpenSearch={handleOpenSearch}
-                  />
-
-                  <HomeCategoriesList
-                    categories={categories}
-                    isLoadingCategories={isLoadingCategories}
-                    activeCat={activeCat}
-                    currentTheme={currentTheme}
-                    themesByCat={themesByCat}
-                    isDarkMode={isDarkMode}
-                    dims={dims}
-                    categoryScrollRef={categoryScrollRef}
-                    onCategoryPress={handleCategoryPress}
-                    onCategoryLayout={handleCategoryLayout}
-                    onContainerLayout={handleContainerLayout}
-                    onContentSizeChange={handleContentSizeChange}
-                  />
-                </View>
-
-                {errorConfig ? (
-                  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", minHeight: dims.availableHeight - 120 }}>
-                    <StateFeedbackView
-                      icon={errorConfig.icon}
-                      title={errorConfig.title}
-                      message={errorConfig.message}
-                      buttonText={errorConfig.buttonText}
-                      onButtonPress={handleRefresh}
-                      isDarkMode={isDarkMode}
-                    />
-                  </View>
-                ) : (
-                  <>
-                    <HomeFeaturedList
-                      flatListRef={flatListRef}
-                      destinations={destinations}
-                      selectedCategory={selectedCategory}
-                      currentTheme={currentTheme}
-                      isDarkMode={isDarkMode}
-                      navigation={navigation}
-                      dims={dims}
-                      isShowingSkeleton={isShowingSkeleton}
-                      isFetchingNextPage={isFetchingNextPage}
-                      onEndReached={loadNextPage}
-                    />
-
-                    <HomeRecommendationsList
-                      topDestinations={topDestinations}
-                      currentTheme={currentTheme}
-                      isDarkMode={isDarkMode}
-                      navigation={navigation}
-                      dims={dims}
-                      isShowingTopSkeleton={isShowingTopSkeleton}
-                      isFetchingNextTopPage={isFetchingNextTopPage}
-                      onEndReached={loadNextTopPage}
-                    />
-                  </>
-                )}
-              </View>
-            </ScrollView>
-          </SafeAreaView>
-        </LinearGradient>
-      </ImageBackground>
+            />
+            {homeBody}
+          </LinearGradient>
+        </ImageBackground>
+      )}
     </View>
   );
 }

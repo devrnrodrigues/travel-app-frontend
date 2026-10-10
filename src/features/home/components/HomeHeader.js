@@ -13,13 +13,18 @@ const HomeHeader = React.memo(function HomeHeader({
   isDarkMode,
   currentTheme,
   onOpenSearch,
+  isMinimalist,
 }) {
   return (
     <View style={[styles.header, getHeaderTopPadding(dims.headerPaddingTop)]}>
       <Text
         style={[
           styles.headerTitle,
-          styles.headerTitleDark,
+          isMinimalist
+            ? isDarkMode
+              ? styles.headerTitleMinimalistDark
+              : styles.headerTitleMinimalist
+            : styles.headerTitleDark,
           getHeaderTitleSize(dims.headerTitleSize),
         ]}
         numberOfLines={1}
@@ -30,7 +35,13 @@ const HomeHeader = React.memo(function HomeHeader({
         <TouchableOpacity
           style={[
             styles.iconButton,
-            isDarkMode ? styles.iconButtonDark : styles.iconButtonLight,
+            isMinimalist
+              ? isDarkMode
+                ? styles.iconButtonMinimalistDark
+                : styles.iconButtonMinimalist
+              : isDarkMode
+              ? styles.iconButtonDark
+              : styles.iconButtonLight,
             getIconButtonPadding(dims.iconPadding),
           ]}
           onPress={onOpenSearch}

@@ -71,9 +71,19 @@ export default StyleSheet.create({
     marginRight: 10,
     flexDirection: "row",
     alignItems: "center",
+    borderWidth: 0,
   },
   filterBtnInactive: {
     backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 0,
+  },
+  filterBtnInactiveMinimalist: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 0,
+  },
+  filterBtnInactiveMinimalistDark: {
+    backgroundColor: "#1C1C1E",
+    borderWidth: 0,
   },
   filterBtnActiveText: {
     color: "#000000",
@@ -85,6 +95,16 @@ export default StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
   },
+  filterBtnInactiveTextMinimalist: {
+    color: "#4B5563",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  filterBtnInactiveTextMinimalistDark: {
+    color: "#E5E7EB",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
   searchListWrapper: {
     flex: 1,
     marginHorizontal: -20,
@@ -93,6 +113,7 @@ export default StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 6,
     paddingBottom: 24,
+    flexGrow: 1,
   },
   searchEmptyContainer: {
     flex: 1,

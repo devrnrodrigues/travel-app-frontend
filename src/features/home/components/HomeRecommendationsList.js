@@ -17,6 +17,7 @@ const HomeRecommendationsList = React.memo(function HomeRecommendationsList({
   isShowingTopSkeleton,
   isFetchingNextTopPage,
   onEndReached,
+  isMinimalist,
 }) {
   const keyExtractor = useCallback((item) => (item?.id ? String(item.id) : String(Math.random())), []);
 
@@ -32,9 +33,10 @@ const HomeRecommendationsList = React.memo(function HomeRecommendationsList({
         imageSize={dims.topCardImageSize}
         titleSize={dims.isSmallScreen ? 14 : dims.isTallScreen ? 17 : 16}
         locationSize={dims.isSmallScreen ? 11.5 : dims.isTallScreen ? 13.5 : 13}
+        isMinimalist={isMinimalist}
       />
     ),
-    [currentTheme, isDarkMode, navigation, dims]
+    [currentTheme, isDarkMode, navigation, dims, isMinimalist]
   );
 
   const renderFooter = useCallback(() => {
@@ -57,7 +59,11 @@ const HomeRecommendationsList = React.memo(function HomeRecommendationsList({
         <Text
           style={[
             styles.topDestinationsTitle,
-            styles.topDestinationsTitleDark,
+            isMinimalist
+              ? isDarkMode
+                ? styles.topDestinationsTitleMinimalistDark
+                : styles.topDestinationsTitleLight
+              : styles.topDestinationsTitleDark,
             getTopDestTitleSize(dims.topDestTitleSize),
           ]}
         >

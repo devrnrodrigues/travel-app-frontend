@@ -17,6 +17,8 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
   priceSort,
   ratingSort,
   currentTheme,
+  isDarkMode = false,
+  isMinimalist = false,
   onDismissSearchFocus,
   onOpenCategoryModal,
   onClearCategory,
@@ -30,6 +32,22 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
   const animatedMarginBottom = filterAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 15] });
   const animatedOpacity = filterAnim.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.4, 1] });
   const animatedTranslateY = filterAnim.interpolate({ inputRange: [0, 1], outputRange: [-14, 0] });
+
+  const inactiveBtnStyle = isMinimalist
+    ? isDarkMode
+      ? styles.filterBtnInactiveMinimalistDark
+      : styles.filterBtnInactiveMinimalist
+    : styles.filterBtnInactive;
+  const inactiveTextStyle = isMinimalist
+    ? isDarkMode
+      ? styles.filterBtnInactiveTextMinimalistDark
+      : styles.filterBtnInactiveTextMinimalist
+    : styles.filterBtnInactiveText;
+  const inactiveIconColor = isMinimalist
+    ? isDarkMode
+      ? "#E5E7EB"
+      : "#4B5563"
+    : "#FFFFFF";
 
   return (
     <Animated.View
@@ -55,16 +73,16 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
             styles.filterBtnBase,
             selectedCategory
               ? getFilterButtonActiveBg(currentTheme.accent)
-              : styles.filterBtnInactive,
+              : inactiveBtnStyle,
           ]}
         >
           <Feather
             name="grid"
             size={14}
-            color={selectedCategory ? "#000000" : "#FFFFFF"}
+            color={selectedCategory ? "#000000" : inactiveIconColor}
             style={styles.marginRight6}
           />
-          <Text style={selectedCategory ? styles.filterBtnActiveText : styles.filterBtnInactiveText}>
+          <Text style={selectedCategory ? styles.filterBtnActiveText : inactiveTextStyle}>
             {selectedCategoryName || "Categorias"}
           </Text>
           {selectedCategory ? (
@@ -85,10 +103,10 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
             styles.filterBtnBase,
             alphaSort
               ? getFilterButtonActiveBg(currentTheme.accent)
-              : styles.filterBtnInactive,
+              : inactiveBtnStyle,
           ]}
         >
-          <Text style={alphaSort ? styles.filterBtnActiveText : styles.filterBtnInactiveText}>
+          <Text style={alphaSort ? styles.filterBtnActiveText : inactiveTextStyle}>
             {alphaSort === "asc" ? "A-Z ↓" : alphaSort === "desc" ? "Z-A ↑" : "A-Z ⇅"}
           </Text>
         </TouchableOpacity>
@@ -100,16 +118,16 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
             styles.filterBtnBase,
             selectedCountry
               ? getFilterButtonActiveBg(currentTheme.accent)
-              : styles.filterBtnInactive,
+              : inactiveBtnStyle,
           ]}
         >
           <Feather
             name="globe"
             size={14}
-            color={selectedCountry ? "#000000" : "#FFFFFF"}
+            color={selectedCountry ? "#000000" : inactiveIconColor}
             style={styles.marginRight6}
           />
-          <Text style={selectedCountry ? styles.filterBtnActiveText : styles.filterBtnInactiveText}>
+          <Text style={selectedCountry ? styles.filterBtnActiveText : inactiveTextStyle}>
             {selectedCountry || "Países"}
           </Text>
           {selectedCountry ? (
@@ -130,10 +148,10 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
             styles.filterBtnBase,
             priceSort
               ? getFilterButtonActiveBg(currentTheme.accent)
-              : styles.filterBtnInactive,
+              : inactiveBtnStyle,
           ]}
         >
-          <Text style={priceSort ? styles.filterBtnActiveText : styles.filterBtnInactiveText}>
+          <Text style={priceSort ? styles.filterBtnActiveText : inactiveTextStyle}>
             {priceSort === "asc" ? "Preço ↑" : priceSort === "desc" ? "Preço ↓" : "Preço ↑↓"}
           </Text>
         </TouchableOpacity>
@@ -146,16 +164,16 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
             styles.marginRight20,
             ratingSort
               ? getFilterButtonActiveBg(currentTheme.accent)
-              : styles.filterBtnInactive,
+              : inactiveBtnStyle,
           ]}
         >
           <Ionicons
             name="star"
             size={13}
-            color={ratingSort ? "#000000" : "#FFFFFF"}
+            color={ratingSort ? "#000000" : inactiveIconColor}
             style={styles.marginRight6}
           />
-          <Text style={ratingSort ? styles.filterBtnActiveText : styles.filterBtnInactiveText}>
+          <Text style={ratingSort ? styles.filterBtnActiveText : inactiveTextStyle}>
             {ratingSort === "desc" ? "Avaliações ↓" : ratingSort === "asc" ? "Avaliações ↑" : "Avaliações ↑↓"}
           </Text>
         </TouchableOpacity>

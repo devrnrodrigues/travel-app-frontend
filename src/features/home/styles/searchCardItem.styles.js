@@ -19,9 +19,19 @@ export default StyleSheet.create({
   },
   searchCardDark: {
     backgroundColor: "rgba(26, 26, 26, 0.78)",
+    borderWidth: 0,
   },
   searchCardLight: {
     backgroundColor: "rgba(250, 250, 250, 0.30)",
+    borderWidth: 0,
+  },
+  searchCardMinimalist: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 0,
+  },
+  searchCardMinimalistDark: {
+    backgroundColor: "#161616",
+    borderWidth: 0,
   },
   searchCardImageWrapper: {
     borderRadius: 13,
@@ -29,6 +39,7 @@ export default StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.06)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 0,
   },
   searchCardImage: {
     borderRadius: 13,
@@ -49,12 +60,15 @@ export default StyleSheet.create({
     borderRadius: 13,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 0,
   },
   searchCardEmptyFallbackDark: {
     backgroundColor: "#252525",
+    borderWidth: 0,
   },
   searchCardEmptyFallbackLight: {
     backgroundColor: "#E2E2E2",
+    borderWidth: 0,
   },
   searchCardInfo: {
     marginLeft: 14,
@@ -66,6 +80,16 @@ export default StyleSheet.create({
     fontSize: 15,
     fontWeight: "bold",
   },
+  searchCardTitleMinimalist: {
+    color: "#1F2937",
+    fontSize: 15,
+    fontWeight: "bold",
+  },
+  searchCardTitleMinimalistDark: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "bold",
+  },
   searchCardLocationRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -73,6 +97,18 @@ export default StyleSheet.create({
   },
   searchCardLocationText: {
     color: "#FFFFFF",
+    fontSize: 12,
+    marginLeft: 5,
+    flex: 1,
+  },
+  searchCardLocationTextMinimalist: {
+    color: "#6B7280",
+    fontSize: 12,
+    marginLeft: 5,
+    flex: 1,
+  },
+  searchCardLocationTextMinimalistDark: {
+    color: "#9CA3AF",
     fontSize: 12,
     marginLeft: 5,
     flex: 1,

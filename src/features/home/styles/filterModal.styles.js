@@ -83,7 +83,7 @@ export const filterModalStyles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 14,
     marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: "transparent",
   },
   countryItemDark: {
@@ -118,6 +118,9 @@ export const filterModalStyles = StyleSheet.create({
   marginRight6: {
     marginRight: 6,
   },
+  marginRight10: {
+    marginRight: 10,
+  },
   flag18: {
     fontSize: 18,
     marginRight: 10,
@@ -129,7 +132,7 @@ export const filterModalStyles = StyleSheet.create({
 });
 
 export const getActiveItemBorderStyle = (accentColor) => ({
-  borderColor: accentColor,
+  borderWidth: 0,
 });
 
 export const getActiveItemTextStyle = (accentColor) => ({

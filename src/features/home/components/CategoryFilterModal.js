@@ -8,7 +8,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   filterModalStyles,
   getActiveItemBorderStyle,
@@ -16,6 +16,102 @@ import {
   getModalTranslateStyle,
 } from "../styles/filterModal.styles";
 import useFilterModalSwipe from "../hooks/useFilterModalSwipe";
+
+const CATEGORY_ICON_MAP = {
+  "todas": "compass-outline",
+  "florestas": "tree",
+  "floresta": "tree",
+  "praias": "umbrella-beach",
+  "praia": "umbrella-beach",
+  "montanhas": "image-filter-hdr",
+  "montanha": "image-filter-hdr",
+  "ilhas": "island",
+  "ilha": "island",
+  "cidades": "city-variant-outline",
+  "cidade": "city-variant-outline",
+  "urbano": "city-variant-outline",
+  "cachoeiras": "waterfall",
+  "cachoeira": "waterfall",
+  "desertos": "white-balance-sunny",
+  "deserto": "white-balance-sunny",
+  "canions": "terrain",
+  "canion": "terrain",
+  "penhascos": "elevation-rise",
+  "penhasco": "elevation-rise",
+  "vulcoes": "fire",
+  "vulcao": "fire",
+  "neve": "snowflake",
+  "geleiras": "snowflake",
+  "geleira": "snowflake",
+  "cavernas": "tunnel-outline",
+  "caverna": "tunnel-outline",
+  "vales": "image-filter-hdr",
+  "vale": "image-filter-hdr",
+  "historico": "pillar",
+  "surf": "surfing",
+  "cultural": "palette-outline",
+  "lagos": "water-outline",
+  "lago": "water-outline",
+  "rios": "waves",
+  "rio": "waves",
+  "interior": "home-variant-outline",
+  "aventura": "bicycle",
+  "costeiro": "compass-outline",
+  "rural": "home-outline",
+  "arquitetonico": "office-building",
+  "arqueologico": "timer-sand",
+  "recifes": "fish",
+  "recife": "fish",
+  "pantanos": "leaf",
+  "pantano": "leaf",
+  "termal": "hot-tub",
+  "parques-nacionais": "pine-tree",
+  "parques": "pine-tree",
+  "parque": "pine-tree",
+  "safari": "paw",
+  "resorts": "umbrella-beach",
+  "resort": "umbrella-beach",
+  "vinhedos": "glass-wine",
+  "vinhedo": "glass-wine",
+  "castelos": "castle",
+  "castelo": "castle",
+  "mergulho": "diving-scuba",
+  "gastronomia": "silverware-fork-knife",
+  "mirantes": "binoculars",
+  "mirante": "binoculars",
+  "romantico": "heart-outline",
+  "entretenimento": "ticket-outline",
+  "trilhas": "hiking",
+  "trilha": "hiking",
+  "cidades-fluviais": "ferry",
+};
+
+const normalizeCategoryKey = (str) => {
+  if (!str) return "";
+  return String(str)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+};
+
+const resolveCategoryIcon = (item) => {
+  if (!item || item.key === null) return "compass-outline";
+
+  const normalizedKey = normalizeCategoryKey(item.key);
+  const normalizedName = normalizeCategoryKey(item.name);
+  const normalizedIcon = normalizeCategoryKey(item.icon);
+
+  if (CATEGORY_ICON_MAP[normalizedKey]) return CATEGORY_ICON_MAP[normalizedKey];
+  if (CATEGORY_ICON_MAP[normalizedName]) return CATEGORY_ICON_MAP[normalizedName];
+  if (CATEGORY_ICON_MAP[normalizedIcon]) return CATEGORY_ICON_MAP[normalizedIcon];
+
+  if (item.icon && typeof item.icon === "string") {
+    return item.icon;
+  }
+
+  return "compass-outline";
+};
 
 const CategoryFilterModal = React.memo(function CategoryFilterModal({
   visible,
@@ -26,7 +122,7 @@ const CategoryFilterModal = React.memo(function CategoryFilterModal({
   currentTheme,
   isDarkMode,
 }) {
-  const { slideAnim, panResponder, handleCloseModal } = useFilterModalSwipe(visible, onClose);
+  const { slideAnim, fadeAnim, panResponder, handleCloseModal } = useFilterModalSwipe(visible, onClose);
 
   const orderedCategories = useMemo(() => {
     const allOption = { key: null, name: "Todas as categorias" };
@@ -41,7 +137,12 @@ const CategoryFilterModal = React.memo(function CategoryFilterModal({
     for (const cat of categories) {
       const catKey = cat?.slug || cat?.name || String(cat);
       const catName = cat?.name || cat?.title || catKey;
-      const itemObj = { key: catKey, name: catName };
+      const itemObj = {
+        key: catKey,
+        name: catName,
+        icon: cat?.icon,
+        slug: cat?.slug,
+      };
 
       if (
         normalizedSelected &&
@@ -60,17 +161,19 @@ const CategoryFilterModal = React.memo(function CategoryFilterModal({
     return [allOption, ...others];
   }, [categories, selectedCategory]);
 
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
       transparent={true}
-      animationType="fade"
+      animationType="none"
       statusBarTranslucent={true}
       navigationBarTranslucent={true}
       onRequestClose={handleCloseModal}
     >
       <TouchableWithoutFeedback onPress={handleCloseModal}>
-        <View style={filterModalStyles.overlay}>
+        <Animated.View style={[filterModalStyles.overlay, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback>
             <Animated.View
               style={[
@@ -137,11 +240,11 @@ const CategoryFilterModal = React.memo(function CategoryFilterModal({
                       ]}
                     >
                       <View style={filterModalStyles.rowCenter}>
-                        <Feather
-                          name={item.key === null ? "compass" : "grid"}
-                          size={16}
+                        <MaterialCommunityIcons
+                          name={resolveCategoryIcon(item)}
+                          size={18}
                           color={isSelected ? currentTheme.accent : !isDarkMode ? "#000000" : "#FFFFFF"}
-                          style={filterModalStyles.marginRight6}
+                          style={filterModalStyles.marginRight10}
                         />
                         <Text
                           style={[
@@ -165,7 +268,7 @@ const CategoryFilterModal = React.memo(function CategoryFilterModal({
               </ScrollView>
             </Animated.View>
           </TouchableWithoutFeedback>
-        </View>
+        </Animated.View>
       </TouchableWithoutFeedback>
     </Modal>
   );

@@ -21,6 +21,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
   cardHeight,
   cardInfoBottom,
   cardInfoHeight,
+  isMinimalist,
 }) {
   const hasImage = Boolean(item.image_url && typeof item.image_url === "string" && item.image_url.startsWith("http"));
   const isLocal = !hasImage && Boolean(item.isLocalSource && item.image_url);
@@ -45,7 +46,8 @@ const HomeCardItem = React.memo(function HomeCardItem({
       activeOpacity={0.9}
       style={[
         styles.card,
-        getCardDimensionsStyle(cardWidth, cardHeight, item.avgColor),
+        isDarkMode ? styles.cardDark : styles.cardLight,
+        getCardDimensionsStyle(cardWidth, cardHeight, isDarkMode ? item.avgColor : undefined),
       ]}
       onPress={() => navigation.navigate("Details", { item, currentTheme })}
     >
@@ -63,8 +65,12 @@ const HomeCardItem = React.memo(function HomeCardItem({
             isDarkMode ? styles.cardImageFallbackDark : styles.cardImageFallbackLight,
           ]}
         >
-          <Ionicons name="image-outline" size={48} color="rgba(255, 255, 255, 0.35)" />
-          <Text style={styles.cardFallbackText}>
+          <Ionicons
+            name="image-outline"
+            size={48}
+            color={isDarkMode ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.25)"}
+          />
+          <Text style={[styles.cardFallbackText, !isDarkMode && { color: "rgba(0, 0, 0, 0.45)" }]}>
             Sem imagens disponível.
           </Text>
         </View>
@@ -73,9 +79,16 @@ const HomeCardItem = React.memo(function HomeCardItem({
         style={[
           styles.cardInfo,
           getCardInfoPosition(cardInfoBottom, cardInfoHeight),
+          isMinimalist
+            ? isDarkMode
+              ? styles.cardInfoMinimalistDark
+              : styles.cardInfoMinimalist
+            : isDarkMode
+            ? styles.cardInfoDark
+            : styles.cardInfoLight,
         ]}
       >
-        {Platform.OS === "android" && !isDarkMode && cardImgSource && (
+        {Platform.OS === "android" && !isDarkMode && !isMinimalist && cardImgSource && (
           <Image
             source={cardImgSource}
             blurRadius={4}
@@ -89,11 +102,17 @@ const HomeCardItem = React.memo(function HomeCardItem({
         <View
           style={[
             styles.overlayBase,
-            isDarkMode ? styles.overlayDark : styles.overlayLight,
+            isMinimalist
+              ? isDarkMode
+                ? styles.overlayMinimalistDark
+                : styles.overlayMinimalist
+              : isDarkMode
+              ? styles.overlayDark
+              : styles.overlayLight,
           ]}
         />
 
-        {Platform.OS !== "android" && !isDarkMode && (
+        {Platform.OS !== "android" && !isDarkMode && !isMinimalist && (
           <BlurView
             intensity={20}
             tint="light"
@@ -102,16 +121,29 @@ const HomeCardItem = React.memo(function HomeCardItem({
         )}
 
         <View style={styles.cardInfoInner}>
-          <View style={styles.cardInfoLeft}>
+          <View
+            style={[
+              styles.cardInfoLeft,
+              hasRating && styles.cardInfoLeftWithRating,
+            ]}
+          >
             <Text
-              style={isCompactInfo ? styles.cardTitleCompact : styles.cardTitle}
+              style={[
+                isCompactInfo ? styles.cardTitleCompact : styles.cardTitle,
+                isMinimalist &&
+                  (isDarkMode ? styles.cardTitleMinimalistDark : styles.cardTitleMinimalist),
+              ]}
               numberOfLines={2}
               ellipsizeMode="tail"
             >
               {item.title}
             </Text>
             <Text
-              style={isCompactInfo ? styles.cardLocationCompact : styles.cardLocation}
+              style={[
+                isCompactInfo ? styles.cardLocationCompact : styles.cardLocation,
+                isMinimalist &&
+                  (isDarkMode ? styles.cardLocationMinimalistDark : styles.cardLocationMinimalist),
+              ]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -122,7 +154,12 @@ const HomeCardItem = React.memo(function HomeCardItem({
             <View
               style={[
                 styles.ratingContainer,
-                !isDarkMode && styles.cardInfoLightBg,
+                isCompactInfo && styles.ratingContainerCompact,
+                isMinimalist
+                  ? isDarkMode
+                    ? styles.ratingContainerMinimalistDark
+                    : styles.ratingContainerMinimalist
+                  : !isDarkMode && styles.cardInfoLightBg,
               ]}
             >
               <Ionicons name="star" size={14} color={currentTheme?.accent || "#FFD700"} />
