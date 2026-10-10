@@ -22,14 +22,15 @@ import {
 
 export default function BottomTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
-  const { currentTheme, isDarkMode } = useTheme();
+  const { currentTheme, isDarkMode, aestheticMode } = useTheme();
   const activeAccent = currentTheme.accent;
 
   const currentRouteName = state.routes[state.index]?.name;
   const isHome = currentRouteName === "Home";
   const isExplore = currentRouteName === "Explore";
   const isFavorites = currentRouteName === "Favorites";
-  const isTranslucentTab = isHome || isExplore;
+  const isMinimalist = aestheticMode === "minimalista";
+  const isTranslucentTab = !isMinimalist && (isHome || isExplore);
 
   const exploreRoute = state.routes.find((r) => r.name === "Explore");
   const [isExploreSearchVisible, setIsExploreSearchVisible] = useState(
@@ -179,7 +180,11 @@ export default function BottomTabBar({ state, navigation }) {
       style={[
         styles.bottomTab,
         {
-          backgroundColor: isTranslucentTab
+          backgroundColor: isMinimalist
+            ? isDarkMode
+              ? "#141414"
+              : "#F5F5F7"
+            : isTranslucentTab
             ? "transparent"
             : isDarkMode
             ? "#000000"
@@ -214,7 +219,7 @@ export default function BottomTabBar({ state, navigation }) {
           />
         </View>
       )}
-      {isExplore && (
+      {!isMinimalist && isExplore && (
         <Animated.View
           pointerEvents="none"
           style={[
@@ -260,7 +265,8 @@ export default function BottomTabBar({ state, navigation }) {
               isFocused && [
                 styles.activeTab,
                 {
-                  borderColor: activeAccent,
+                  borderWidth: 0,
+                  borderColor: "transparent",
                   backgroundColor: activeAccent,
                 },
               ],
@@ -279,7 +285,11 @@ export default function BottomTabBar({ state, navigation }) {
                 color={
                   isFocused
                     ? "#FFFFFF"
-                    : isDarkMode || isHome || isFavorites || isExplore
+                    : isDarkMode
+                    ? "#FFFFFF"
+                    : isMinimalist
+                    ? "#000000"
+                    : isHome || isFavorites || isExplore
                     ? "#FFFFFF"
                     : "#000000"
                 }
