@@ -6,7 +6,7 @@ import {
   Dimensions,
   Easing,
 } from "react-native";
-import { ALL_COUNTRIES } from "../data/countries";
+import { ALL_COUNTRIES } from "../../../shared/data/countries";
 
 const { height: WINDOW_HEIGHT } = Dimensions.get("window");
 const SCREEN_HEIGHT = Math.max(

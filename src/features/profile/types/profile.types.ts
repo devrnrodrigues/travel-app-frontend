@@ -55,10 +55,14 @@ export interface EditProfileModalProps {
   setNationality: (nationality: string) => void;
   bio: string;
   setBio: (bio: string) => void;
-  onSave: () => Promise<void>;
-  isSaving: boolean;
+  onSave?: () => Promise<void>;
+  isSaving?: boolean;
   currentTheme: HomeTheme;
   isDarkMode: boolean;
+  galleryCount?: number | string;
+  onGalleryCountChange?: (count: number | string) => void;
+  aestheticMode?: "minimalista" | "decorativa";
+  onAestheticModeChange?: (mode: "minimalista" | "decorativa") => void;
 }
 
 export interface LogoutConfirmationModalProps {

@@ -68,6 +68,8 @@ export default function ProfileScreen({ navigation }) {
     setBio,
     galleryCount,
     setGalleryCount,
+    aestheticMode,
+    setAestheticMode,
     hideFavorites,
     setHideFavorites,
     refreshing,
@@ -211,6 +213,29 @@ export default function ProfileScreen({ navigation }) {
     [user, setGalleryCount]
   );
 
+  const handleAestheticModeChange = useCallback(
+    async (mode) => {
+      setAestheticMode(mode);
+      try {
+        await AsyncStorage.setItem("@profile_aesthetic_mode", mode);
+        if (user) {
+          const storedProfileJson = await AsyncStorage.getItem(
+            `profile_${user.id}`
+          );
+          const parsed = storedProfileJson ? JSON.parse(storedProfileJson) : {};
+          parsed.aestheticMode = mode;
+          await AsyncStorage.setItem(
+            `profile_${user.id}`,
+            JSON.stringify(parsed)
+          );
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [user, setAestheticMode]
+  );
+
   const handleToggleHideFavorites = useCallback(async () => {
     const nextVal = !hideFavorites;
     setHideFavorites(nextVal);
@@ -238,11 +263,15 @@ export default function ProfileScreen({ navigation }) {
 
       await AsyncStorage.setItem(
         `profile_${user.id}`,
-        JSON.stringify({ nationality, bio, galleryCount })
+        JSON.stringify({ nationality, bio, galleryCount, aestheticMode })
       );
       await AsyncStorage.setItem(
         "@profile_gallery_count",
         String(galleryCount)
+      );
+      await AsyncStorage.setItem(
+        "@profile_aesthetic_mode",
+        aestheticMode
       );
 
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
@@ -252,7 +281,7 @@ export default function ProfileScreen({ navigation }) {
     } finally {
       setLoadingData(false);
     }
-  }, [user, name, bio, nationality, galleryCount, updateUser]);
+  }, [user, name, bio, nationality, galleryCount, aestheticMode, updateUser]);
 
   useFocusEffect(
     useCallback(() => {
@@ -271,7 +300,12 @@ export default function ProfileScreen({ navigation }) {
           }
         }
       });
-    }, [setHideFavorites, setGalleryCount])
+      AsyncStorage.getItem("@profile_aesthetic_mode").then((val) => {
+        if (val) {
+          setAestheticMode(val);
+        }
+      });
+    }, [setHideFavorites, setGalleryCount, setAestheticMode])
   );
 
   const refreshControl = canScroll ? (
@@ -376,6 +410,8 @@ export default function ProfileScreen({ navigation }) {
           setBio={setBio}
           galleryCount={galleryCount}
           onGalleryCountChange={handleGalleryCountChange}
+          aestheticMode={aestheticMode}
+          onAestheticModeChange={handleAestheticModeChange}
           hideFavorites={hideFavorites}
           onToggleHideFavorites={handleToggleHideFavorites}
           onSaveProfile={handleSaveProfile}

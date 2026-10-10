@@ -1,29 +1,43 @@
 import React from "react";
 import { View } from "react-native";
 import { useShimmerAnimation, ShimmerOverlay } from "../../../shared/components/Skeleton";
+import { useTheme } from "../../../theme/ThemeContext";
 import styles, { getPillWidthStyle } from "../styles/countryPillSkeleton.styles";
 
 export function CountryPillSkeleton({ isDarkMode, width = 110 }) {
   const shimmerAnim = useShimmerAnimation(1800);
+  let isMinimalist = false;
+  try {
+    const theme = useTheme();
+    isMinimalist = !isDarkMode && theme?.aestheticMode === "minimalista";
+  } catch {}
 
   return (
     <View
       style={[
         styles.pill,
-        !isDarkMode && styles.pillLight,
+        isMinimalist ? styles.pillMinimalist : (!isDarkMode && styles.pillLight),
         getPillWidthStyle(width),
       ]}
     >
       <View
         style={[
           styles.flagIcon,
-          isDarkMode ? styles.flagIconDark : styles.flagIconLight,
+          isDarkMode
+            ? styles.flagIconDark
+            : isMinimalist
+            ? styles.flagIconMinimalist
+            : styles.flagIconLight,
         ]}
       />
       <View
         style={[
           styles.labelBar,
-          isDarkMode ? styles.labelBarDark : styles.labelBarLight,
+          isDarkMode
+            ? styles.labelBarDark
+            : isMinimalist
+            ? styles.labelBarMinimalist
+            : styles.labelBarLight,
         ]}
       />
       <ShimmerOverlay

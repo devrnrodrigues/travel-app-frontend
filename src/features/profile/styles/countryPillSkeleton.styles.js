@@ -21,6 +21,9 @@ export default StyleSheet.create({
   pillLight: {
     backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
+  pillMinimalist: {
+    backgroundColor: "#F3F4F6",
+  },
   flagIcon: {
     width: 20,
     height: 14,
@@ -33,6 +36,9 @@ export default StyleSheet.create({
   flagIconLight: {
     backgroundColor: "rgba(0, 0, 0, 0.12)",
   },
+  flagIconMinimalist: {
+    backgroundColor: "#E5E7EB",
+  },
   labelBar: {
     flex: 1,
     height: 14,
@@ -43,6 +49,9 @@ export default StyleSheet.create({
   },
   labelBarLight: {
     backgroundColor: "rgba(0, 0, 0, 0.12)",
+  },
+  labelBarMinimalist: {
+    backgroundColor: "#CBD5E1",
   },
 });
 

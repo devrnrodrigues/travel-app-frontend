@@ -5,9 +5,11 @@ import { getProfileApi } from "../api/profileService";
 import { getCollectionsApi } from "../api/collectionService";
 import { getFavoritesApi } from "../../../shared/api/favoriteApi";
 import { useAuth } from "../../../context/AuthContext";
+import { useTheme } from "../../../theme/ThemeContext";
 
 export default function useProfileData() {
   const { user, updateUser } = useAuth();
+  const { aestheticMode, setAestheticMode } = useTheme();
   const queryClient = useQueryClient();
 
   const [name, setName] = useState(user?.fullName || "");
@@ -127,6 +129,8 @@ export default function useProfileData() {
     setBio,
     galleryCount,
     setGalleryCount,
+    aestheticMode,
+    setAestheticMode,
     hideFavorites,
     setHideFavorites,
     refreshing,

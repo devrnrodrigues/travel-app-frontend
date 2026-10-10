@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   FlatList,
   ActivityIndicator,
   Image,
+  Platform,
+  UIManager,
+  LayoutAnimation,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AnimatedProfileInput from "./AnimatedProfileInput";
@@ -49,6 +52,8 @@ const EditProfileModal = memo(function EditProfileModal({
   setBio,
   galleryCount,
   onGalleryCountChange,
+  aestheticMode = "minimalista",
+  onAestheticModeChange,
   hideFavorites,
   onToggleHideFavorites,
   onSaveProfile,
@@ -360,6 +365,98 @@ const EditProfileModal = memo(function EditProfileModal({
                     }
                   />
                 </TouchableOpacity>
+
+                <Text
+                  style={[
+                    styles.label,
+                    !isDarkMode && styles.labelLight,
+                    styles.labelMarginTop,
+                  ]}
+                >
+                  Estética
+                </Text>
+                <View
+                  style={[
+                    styles.aestheticSelectorTrack,
+                    !isDarkMode && styles.aestheticSelectorTrackLight,
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.aestheticSelectorOption,
+                      aestheticMode === "minimalista" && [
+                        styles.aestheticSelectorOptionActive,
+                        { backgroundColor: currentTheme.accent },
+                      ],
+                    ]}
+                    activeOpacity={0.75}
+                    onPress={() =>
+                      onAestheticModeChange &&
+                      onAestheticModeChange("minimalista")
+                    }
+                  >
+                    <Ionicons
+                      name="cube-outline"
+                      size={16}
+                      color={
+                        aestheticMode === "minimalista"
+                          ? "#000000"
+                          : !isDarkMode
+                          ? "rgba(0, 0, 0, 0.6)"
+                          : "rgba(255, 255, 255, 0.6)"
+                      }
+                      style={styles.aestheticSelectorIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.aestheticSelectorText,
+                        !isDarkMode && styles.aestheticSelectorTextLight,
+                        aestheticMode === "minimalista" &&
+                          styles.aestheticSelectorTextActive,
+                      ]}
+                    >
+                      Minimalista
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.aestheticSelectorOption,
+                      aestheticMode === "decorativa" && [
+                        styles.aestheticSelectorOptionActive,
+                        { backgroundColor: currentTheme.accent },
+                      ],
+                    ]}
+                    activeOpacity={0.75}
+                    onPress={() =>
+                      onAestheticModeChange &&
+                      onAestheticModeChange("decorativa")
+                    }
+                  >
+                    <Ionicons
+                      name="color-palette-outline"
+                      size={16}
+                      color={
+                        aestheticMode === "decorativa"
+                          ? "#000000"
+                          : !isDarkMode
+                          ? "rgba(0, 0, 0, 0.6)"
+                          : "rgba(255, 255, 255, 0.6)"
+                      }
+                      style={styles.aestheticSelectorIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.aestheticSelectorText,
+                        !isDarkMode && styles.aestheticSelectorTextLight,
+                        aestheticMode === "decorativa" &&
+                          styles.aestheticSelectorTextActive,
+                      ]}
+                    >
+                      Decorativa
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
                 <Text
                   style={[

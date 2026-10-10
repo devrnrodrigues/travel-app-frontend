@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { Alert, Animated, Easing } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { updateProfileApi } from "../api/profileService";
-import { ALL_COUNTRIES } from "../data/countries";
+import { ALL_COUNTRIES } from "../../../shared/data/countries";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function useProfileEdit({

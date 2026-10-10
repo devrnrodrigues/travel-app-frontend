@@ -1346,6 +1346,50 @@ export const dialogStyles = StyleSheet.create({
   addCollectionTriggerBtnNoTopMargin: {
     marginTop: 0,
   },
+  aestheticSelectorTrack: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.07)",
+    borderRadius: 14,
+    padding: 4,
+    gap: 4,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  aestheticSelectorTrackLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+  },
+  aestheticSelectorOption: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: "transparent",
+  },
+  aestheticSelectorOptionActive: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  aestheticSelectorIcon: {
+    marginRight: 6,
+  },
+  aestheticSelectorText: {
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.65)",
+  },
+  aestheticSelectorTextLight: {
+    color: "rgba(0, 0, 0, 0.6)",
+  },
+  aestheticSelectorTextActive: {
+    color: "#000000",
+    fontWeight: "700",
+  },
   labelMarginTop: {
     marginTop: 14,
   },
@@ -1665,3 +1709,5 @@ export const getAddCollectionSaveBtnDynamicStyle = (accentColor, isDisabled) => 
 export const getSaveButtonStyle = (accentColor) => ({
   backgroundColor: accentColor,
 });
+
+
