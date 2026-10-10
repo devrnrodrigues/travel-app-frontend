@@ -17,6 +17,9 @@ export const exploreHeaderStyles = StyleSheet.create({
   headerBarLight: {
     backgroundColor: "rgba(100, 100, 100, 1)",
   },
+  headerBarMinimalist: {
+    backgroundColor: "#FFFFFF",
+  },
   searchBarRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -37,6 +40,9 @@ export const exploreHeaderStyles = StyleSheet.create({
   },
   searchBarInputLight: {
     backgroundColor: "rgba(255, 255, 255, 0.75)",
+  },
+  searchBarInputMinimalist: {
+    backgroundColor: "#F5F5F7",
   },
   searchBarInputFocusedDark: {
     backgroundColor: "#1F1F1F",
@@ -79,6 +85,9 @@ export const exploreHeaderStyles = StyleSheet.create({
   },
   photoIconButtonLight: {
     backgroundColor: "rgba(255, 255, 255, 0.75)",
+  },
+  photoIconButtonMinimalist: {
+    backgroundColor: "#F5F5F7",
   },
 });
 

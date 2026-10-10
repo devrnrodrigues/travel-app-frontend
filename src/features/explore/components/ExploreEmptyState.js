@@ -1,6 +1,10 @@
 import React from "react";
 import StateFeedbackView from "../../../shared/components/StateFeedbackView";
 
+const notFoundImage = require("../../../../assets/images/not-found.png");
+const errorImage = require("../../../../assets/images/error.png");
+const noConnectionImage = require("../../../../assets/images/no-connection.png");
+
 export const ExploreEmptyState = React.memo(function ExploreEmptyState({
   isError,
   error,
@@ -13,12 +17,13 @@ export const ExploreEmptyState = React.memo(function ExploreEmptyState({
     if (error?.status === 404) {
       return (
         <StateFeedbackView
-          icon="alert-circle-outline"
+          imageSource={notFoundImage}
           title="Destinos não encontrados"
           message="Não foi possível localizar os destinos solicitados."
           buttonText="Tentar novamente"
           onButtonPress={onRetry}
           isDarkMode={isDarkMode}
+          showDarkFilter={false}
         />
       );
     }
@@ -26,24 +31,26 @@ export const ExploreEmptyState = React.memo(function ExploreEmptyState({
     if (error?.status >= 500) {
       return (
         <StateFeedbackView
-          icon="server-outline"
+          imageSource={errorImage}
           title="Erro ao carregar destinos"
           message="Não conseguimos processar a listagem de destinos agora. Tente de novo em instantes."
           buttonText="Tentar novamente"
           onButtonPress={onRetry}
           isDarkMode={isDarkMode}
+          showDarkFilter={false}
         />
       );
     }
 
     return (
       <StateFeedbackView
-        icon="cloud-offline-outline"
+        imageSource={noConnectionImage}
         title="Sem conexão"
         message="Não foi possível carregar os destinos. Verifique sua internet para continuar explorando."
         buttonText="Tentar novamente"
         onButtonPress={onRetry}
         isDarkMode={isDarkMode}
+        showDarkFilter={false}
       />
     );
   }
@@ -52,7 +59,7 @@ export const ExploreEmptyState = React.memo(function ExploreEmptyState({
 
   return (
     <StateFeedbackView
-      icon="search-outline"
+      imageSource={notFoundImage}
       title="Nenhum destino encontrado"
       message={
         hasSearch

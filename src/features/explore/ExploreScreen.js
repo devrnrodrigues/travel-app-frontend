@@ -24,7 +24,8 @@ const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0,
 const GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
 
 export default function Explore({ navigation }) {
-  const { currentTheme, isDarkMode } = useTheme();
+  const { currentTheme, isDarkMode, aestheticMode } = useTheme();
+  const isMinimalist = !isDarkMode && aestheticMode === "minimalista";
   const insets = useSafeAreaInsets();
   const flatListRef = useRef(null);
 
@@ -115,6 +116,108 @@ export default function Explore({ navigation }) {
     isDarkMode ? styles.bgDark : styles.bgLight,
   ], [headerHeight, bottomPadding, isDarkMode, destinations.length]);
 
+  const isPlainBg = isMinimalist || isError;
+  const isWhiteBg = isMinimalist || (Boolean(isError) && !isDarkMode);
+
+  const bodyContent = (
+    <View style={styles.container}>
+      <StatusBar
+        barStyle={isWhiteBg ? "dark-content" : "light-content"}
+        backgroundColor="transparent"
+        translucent
+      />
+
+      <ExploreHeader
+        headerPaddingTop={headerPaddingTop}
+        isDarkMode={isDarkMode}
+        isMinimalist={isMinimalist}
+        searchTranslateY={searchTranslateY}
+        searchOpacity={searchOpacity}
+        isSearchBarVisible={isSearchBarVisible}
+        isSearchFocused={isSearchFocused}
+        currentTheme={currentTheme}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        isSearching={isSearching}
+        searchInputRef={searchInputRef}
+        setIsSearchFocused={setIsSearchFocused}
+      />
+
+      {isShowingSkeleton ? (
+        <ScrollView
+          style={styles.flex1}
+          contentContainerStyle={dynamicContentContainerStyle}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+        >
+          <ExploreSkeletonGrid isDarkMode={isDarkMode} currentTheme={currentTheme} />
+        </ScrollView>
+      ) : (
+        <FadeInView duration={350} style={styles.flex1}>
+          <FlatList
+            ref={flatListRef}
+            style={styles.flex1}
+            data={destinations}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            numColumns={3}
+            columnWrapperStyle={styles.columnWrapper}
+            contentContainerStyle={dynamicContentContainerStyle}
+            showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            onScrollBeginDrag={handleScrollBeginDrag}
+            onScrollEndDrag={handleScrollEnd}
+            onMomentumScrollEnd={handleScrollEnd}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            scrollEventThrottle={16}
+            onEndReached={loadNextPage}
+            onEndReachedThreshold={0.5}
+            windowSize={7}
+            maxToRenderPerBatch={12}
+            initialNumToRender={12}
+            removeClippedSubviews={Platform.OS === "android"}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={currentTheme?.accent || "#4CAF50"}
+                colors={[currentTheme?.accent || "#4CAF50"]}
+                progressViewOffset={headerHeight}
+              />
+            }
+            ListEmptyComponent={
+              <ExploreEmptyState
+                isError={isError}
+                error={error}
+                searchFilter={normalizedSearch}
+                onRetry={handleRefresh}
+                onClearSearch={() => setSearchQuery("")}
+                accentColor={currentTheme?.accent || "#4CAF50"}
+                isDarkMode={isDarkMode}
+              />
+            }
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={styles.listFooterWrapper}>
+                  <ExploreSkeletonGrid isDarkMode={isDarkMode} currentTheme={currentTheme} rows={1} />
+                </View>
+              ) : null
+            }
+          />
+        </FadeInView>
+      )}
+    </View>
+  );
+
+  if (isPlainBg) {
+    return (
+      <View style={isWhiteBg ? styles.screenWhiteBg : styles.screenDarkBg}>
+        {bodyContent}
+      </View>
+    );
+  }
+
   return (
     <ImageBackground source={bgSource} style={styles.screenDarkBg} resizeMode="cover">
       <LinearGradient
@@ -122,93 +225,7 @@ export default function Explore({ navigation }) {
         locations={GRADIENT_LOCATIONS}
         style={styles.flex1}
       >
-        <View style={styles.container}>
-          <StatusBar
-            barStyle="light-content"
-            backgroundColor="transparent"
-            translucent
-          />
-
-          <ExploreHeader
-            headerPaddingTop={headerPaddingTop}
-            isDarkMode={isDarkMode}
-            searchTranslateY={searchTranslateY}
-            searchOpacity={searchOpacity}
-            isSearchBarVisible={isSearchBarVisible}
-            isSearchFocused={isSearchFocused}
-            currentTheme={currentTheme}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            isSearching={isSearching}
-            searchInputRef={searchInputRef}
-            setIsSearchFocused={setIsSearchFocused}
-          />
-
-          {isShowingSkeleton ? (
-            <ScrollView
-              style={styles.flex1}
-              contentContainerStyle={dynamicContentContainerStyle}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false}
-            >
-              <ExploreSkeletonGrid isDarkMode={isDarkMode} currentTheme={currentTheme} />
-            </ScrollView>
-          ) : (
-            <FadeInView duration={350} style={styles.flex1}>
-              <FlatList
-                ref={flatListRef}
-                style={styles.flex1}
-                data={destinations}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                numColumns={3}
-                columnWrapperStyle={styles.columnWrapper}
-                contentContainerStyle={dynamicContentContainerStyle}
-                showsVerticalScrollIndicator={false}
-                onScroll={handleScroll}
-                onScrollBeginDrag={handleScrollBeginDrag}
-                onScrollEndDrag={handleScrollEnd}
-                onMomentumScrollEnd={handleScrollEnd}
-                keyboardDismissMode="on-drag"
-                keyboardShouldPersistTaps="handled"
-                scrollEventThrottle={16}
-                onEndReached={loadNextPage}
-                onEndReachedThreshold={0.5}
-                windowSize={7}
-                maxToRenderPerBatch={12}
-                initialNumToRender={12}
-                removeClippedSubviews={Platform.OS === "android"}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={handleRefresh}
-                    tintColor={currentTheme?.accent || "#4CAF50"}
-                    colors={[currentTheme?.accent || "#4CAF50"]}
-                    progressViewOffset={headerHeight}
-                  />
-                }
-                ListEmptyComponent={
-                  <ExploreEmptyState
-                    isError={isError}
-                    error={error}
-                    searchFilter={normalizedSearch}
-                    onRetry={handleRefresh}
-                    onClearSearch={() => setSearchQuery("")}
-                    accentColor={currentTheme?.accent || "#4CAF50"}
-                    isDarkMode={isDarkMode}
-                  />
-                }
-                ListFooterComponent={
-                  loadingMore ? (
-                    <View style={styles.listFooterWrapper}>
-                      <ExploreSkeletonGrid isDarkMode={isDarkMode} currentTheme={currentTheme} rows={1} />
-                    </View>
-                  ) : null
-                }
-              />
-            </FadeInView>
-          )}
-        </View>
+        {bodyContent}
       </LinearGradient>
     </ImageBackground>
   );

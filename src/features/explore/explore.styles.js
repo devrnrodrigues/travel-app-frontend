@@ -15,7 +15,11 @@ export const exploreStyles = StyleSheet.create({
   },
   screenDarkBg: {
     flex: 1,
-    backgroundColor: "#0A0A0A",
+    backgroundColor: "#000000",
+  },
+  screenWhiteBg: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
   },
   flex1: {
     flex: 1,
@@ -56,7 +60,7 @@ export const exploreStyles = StyleSheet.create({
     backgroundColor: "#000000",
   },
   bgLight: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
   },
 });
 

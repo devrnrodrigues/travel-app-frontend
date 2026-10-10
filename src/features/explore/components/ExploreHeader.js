@@ -23,6 +23,7 @@ export const ExploreHeader = React.memo(function ExploreHeader({
   isSearching,
   searchInputRef,
   setIsSearchFocused,
+  isMinimalist,
 }) {
   const accentColor = currentTheme?.accent || "#4CAF50";
   const placeholderColor = isDarkMode ? "#8E8E93" : "#767676";
@@ -32,7 +33,11 @@ export const ExploreHeader = React.memo(function ExploreHeader({
       pointerEvents={isSearchBarVisible || isSearchFocused ? "auto" : "none"}
       style={[
         styles.headerBar,
-        isDarkMode ? styles.headerBarDark : styles.headerBarLight,
+        isMinimalist
+          ? styles.headerBarMinimalist
+          : isDarkMode
+          ? styles.headerBarDark
+          : styles.headerBarLight,
         {
           paddingTop: headerPaddingTop,
           transform: [{ translateY: searchTranslateY }],
@@ -44,12 +49,18 @@ export const ExploreHeader = React.memo(function ExploreHeader({
         <Pressable
           style={[
             styles.searchBarInputWrapper,
-            isDarkMode ? styles.searchBarInputDark : styles.searchBarInputLight,
+            isMinimalist
+              ? styles.searchBarInputMinimalist
+              : isDarkMode
+              ? styles.searchBarInputDark
+              : styles.searchBarInputLight,
             isSearchFocused && [
               { borderColor: accentColor },
-              isDarkMode
-                ? styles.searchBarInputFocusedDark
-                : styles.searchBarInputFocusedLight,
+              !isMinimalist && (
+                isDarkMode
+                  ? styles.searchBarInputFocusedDark
+                  : styles.searchBarInputFocusedLight
+              ),
             ],
           ]}
           onPress={() => searchInputRef.current?.focus()}
@@ -104,7 +115,11 @@ export const ExploreHeader = React.memo(function ExploreHeader({
         <TouchableOpacity
           style={[
             styles.photoIconButton,
-            isDarkMode ? styles.photoIconButtonDark : styles.photoIconButtonLight,
+            isMinimalist
+              ? styles.photoIconButtonMinimalist
+              : isDarkMode
+              ? styles.photoIconButtonDark
+              : styles.photoIconButtonLight,
           ]}
           activeOpacity={0.7}
           onPress={() => {}}
