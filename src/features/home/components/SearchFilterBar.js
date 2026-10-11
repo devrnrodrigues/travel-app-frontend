@@ -9,6 +9,7 @@ import styles, {
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
 
 const SearchFilterBar = React.memo(function SearchFilterBar({
+  isFilterVisible,
   filterAnim,
   selectedCategory,
   selectedCategoryName,
@@ -28,10 +29,10 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
   onTogglePriceSort,
   onToggleRatingSort,
 }) {
-  const animatedHeight = filterAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 50] });
-  const animatedMarginBottom = filterAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 15] });
-  const animatedOpacity = filterAnim.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.4, 1] });
-  const animatedTranslateY = filterAnim.interpolate({ inputRange: [0, 1], outputRange: [-14, 0] });
+  const animatedTranslateY = filterAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-10, 0],
+  });
 
   const inactiveBtnStyle = isMinimalist
     ? isDarkMode
@@ -50,22 +51,27 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
     : "#FFFFFF";
 
   return (
-    <Animated.View
-      style={getFilterAnimatedStyle(
-        animatedHeight,
-        animatedMarginBottom,
-        animatedOpacity,
-        animatedTranslateY
-      )}
+    <View
+      style={[
+        styles.filterBarWrapper,
+        isFilterVisible ? styles.filterBarOpen : styles.filterBarClosed,
+      ]}
+      pointerEvents={isFilterVisible ? "auto" : "none"}
     >
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        onScrollBeginDrag={onDismissSearchFocus}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.filterCategoriesContent}
-        style={styles.searchFilterRow}
+      <Animated.View
+        style={[
+          styles.flex1,
+          getFilterAnimatedStyle(filterAnim, animatedTranslateY),
+        ]}
       >
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          onScrollBeginDrag={onDismissSearchFocus}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.filterCategoriesContent}
+          style={styles.searchFilterRow}
+        >
         <TouchableOpacity
           onPress={onOpenCategoryModal}
           activeOpacity={0.75}
@@ -179,6 +185,7 @@ const SearchFilterBar = React.memo(function SearchFilterBar({
         </TouchableOpacity>
       </ScrollView>
     </Animated.View>
+  </View>
   );
 });
 

@@ -18,7 +18,7 @@ const SearchModalBackground = React.memo(function SearchModalBackground({
         style={[
           styles.screenCover,
           getFadeOpacityStyle(searchFadeAnim),
-          { backgroundColor: isDarkMode ? "#141414" : "#FFFFFF" },
+          { backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF" },
         ]}
         pointerEvents="none"
       />

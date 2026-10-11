@@ -35,7 +35,7 @@ const SearchModalHeader = React.memo(function SearchModalHeader({
     inputRange: [0, 1],
     outputRange: isMinimalist
       ? isDarkMode
-        ? ["#000000", "#000000"]
+        ? ["#161616", "#161616"]
         : ["#F3F4F6", "#F3F4F6"]
       : !isDarkMode
       ? ["rgba(100, 100, 100, 0.82)", "rgba(100, 100, 100, 1)"]
@@ -54,7 +54,12 @@ const SearchModalHeader = React.memo(function SearchModalHeader({
 
   return (
     <View style={styles.searchHeaderRow}>
-      <TouchableOpacity onPress={onToggleFilter} style={styles.searchBackBtn}>
+      <TouchableOpacity
+        onPress={onToggleFilter}
+        style={styles.searchBackBtn}
+        hitSlop={HIT_SLOP_10}
+        activeOpacity={0.7}
+      >
         <Animated.View style={getFilterIconAnimatedStyle(filterIconRotate, filterIconScale)}>
           <Feather
             name="sliders"

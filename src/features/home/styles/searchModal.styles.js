@@ -82,7 +82,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   filterBtnInactiveMinimalistDark: {
-    backgroundColor: "#000000",
+    backgroundColor: "#161616",
     borderWidth: 0,
   },
   filterBtnActiveText: {
@@ -144,8 +144,16 @@ export default StyleSheet.create({
   flex1: {
     flex: 1,
   },
-  fullAbsolute: {
-    ...StyleSheet.absoluteFillObject,
+  filterBarWrapper: {
+    overflow: "hidden",
+  },
+  filterBarOpen: {
+    height: 48,
+    marginBottom: 14,
+  },
+  filterBarClosed: {
+    height: 0,
+    marginBottom: 0,
   },
 });
 
@@ -154,12 +162,9 @@ export const getSearchInputAnimatedStyle = (borderColor, backgroundColor) => ({
   backgroundColor,
 });
 
-export const getFilterAnimatedStyle = (height, marginBottom, opacity, translateY) => ({
-  height,
-  marginBottom,
+export const getFilterAnimatedStyle = (opacity, translateY) => ({
   opacity,
   transform: [{ translateY }],
-  overflow: "hidden",
 });
 
 export const getFilterButtonActiveBg = (accentColor) => ({

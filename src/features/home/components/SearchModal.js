@@ -291,6 +291,7 @@ export default function SearchModal({
             />
 
             <SearchFilterBar
+              isFilterVisible={isFilterVisible}
               filterAnim={filterAnim}
               selectedCategory={selectedCategory}
               selectedCategoryName={selectedCategoryName}

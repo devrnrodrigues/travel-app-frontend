@@ -1,10 +1,29 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Animated, Keyboard, Easing, Platform, Dimensions } from "react-native";
+import { Animated, Keyboard, Easing, Platform, Dimensions, LayoutAnimation, UIManager } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getDestinations } from "../../../shared/api/destinationApi";
 
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 const SEARCH_PAGE_SIZE = 12;
 const ENTRANCE_OFFSET = -35;
+
+const FILTER_LAYOUT_ANIMATION = {
+  duration: 220,
+  create: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+  update: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+  },
+  delete: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+};
 
 export default function useSearchModal({
   visible,
@@ -178,29 +197,45 @@ export default function useSearchModal({
     handleSearchBlur();
   }, [handleSearchBlur]);
 
+  const isFilterAnimating = useRef(false);
+
   const toggleFilter = useCallback(() => {
-    dismissSearchFocus();
+    if (isSearchFocused) {
+      dismissSearchFocus();
+    }
+
+    if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+
+    if (isFilterAnimating.current) return;
+    isFilterAnimating.current = true;
+
     if (isFilterVisible) {
+      LayoutAnimation.configureNext(FILTER_LAYOUT_ANIMATION);
+      setIsFilterVisible(false);
       Animated.timing(filterAnim, {
         toValue: 0,
         duration: 200,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        useNativeDriver: false,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
       }).start(() => {
-        setIsFilterVisible(false);
+        isFilterAnimating.current = false;
       });
     } else {
+      LayoutAnimation.configureNext(FILTER_LAYOUT_ANIMATION);
       setIsFilterVisible(true);
       filterAnim.setValue(0);
-      Animated.spring(filterAnim, {
+      Animated.timing(filterAnim, {
         toValue: 1,
-        damping: 20,
-        stiffness: 220,
-        mass: 0.8,
-        useNativeDriver: false,
-      }).start();
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start(() => {
+        isFilterAnimating.current = false;
+      });
     }
-  }, [isFilterVisible, filterAnim, dismissSearchFocus]);
+  }, [isFilterVisible, filterAnim, isSearchFocused, dismissSearchFocus]);
 
   useEffect(() => {
     const onShow = () => {
