@@ -197,6 +197,8 @@ export function HomeCardSkeleton({
 
   const cardBg = isDarkMode
     ? "rgba(26, 26, 26, 0.78)"
+    : isMinimalist
+    ? "#E5E7EB"
     : "#FFFFFF";
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
@@ -516,6 +518,8 @@ export function TopDestinationCardSkeleton({
 
   const cardBg = isDarkMode
     ? "rgba(26, 26, 26, 0.78)"
+    : isMinimalist
+    ? "#F3F4F6"
     : "#FFFFFF";
   const imgBg = isDarkMode
     ? "rgba(255, 255, 255, 0.08)"
