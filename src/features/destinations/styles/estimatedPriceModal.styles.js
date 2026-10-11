@@ -18,7 +18,7 @@ export const estimatedPriceStyles = StyleSheet.create({
     paddingBottom: 24,
   },
   cardDark: {
-    backgroundColor: "#000000",
+    backgroundColor: "#0A0A0A",
   },
   cardLight: {
     backgroundColor: "#FFFFFF",
@@ -181,7 +181,7 @@ export const estimatedPriceStyles = StyleSheet.create({
     marginBottom: 4,
   },
   disclaimerContainerDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: "#141414",
   },
   disclaimerContainerLight: {
     backgroundColor: "#F4F4F5",
