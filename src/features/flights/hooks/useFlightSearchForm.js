@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Platform, Keyboard } from "react-native";
-import { searchFlights, getAirportsApi } from "../api/flightApi";
+import { searchFlights, getAirportsApi, formatAirportDisplay } from "../api/flightApi";
 
 export function useFlightSearchForm({ selectedItem, currentTheme }) {
   const getPresetDates = () => {
@@ -155,7 +155,7 @@ export function useFlightSearchForm({ selectedItem, currentTheme }) {
   useEffect(() => {
     if (
       originInput.trim() === "" ||
-      (originAirport && originInput === `${originAirport.nome_aeroporto || originAirport.name} (${originAirport.codigo_iata || originAirport.iataCode})`)
+      (originAirport && originInput === formatAirportDisplay(originAirport))
     ) {
       setOriginSuggestions([]);
       return;
@@ -164,12 +164,9 @@ export function useFlightSearchForm({ selectedItem, currentTheme }) {
     const matches = allAirports
       .filter(
         (item) =>
-          (item.nome_aeroporto && item.nome_aeroporto.toLowerCase().includes(query)) ||
-          (item.name && item.name.toLowerCase().includes(query)) ||
-          (item.cidade && item.cidade.toLowerCase().includes(query)) ||
-          (item.city && item.city.toLowerCase().includes(query)) ||
-          (item.codigo_iata && item.codigo_iata.toLowerCase().includes(query)) ||
-          (item.iataCode && item.iataCode.toLowerCase().includes(query))
+          item.name.toLowerCase().includes(query) ||
+          item.city.toLowerCase().includes(query) ||
+          item.iataCode.toLowerCase().includes(query)
       )
       .slice(0, 5);
     setOriginSuggestions(matches);

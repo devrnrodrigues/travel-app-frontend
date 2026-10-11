@@ -32,6 +32,19 @@ export async function getAirportsApi() {
   } catch {
     return [];
   }
+}export function formatAirportDisplay(item) {
+  if (!item) return "";
+  const name = item.name || item.nome_aeroporto || "";
+  const code = item.iataCode || item.codigo_iata || "";
+  return code ? `${name} (${code})` : name;
+}
+
+export function formatAirportFullDisplay(item) {
+  if (!item) return "";
+  const base = formatAirportDisplay(item);
+  const city = item.city || item.cidade || "";
+  const state = item.state || item.estado || "";
+  return city && state ? `${base} - ${city}/${state}` : base;
 }
 
 export async function searchFlights({

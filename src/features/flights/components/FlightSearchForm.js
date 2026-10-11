@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import FadeInView from "../../../shared/components/FadeInView";
 import { FlightDirectSwitch } from "./FlightDirectSwitch";
 import { CURRENCY_MAP } from "./modals/CurrencyModal";
+import { formatAirportDisplay, formatAirportFullDisplay } from "../api/flightApi";
 import styles, { getAccentBg, getPaddingBottom } from "../styles/flightSearchForm.styles";
 
 function FlightSearchFormComponent({
@@ -185,9 +186,7 @@ function FlightSearchFormComponent({
                 ]}
                 onPress={() => {
                   setOriginAirport(item);
-                  setOriginInput(
-                    `${item.nome_aeroporto || item.name} (${item.codigo_iata || item.iataCode})`
-                  );
+                  setOriginInput(formatAirportDisplay(item));
                   setOriginSuggestions([]);
                   setFormErrors((prev) => ({ ...prev, origin: null }));
                 }}
@@ -204,7 +203,7 @@ function FlightSearchFormComponent({
                     isDarkMode ? styles.autocompleteTextDark : styles.autocompleteTextLight,
                   ]}
                 >
-                  {item.nome_aeroporto || item.name} ({item.codigo_iata || item.iataCode}) - {item.cidade || item.city}/{item.estado || item.state}
+                  {formatAirportFullDisplay(item)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -240,7 +239,7 @@ function FlightSearchFormComponent({
               ]}
             >
               {destinationAirport
-                ? `${destinationAirport.nome_aeroporto || destinationAirport.name} (${destinationAirport.codigo_iata || destinationAirport.iataCode})`
+                ? formatAirportDisplay(destinationAirport)
                 : "Nenhum aeroporto encontrado"}
             </Text>
           )}

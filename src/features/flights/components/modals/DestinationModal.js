@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { View, Text, TouchableOpacity, Modal, FlatList } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { formatAirportDisplay } from "../../api/flightApi";
 import styles, { getSelectedBorder, getSelectedIconBg } from "../../styles/flightModals.styles";
 
 function DestinationModalComponent({
@@ -13,7 +14,7 @@ function DestinationModalComponent({
   isDarkMode,
 }) {
   const renderItem = ({ item }) => {
-    const isSelected = selectedAirport?.id === item.id || selectedAirport?.codigo_iata === item.codigo_iata;
+    const isSelected = selectedAirport?.id === item.id || selectedAirport?.iataCode === item.iataCode;
     const itemBorder = isSelected ? getSelectedBorder(currentTheme.accent) : null;
     const iconBoxBg = isSelected ? getSelectedIconBg(currentTheme.accent) : null;
 
@@ -52,7 +53,7 @@ function DestinationModalComponent({
               isSelected && styles.modalOptionTextSelected,
             ]}
           >
-            {item.nome_aeroporto || item.name} ({item.codigo_iata || item.iataCode})
+            {formatAirportDisplay(item)}
           </Text>
         </View>
         {isSelected && <Feather name="check" size={18} color={currentTheme.accent} />}
