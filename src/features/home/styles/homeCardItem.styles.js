@@ -69,11 +69,11 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   cardInfoMinimalistDark: {
-    backgroundColor: "#000000",
+    backgroundColor: "#161616",
     borderWidth: 0,
   },
   cardInfoDark: {
-    backgroundColor: "rgba(12, 12, 12, 0.82)",
+    backgroundColor: "rgba(12, 12, 12, 0.68)",
     borderWidth: 0,
   },
   cardInfoLight: {
@@ -92,7 +92,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   overlayDark: {
-    backgroundColor: "rgba(12, 12, 12, 0.82)",
+    backgroundColor: "rgba(12, 12, 12, 0.68)",
     borderWidth: 0,
   },
   overlayLight: {
@@ -104,7 +104,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   overlayMinimalistDark: {
-    backgroundColor: "#000000",
+    backgroundColor: "#161616",
     borderWidth: 0,
   },
   cardOverlayImage: {

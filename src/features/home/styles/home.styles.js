@@ -250,7 +250,7 @@ export default StyleSheet.create({
   },
   minimalistDarkScreen: {
     flex: 1,
-    backgroundColor: "#141414",
+    backgroundColor: "#0A0A0A",
   },
   whiteScreen: {
     flex: 1,

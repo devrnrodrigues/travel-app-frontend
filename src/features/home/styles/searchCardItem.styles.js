@@ -30,7 +30,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   searchCardMinimalistDark: {
-    backgroundColor: "#000000",
+    backgroundColor: "#161616",
     borderWidth: 0,
   },
   searchCardImageWrapper: {
