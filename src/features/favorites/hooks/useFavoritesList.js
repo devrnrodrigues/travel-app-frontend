@@ -7,7 +7,7 @@ import { getFavoritesApi } from "../api/favoriteService";
 const PAGE_SIZE = 10;
 
 export function useFavoritesList(user) {
-  const userId = user?.id || user?._id || "anon";
+  const userId = user?.id || "anon";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");

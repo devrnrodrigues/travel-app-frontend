@@ -16,7 +16,7 @@ export function useFavoriteDelete() {
     if (!itemToDelete) return;
     try {
       setIsDeleting(true);
-      const destId = itemToDelete.destinationId || itemToDelete.id || itemToDelete.item_id;
+      const destId = itemToDelete.destinationId || itemToDelete.id;
       await removeFavoriteApi(destId);
 
       queryClient.setQueriesData({ queryKey: ["favorites"] }, (old) => {

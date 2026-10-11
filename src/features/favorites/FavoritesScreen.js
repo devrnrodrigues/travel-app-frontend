@@ -26,7 +26,7 @@ import useFavoritesList from "./hooks/useFavoritesList";
 import useFavoriteDelete from "./hooks/useFavoriteDelete";
 
 const foliageImage = require("../../../assets/images/image.png");
-const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)", "rgba(0, 0, 0, 0.98)"];
+const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.72)", "rgba(0, 0, 0, 0.96)", "rgba(0, 0, 0, 0.98)"];
 const GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
 
 export default function Favorites({ navigation }) {
@@ -52,7 +52,7 @@ export default function Favorites({ navigation }) {
   }, [windowWidth, windowHeight, insets.bottom, insets.top, containerHeight]);
 
   const { currentTheme, isDarkMode, aestheticMode } = useTheme();
-  const isMinimalist = !isDarkMode && aestheticMode === "minimalista";
+  const isMinimalist = aestheticMode === "minimalista";
   const { user } = useAuth();
 
   const {
@@ -121,7 +121,7 @@ export default function Favorites({ navigation }) {
   }, [handleDeactivateSearch]);
 
   const isErrorBg = Boolean(isError);
-  const isWhiteBg = isMinimalist || (isErrorBg && !isDarkMode);
+  const isWhiteBg = !isDarkMode && (isMinimalist || isErrorBg);
 
   const primaryTextColor = isWhiteBg ? "#111827" : "#FFFFFF";
   const secondaryTextColor = isWhiteBg ? "rgba(0, 0, 0, 0.60)" : "rgba(255, 255, 255, 0.70)";
@@ -181,7 +181,7 @@ export default function Favorites({ navigation }) {
   );
 
   const keyExtractor = useCallback(
-    (item) => (item.destinationId || item.id || item.item_id).toString(),
+    (item) => (item.destinationId || item.id).toString(),
     []
   );
 
@@ -263,7 +263,7 @@ export default function Favorites({ navigation }) {
                 onClearSearch={handleClearSearch}
                 onExplorePress={handleExplorePress}
                 accentColor={accentColor}
-                isDarkMode={isError ? isDarkMode : !isMinimalist}
+                isDarkMode={isDarkMode}
               />
             }
           />
@@ -287,9 +287,19 @@ export default function Favorites({ navigation }) {
               style={styles.foliageHeader}
               resizeMode="cover"
             />
-            <View style={styles.foliageWhiteFilter} />
+            <View
+              style={
+                isDarkMode
+                  ? styles.foliageDarkFilter
+                  : styles.foliageWhiteFilter
+              }
+            />
             <LinearGradient
-              colors={["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.6)", "#FFFFFF"]}
+              colors={
+                isDarkMode
+                  ? ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.6)", "#000000"]
+                  : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.6)", "#FFFFFF"]
+              }
               locations={[0, 0.45, 1]}
               style={styles.foliageGradient}
             />

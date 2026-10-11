@@ -65,10 +65,10 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
         <View
           style={[
             styles.searchBox,
-            isMinimalist
-              ? styles.searchBoxMinimalist
-              : isDarkMode
+            isDarkMode
               ? styles.searchBoxDark
+              : isMinimalist
+              ? styles.searchBoxMinimalist
               : styles.searchBoxLight,
             isFocused && { borderColor: accentColor },
           ]}
