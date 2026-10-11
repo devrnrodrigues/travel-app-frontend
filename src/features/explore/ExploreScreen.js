@@ -20,7 +20,7 @@ import ExploreEmptyState from "./components/ExploreEmptyState";
 import useExploreDestinations from "./hooks/useExploreDestinations";
 import useExploreSearchBarAnimation from "./hooks/useExploreSearchBarAnimation";
 
-const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"];
+const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.72)", "rgba(0, 0, 0, 0.96)", "rgba(0, 0, 0, 0.98)"];
 const GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
 
 export default function Explore({ navigation }) {
