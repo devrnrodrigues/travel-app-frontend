@@ -48,7 +48,7 @@ export const CARD_HEIGHT = initialDims.cardHeight;
 export default StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#000000",
+    backgroundColor: "#0A0A0A",
   },
   whiteScreen: {
     flex: 1,

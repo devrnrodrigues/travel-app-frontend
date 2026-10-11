@@ -297,7 +297,7 @@ export default function Favorites({ navigation }) {
             <LinearGradient
               colors={
                 isDarkMode
-                  ? ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.6)", "#000000"]
+                  ? ["rgba(0, 0, 0, 0)", "rgba(10, 10, 10, 0.6)", "#0A0A0A"]
                   : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.6)", "#FFFFFF"]
               }
               locations={[0, 0.45, 1]}
