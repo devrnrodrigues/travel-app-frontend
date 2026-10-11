@@ -63,7 +63,7 @@ export default function Details({ route, navigation }) {
       currentTheme,
       item: {
         ...item,
-        image_url: details.mainImage || item?.image_url || item?.image,
+        image_url: details.mainImage || item?.image_url || null,
       },
     });
   }, [navigation, currentTheme, item, details.mainImage]);

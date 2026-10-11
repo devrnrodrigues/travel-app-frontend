@@ -173,7 +173,7 @@ export function useReviews(item, currentUser, onRatingCalculated) {
     setOpenedFromAvaliarBtn(true);
     if (userReview) {
       setSelectedRating(Number(userReview.rating) || 5);
-      setInputComment(userReview.content || userReview.comment || "");
+      setInputComment(userReview.content || "");
       setEditingReviewId(userReview.id);
       setReviewToEdit(userReview);
     } else {
@@ -188,7 +188,7 @@ export function useReviews(item, currentUser, onRatingCalculated) {
   const handleEditReview = useCallback((rev) => {
     setOpenedFromAvaliarBtn(false);
     setSelectedRating(Number(rev.rating) || 5);
-    setInputComment(rev.content || rev.comment || "");
+    setInputComment(rev.content || "");
     setEditingReviewId(rev.id);
     setReviewToEdit(rev);
     setShowForm(true);

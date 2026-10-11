@@ -1,6 +1,5 @@
-import { Platform } from "react-native";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { apiClient } from "../../../config/apiClient";
+import { prepareWebpFile } from "../../../shared/utils/webpHelper";
 
 export async function getCommentsApi(destinationId) {
   const data = await apiClient.get(`/destinations/${destinationId}/comments`);
@@ -44,32 +43,8 @@ export async function createCommentApi(destinationId, { rating, content, images 
     formData.append("content", content.trim());
 
     for (let i = 0; i < images.length; i++) {
-      const uri = images[i];
-      let manipulatedUri = uri;
-      try {
-        const manipulated = await manipulateAsync(
-          uri,
-          [],
-          { format: SaveFormat.WEBP, compress: 0.85 }
-        );
-        manipulatedUri = manipulated.uri;
-      } catch {
-        manipulatedUri = uri;
-      }
-
-      const filename = `comment_${Date.now()}_${i}.webp`;
-
-      try {
-        const res = await fetch(manipulatedUri);
-        const blob = await res.blob();
-        formData.append("files", blob, filename);
-      } catch {
-        formData.append("files", {
-          uri: manipulatedUri,
-          name: filename,
-          type: "image/webp",
-        });
-      }
+      const { file, filename } = await prepareWebpFile(images[i], "comment", i);
+      formData.append("files", file, filename);
     }
 
     return apiClient.post(`/destinations/${destinationId}/comments`, formData);
@@ -101,32 +76,8 @@ export async function updateCommentApi(commentId, { rating, content, keptPhotoId
 
     if (Array.isArray(newImages) && newImages.length > 0) {
       for (let i = 0; i < newImages.length; i++) {
-        const uri = newImages[i];
-        let manipulatedUri = uri;
-        try {
-          const manipulated = await manipulateAsync(
-            uri,
-            [],
-            { format: SaveFormat.WEBP, compress: 0.85 }
-          );
-          manipulatedUri = manipulated.uri;
-        } catch {
-          manipulatedUri = uri;
-        }
-
-        const filename = `comment_${Date.now()}_${i}.webp`;
-
-        try {
-          const res = await fetch(manipulatedUri);
-          const blob = await res.blob();
-          formData.append("files", blob, filename);
-        } catch {
-          formData.append("files", {
-            uri: manipulatedUri,
-            name: filename,
-            type: "image/webp",
-          });
-        }
+        const { file, filename } = await prepareWebpFile(newImages[i], "comment", i);
+        formData.append("files", file, filename);
       }
     }
 

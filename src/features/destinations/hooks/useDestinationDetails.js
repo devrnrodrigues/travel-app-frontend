@@ -154,13 +154,7 @@ export function useDestinationDetails(item) {
         }
       }
     } catch {
-      try {
-        const fallbackWeather = await getWeather(destId);
-        if (fallbackWeather) setWeather(fallbackWeather);
-        setDescription(["Descrição indisponivel."]);
-      } catch {
-        if (!isPull) setDescription(["Descrição indisponivel."]);
-      }
+      setDescription(["Descrição indisponível."]);
       setCostEstimates(null);
     } finally {
       setLoadingWeather(false);
