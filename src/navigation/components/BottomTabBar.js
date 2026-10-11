@@ -182,7 +182,7 @@ export default function BottomTabBar({ state, navigation }) {
         {
           backgroundColor: isMinimalist
             ? isDarkMode
-              ? "#141414"
+              ? "#000000"
               : "#F5F5F7"
             : isTranslucentTab
             ? "transparent"
