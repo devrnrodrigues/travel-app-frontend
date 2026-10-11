@@ -7,6 +7,7 @@ import { createCollectionApi } from "../api/collectionService";
 export default function useCreateCollection(queryClient) {
   const [addCollectionModalVisible, setAddCollectionModalVisible] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
+  const [isCollectionNameFocused, setIsCollectionNameFocused] = useState(false);
   const [selectedCollectionPhotos, setSelectedCollectionPhotos] = useState([]);
   const [isPickingPhotos, setIsPickingPhotos] = useState(false);
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
@@ -35,24 +36,10 @@ export default function useCreateCollection(queryClient) {
         return;
       }
 
-      const compressedUris = [];
-      for (let i = 0; i < result.assets.length; i++) {
-        const a = result.assets[i];
-        let finalUri = a.uri;
-        try {
-          const manipulated = await manipulateAsync(
-            a.uri,
-            [],
-            { format: SaveFormat.WEBP, compress: 0.85 }
-          );
-          finalUri = manipulated.uri;
-        } catch {
-          finalUri = a.uri;
-        }
-        compressedUris.push(finalUri);
-      }
-
-      setSelectedCollectionPhotos((prev) => [...prev, ...compressedUris]);
+      setSelectedCollectionPhotos((prev) => [
+        ...prev,
+        ...result.assets.map((a) => a.uri),
+      ]);
     } catch {
       Alert.alert("Erro", "Não foi possível selecionar as fotos.");
     } finally {
@@ -92,7 +79,11 @@ export default function useCreateCollection(queryClient) {
       setAddCollectionModalVisible(false);
     } catch (err) {
       console.error(err);
-      Alert.alert("Erro", "Não foi possível criar a coleção.");
+      const detail =
+        err?.message ||
+        (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+        "Não foi possível criar a coleção.";
+      Alert.alert("Erro ao criar coleção", String(detail));
     } finally {
       setIsCreatingCollection(false);
     }
@@ -103,6 +94,8 @@ export default function useCreateCollection(queryClient) {
     setAddCollectionModalVisible,
     newCollectionName,
     setNewCollectionName,
+    isCollectionNameFocused,
+    setIsCollectionNameFocused,
     selectedCollectionPhotos,
     setSelectedCollectionPhotos,
     isPickingPhotos,

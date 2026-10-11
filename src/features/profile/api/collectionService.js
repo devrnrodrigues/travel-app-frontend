@@ -1,6 +1,5 @@
-import { Platform } from "react-native";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { apiClient } from "../../../config/apiClient";
+import { prepareWebpFile } from "../../../shared/utils/webpHelper";
 
 export async function createCollectionApi({ title, imageUris }) {
   const formData = new FormData();
@@ -8,32 +7,8 @@ export async function createCollectionApi({ title, imageUris }) {
 
   if (Array.isArray(imageUris)) {
     for (let i = 0; i < imageUris.length; i++) {
-      const uri = imageUris[i];
-      let manipulatedUri = uri;
-      try {
-        const manipulated = await manipulateAsync(
-          uri,
-          [],
-          { format: SaveFormat.WEBP }
-        );
-        manipulatedUri = manipulated.uri;
-      } catch (e) {
-        manipulatedUri = uri;
-      }
-
-      const filename = `photo_${Date.now()}_${i}.webp`;
-
-      try {
-        const res = await fetch(manipulatedUri);
-        const blob = await res.blob();
-        formData.append("files", blob, filename);
-      } catch {
-        formData.append("files", {
-          uri: manipulatedUri,
-          name: filename,
-          type: "image/webp",
-        });
-      }
+      const { file, filename } = await prepareWebpFile(imageUris[i], "collection", i);
+      formData.append("files", file, filename);
     }
   }
 
@@ -66,32 +41,8 @@ export async function addPhotosToCollectionApi(collectionId, imageUris) {
 
   if (Array.isArray(imageUris)) {
     for (let i = 0; i < imageUris.length; i++) {
-      const uri = imageUris[i];
-      let manipulatedUri = uri;
-      try {
-        const manipulated = await manipulateAsync(
-          uri,
-          [],
-          { format: SaveFormat.WEBP }
-        );
-        manipulatedUri = manipulated.uri;
-      } catch (e) {
-        manipulatedUri = uri;
-      }
-
-      const filename = `photo_${Date.now()}_${i}.webp`;
-
-      try {
-        const res = await fetch(manipulatedUri);
-        const blob = await res.blob();
-        formData.append("files", blob, filename);
-      } catch {
-        formData.append("files", {
-          uri: manipulatedUri,
-          name: filename,
-          type: "image/webp",
-        });
-      }
+      const { file, filename } = await prepareWebpFile(imageUris[i], "collection", i);
+      formData.append("files", file, filename);
     }
   }
 

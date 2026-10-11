@@ -15,7 +15,6 @@ export default function useProfileData() {
   const [name, setName] = useState(user?.fullName || "");
   const [nationality, setNationality] = useState(user?.nationality || "Brasileiro");
   const [bio, setBio] = useState(user?.bio || "");
-  const [galleryCount, setGalleryCount] = useState(4);
   const [hideFavorites, setHideFavorites] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -127,8 +126,6 @@ export default function useProfileData() {
     setNationality,
     bio,
     setBio,
-    galleryCount,
-    setGalleryCount,
     aestheticMode,
     setAestheticMode,
     hideFavorites,

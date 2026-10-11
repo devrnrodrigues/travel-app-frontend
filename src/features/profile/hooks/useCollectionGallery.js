@@ -117,16 +117,10 @@ export default function useCollectionGallery(initialCollection, navigation) {
         quality: 0.8,
       });
       if (!res.canceled && res.assets) {
-        const compressed = [];
-        for (const a of res.assets) {
-          try {
-            const m = await manipulateAsync(a.uri, [], { format: SaveFormat.WEBP, compress: 0.85 });
-            compressed.push(m.uri);
-          } catch {
-            compressed.push(a.uri);
-          }
-        }
-        setNewPhotosToUpload((prev) => [...prev, ...compressed]);
+        setNewPhotosToUpload((prev) => [
+          ...prev,
+          ...res.assets.map((a) => a.uri),
+        ]);
       }
     } catch {
       Alert.alert("Erro", "Não foi possível selecionar fotos.");
@@ -150,8 +144,13 @@ export default function useCollectionGallery(initialCollection, navigation) {
       await queryClient.invalidateQueries({ queryKey: ["collections"] });
       setNewPhotosToUpload([]);
       setIsAddPhotosModalOpen(false);
-    } catch {
-      Alert.alert("Erro", "Não foi possível adicionar fotos.");
+    } catch (err) {
+      console.error(err);
+      const detail =
+        err?.message ||
+        (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
+        "Não foi possível adicionar fotos.";
+      Alert.alert("Erro ao adicionar fotos", String(detail));
     } finally {
       setIsSavingNewPhotos(false);
     }

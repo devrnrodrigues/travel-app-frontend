@@ -28,10 +28,14 @@ export default function useProfileLayout(insets) {
 
   const bioFontSize = Math.round(13 * scale);
   const bioLineHeight = Math.round(19 * scale);
-  const bioMarginBottom = Math.round(20 * scale);
 
+  const extraVerticalSpace = Math.max(0, windowHeight - BASE_HEIGHT);
+  const statsExtraMargin = Math.min(28, Math.round(extraVerticalSpace * 0.14));
+
+  const bioMarginBottom = Math.round(14 * scale);
+  const statsMarginTop = statsExtraMargin;
   const statsPaddingVertical = Math.round(18 * scale);
-  const statsMarginBottom = Math.round(24 * scale);
+  const statsMarginBottom = Math.round(18 * scale) + statsExtraMargin;
   const statValueFontSize = Math.round(22 * scale);
   const statValueLineHeight = Math.round(27 * scale);
   const statLabelFontSize = Math.round(11 * scale);
@@ -117,6 +121,7 @@ export default function useProfileLayout(insets) {
     bioFontSize,
     bioLineHeight,
     bioMarginBottom,
+    statsMarginTop,
     statsPaddingVertical,
     statsMarginBottom,
     statValueFontSize,
@@ -139,6 +144,7 @@ export default function useProfileLayout(insets) {
     bioFontSize,
     bioLineHeight,
     bioMarginBottom,
+    statsMarginTop,
     statsPaddingVertical,
     statsMarginBottom,
     statValueFontSize,
