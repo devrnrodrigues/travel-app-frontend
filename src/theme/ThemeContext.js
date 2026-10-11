@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
+import { useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { THEMES_BY_CAT, resolveCategoryTheme } from "./categoryThemes";
 import { useCategories } from "../features/categories/hooks/useCategories";
@@ -6,7 +7,9 @@ import { useCategories } from "../features/categories/hooks/useCategories";
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
+  const systemColorScheme = useColorScheme();
   const [activeCat, setActiveCat] = useState(0);
+  const [themePreference, setThemePreference] = useState("dark");
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [aestheticMode, setAestheticMode] = useState("minimalista");
   const {
@@ -18,11 +21,24 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     async function loadThemeMode() {
       try {
-        const saved = await AsyncStorage.getItem("@app_theme_mode");
-        if (saved !== null) {
-          setIsDarkMode(JSON.parse(saved));
-        }
+        const savedPref = await AsyncStorage.getItem("@app_theme_preference");
+        const savedMode = await AsyncStorage.getItem("@app_theme_mode");
         const savedAesthetic = await AsyncStorage.getItem("@profile_aesthetic_mode");
+
+        let pref = "dark";
+        if (savedPref !== null) {
+          pref = savedPref;
+        } else if (savedMode !== null) {
+          pref = JSON.parse(savedMode) ? "dark" : "light";
+        }
+
+        setThemePreference(pref);
+        if (pref === "auto") {
+          setIsDarkMode(systemColorScheme === "dark");
+        } else {
+          setIsDarkMode(pref === "dark");
+        }
+
         if (savedAesthetic) {
           setAestheticMode(savedAesthetic);
         }
@@ -33,15 +49,31 @@ export function ThemeProvider({ children }) {
     loadThemeMode();
   }, []);
 
-  const toggleThemeMode = async () => {
-    try {
-      const nextMode = !isDarkMode;
-      setIsDarkMode(nextMode);
-      await AsyncStorage.setItem("@app_theme_mode", JSON.stringify(nextMode));
-    } catch (e) {
-      console.log("Erro ao salvar tema:", e);
+  useEffect(() => {
+    if (themePreference === "auto") {
+      setIsDarkMode(systemColorScheme === "dark");
     }
-  };
+  }, [systemColorScheme, themePreference]);
+
+  const updateThemePreference = useCallback(
+    async (pref) => {
+      try {
+        setThemePreference(pref);
+        const resolvedIsDark = pref === "auto" ? systemColorScheme === "dark" : pref === "dark";
+        setIsDarkMode(resolvedIsDark);
+        await AsyncStorage.setItem("@app_theme_preference", pref);
+        await AsyncStorage.setItem("@app_theme_mode", JSON.stringify(resolvedIsDark));
+      } catch (e) {
+        console.log("Erro ao salvar tema:", e);
+      }
+    },
+    [systemColorScheme]
+  );
+
+  const toggleThemeMode = useCallback(async () => {
+    const nextPref = isDarkMode ? "light" : "dark";
+    await updateThemePreference(nextPref);
+  }, [isDarkMode, updateThemePreference]);
 
   const updateAestheticMode = async (mode) => {
     try {
@@ -75,6 +107,8 @@ export function ThemeProvider({ children }) {
         setActiveCat,
         currentTheme,
         themesByCat,
+        themePreference,
+        setThemePreference: updateThemePreference,
         isDarkMode,
         setIsDarkMode,
         toggleThemeMode,
@@ -99,6 +133,8 @@ export function useTheme() {
       setActiveCat: () => {},
       currentTheme: THEMES_BY_CAT[0],
       themesByCat: THEMES_BY_CAT,
+      themePreference: "dark",
+      setThemePreference: () => {},
       isDarkMode: true,
       setIsDarkMode: () => {},
       toggleThemeMode: () => {},

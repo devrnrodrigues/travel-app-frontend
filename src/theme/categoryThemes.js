@@ -1,6 +1,6 @@
 export const THEMES_BY_CAT = {
   0: {
-    colors: ["rgba(15, 23, 21, 0.45)", "rgba(20, 33, 29, 0.55)", "rgba(27, 46, 41, 0.68)"],
+    colors: ["rgba(15, 23, 21, 0.60)", "rgba(20, 33, 29, 0.70)", "rgba(27, 46, 41, 0.80)"],
     accent: "#4CAF50",
     icon: "leaf",
     bg: require("../assets/welcome-bg.jpg"),
