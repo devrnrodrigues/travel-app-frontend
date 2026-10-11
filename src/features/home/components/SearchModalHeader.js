@@ -35,7 +35,7 @@ const SearchModalHeader = React.memo(function SearchModalHeader({
     inputRange: [0, 1],
     outputRange: isMinimalist
       ? isDarkMode
-        ? ["#1C1C1E", "#1C1C1E"]
+        ? ["#000000", "#000000"]
         : ["#F3F4F6", "#F3F4F6"]
       : !isDarkMode
       ? ["rgba(100, 100, 100, 0.82)", "rgba(100, 100, 100, 1)"]

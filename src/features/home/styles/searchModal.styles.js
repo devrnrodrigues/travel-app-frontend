@@ -82,7 +82,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   filterBtnInactiveMinimalistDark: {
-    backgroundColor: "#1C1C1E",
+    backgroundColor: "#000000",
     borderWidth: 0,
   },
   filterBtnActiveText: {

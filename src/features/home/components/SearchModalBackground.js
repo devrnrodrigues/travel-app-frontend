@@ -3,7 +3,7 @@ import { View, Animated, ImageBackground } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import styles, { getFadeOpacityStyle } from "../styles/searchModal.styles";
 
-const GRADIENT_COLORS = ["rgba(0, 0, 0, 0.55)", "transparent", "rgba(0, 0, 0, 0.75)"];
+const GRADIENT_COLORS = ["rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.25)", "rgba(0, 0, 0, 0.82)"];
 const GRADIENT_LOCATIONS = [0, 0.45, 1];
 
 const SearchModalBackground = React.memo(function SearchModalBackground({
@@ -18,7 +18,7 @@ const SearchModalBackground = React.memo(function SearchModalBackground({
         style={[
           styles.screenCover,
           getFadeOpacityStyle(searchFadeAnim),
-          { backgroundColor: isDarkMode ? "#000000" : "#FFFFFF" },
+          { backgroundColor: isDarkMode ? "#141414" : "#FFFFFF" },
         ]}
         pointerEvents="none"
       />
