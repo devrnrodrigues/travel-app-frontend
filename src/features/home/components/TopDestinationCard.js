@@ -40,8 +40,8 @@ const TopDestinationCard = React.memo(function TopDestinationCard({
     }
   };
 
-  const title = item?.title || item?.name || "";
-  const location = item?.country || item?.location || item?.city || "";
+  const title = item?.title || "";
+  const location = item?.location || item?.country || "";
 
   return (
     <TouchableOpacity

@@ -140,7 +140,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   iconButtonMinimalistDark: {
-    backgroundColor: "#1C1C1E",
+    backgroundColor: "#000000",
     borderWidth: 0,
   },
   categoriesSection: { justifyContent: "center" },
@@ -248,6 +248,10 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
+  minimalistDarkScreen: {
+    flex: 1,
+    backgroundColor: "#141414",
+  },
   whiteScreen: {
     flex: 1,
     backgroundColor: "#FFFFFF",
@@ -267,6 +271,46 @@ export default StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: 80,
+  },
+  foliageContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    width: "100%",
+    height: 155,
+    overflow: "hidden",
+    zIndex: 0,
+  },
+  foliageHeader: {
+    position: "absolute",
+    top: -8,
+    left: "-8%",
+    width: "128%",
+    height: 320,
+  },
+  foliageGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 70,
+  },
+  foliageWhiteFilter: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.28)",
+  },
+  foliageDarkFilter: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.28)",
   },
 });
 

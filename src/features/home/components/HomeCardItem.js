@@ -56,7 +56,7 @@ const HomeCardItem = React.memo(function HomeCardItem({
           source={cardImgSource}
           style={[styles.cardImage, getImageOpacityStyle(imgAnim)]}
           onLoad={handleImageLoad}
-          accessibilityLabel={item.alt || item.title || item.name}
+          accessibilityLabel={item.alt || item.title || ""}
         />
       ) : (
         <View

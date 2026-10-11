@@ -29,7 +29,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   cardContainerMinimalistDark: {
-    backgroundColor: "#161616",
+    backgroundColor: "#000000",
     borderWidth: 0,
   },
   imageWrapper: {
@@ -73,7 +73,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   fallbackMinimalistDark: {
-    backgroundColor: "#202020",
+    backgroundColor: "#0A0A0A",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 0,

@@ -14,11 +14,11 @@ export default StyleSheet.create({
     shadowRadius: 0,
   },
   cardDark: {
-    backgroundColor: "#121212",
+    backgroundColor: "#000000",
     borderWidth: 0,
   },
   cardLight: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F3F4F6",
     borderWidth: 0,
   },
   cardImage: {
@@ -35,10 +35,10 @@ export default StyleSheet.create({
     alignItems: "center",
   },
   cardImageFallbackDark: {
-    backgroundColor: "#181818",
+    backgroundColor: "#000000",
   },
   cardImageFallbackLight: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F3F4F6",
   },
   cardFallbackText: {
     color: "rgba(255, 255, 255, 0.6)",
@@ -69,7 +69,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   cardInfoMinimalistDark: {
-    backgroundColor: "#161616",
+    backgroundColor: "#000000",
     borderWidth: 0,
   },
   cardInfoDark: {
@@ -104,7 +104,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   overlayMinimalistDark: {
-    backgroundColor: "#161616",
+    backgroundColor: "#000000",
     borderWidth: 0,
   },
   cardOverlayImage: {

@@ -18,17 +18,17 @@ const HomeCategoriesList = React.memo(function HomeCategoriesList({
   onContainerLayout,
   onContentSizeChange,
   isMinimalist,
+  hasError,
 }) {
-  if (categories.length === 0 && isLoadingCategories) {
+  if (categories.length === 0) {
+    if (hasError) {
+      return null;
+    }
     return (
       <View style={[styles.categoriesSection, getCategoriesHeight(dims.categoriesHeight)]}>
         <HomeCategoriesSkeleton isDarkMode={isDarkMode} />
       </View>
     );
-  }
-
-  if (categories.length === 0) {
-    return null;
   }
 
   return (

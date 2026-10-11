@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
+  Image,
   ScrollView,
   StatusBar,
   ImageBackground,
   Animated,
   RefreshControl,
   useWindowDimensions,
+  Platform,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,6 +29,7 @@ import useHomeData from "./hooks/useHomeData";
 import useHomeCategories from "./hooks/useHomeCategories";
 import useHomeAnimations from "./hooks/useHomeAnimations";
 
+const foliageImage = require("../../../assets/images/image.png");
 const errorImage = require("../../../assets/images/error.png");
 const notFoundImage = require("../../../assets/images/not-found.png");
 const noConnectionImage = require("../../../assets/images/no-connection.png");
@@ -36,6 +39,7 @@ export default function Home({ navigation }) {
   const {
     categories = [],
     isLoadingCategories,
+    isCategoriesError,
     activeCategory,
     activeCat,
     setActiveCat,
@@ -51,19 +55,20 @@ export default function Home({ navigation }) {
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const topInset = insets.top || (Platform.OS === "android" ? (StatusBar.currentHeight || 0) : 0);
   const dims = useMemo(
-    () => getHomeDimensions(windowWidth, windowHeight, insets.top, insets.bottom),
-    [windowWidth, windowHeight, insets.top, insets.bottom]
+    () => getHomeDimensions(windowWidth, windowHeight, topInset, insets.bottom),
+    [windowWidth, windowHeight, topInset, insets.bottom]
   );
 
   const userName = useMemo(() => {
-    const raw = user?.fullName || user?.name || user?.username || "";
+    const raw = user?.fullName || user?.name || "";
     const first = raw.trim().split(" ")[0];
     return first || "visitante";
-  }, [user?.fullName, user?.name, user?.username]);
+  }, [user?.fullName, user?.name]);
 
-  const selectedCategoryObj = activeCategory || categories[activeCat] || categories[0];
-  const selectedCategory = selectedCategoryObj?.slug || selectedCategoryObj?.name || "florestas";
+  const selectedCategoryObj = activeCategory || categories[0];
+  const selectedCategory = selectedCategoryObj?.slug || "florestas";
 
   const {
     flatListRef,
@@ -133,14 +138,16 @@ export default function Home({ navigation }) {
     if (currentTheme?.colors && currentTheme.colors.length >= 3) {
       return [
         currentTheme.colors[0],
-        "rgba(0, 0, 0, 0.15)",
-        "rgba(0, 0, 0, 0.65)",
+        currentTheme.colors[1],
+        "rgba(0, 0, 0, 0.72)",
+        "rgba(0, 0, 0, 0.96)",
       ];
     }
-    return ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.15)", "rgba(0, 0, 0, 0.65)"];
+    return ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)", "rgba(0, 0, 0, 0.98)"];
   }, [currentTheme?.colors]);
 
   const isErrorBg = Boolean(errorConfig);
+  const isMinimalistDark = isDarkMode && isMinimalist;
   const isWhiteBg = !isDarkMode && (isMinimalist || isErrorBg);
 
   const homeBody = (
@@ -196,6 +203,7 @@ export default function Home({ navigation }) {
                 onContainerLayout={handleContainerLayout}
                 onContentSizeChange={handleContentSizeChange}
                 isMinimalist={isMinimalist}
+                hasError={Boolean(errorConfig) || (Boolean(isCategoriesError) && categories.length === 0)}
               />
             </View>
 
@@ -248,7 +256,15 @@ export default function Home({ navigation }) {
   );
 
   return (
-    <View style={isWhiteBg ? styles.whiteScreen : styles.blackScreen}>
+    <View
+      style={
+        isWhiteBg
+          ? styles.whiteScreen
+          : isMinimalistDark
+          ? styles.minimalistDarkScreen
+          : styles.blackScreen
+      }
+    >
       <SearchModal
         visible={isSearchVisible}
         onClose={handleCloseSearch}
@@ -261,13 +277,42 @@ export default function Home({ navigation }) {
         isMinimalist={isMinimalist}
       />
 
-      {isMinimalist || isErrorBg ? (
+      {isMinimalist ? (
+        <View style={styles.flex1}>
+          {!isErrorBg && (
+            <View pointerEvents="none" style={styles.foliageContainer}>
+              <Image
+                source={foliageImage}
+                style={styles.foliageHeader}
+                resizeMode="cover"
+              />
+              <View
+                style={
+                  isDarkMode
+                    ? styles.foliageDarkFilter
+                    : styles.foliageWhiteFilter
+                }
+              />
+              <LinearGradient
+                colors={
+                  isDarkMode
+                    ? ["rgba(0, 0, 0, 0)", "rgba(20, 20, 20, 0.6)", "#141414"]
+                    : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.6)", "#FFFFFF"]
+                }
+                locations={[0, 0.45, 1]}
+                style={styles.foliageGradient}
+              />
+            </View>
+          )}
+          {homeBody}
+        </View>
+      ) : isErrorBg ? (
         <View style={styles.flex1}>{homeBody}</View>
       ) : (
         <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
           <LinearGradient
             colors={gradientColors}
-            locations={[0, 0.40, 1]}
+            locations={[0, 0.38, 0.72, 1]}
             style={styles.flex1}
           >
             <Animated.View

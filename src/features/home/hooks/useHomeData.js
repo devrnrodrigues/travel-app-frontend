@@ -149,9 +149,12 @@ export default function useHomeData(selectedCategory) {
     }
   }, [refetch, refetchTopDestinations, queryClient]);
 
-  const isShowingSkeleton = isLoading && destinations.length === 0;
-  const isShowingTopSkeleton = loadingTopDestinations && topDestinations.length === 0;
-  const isErrorCombined = (isError || isTopError) && destinations.length === 0 && topDestinations.length === 0;
+  const isShowingSkeleton =
+    (isLoading || isRefetching || refreshing) && destinations.length === 0;
+  const isShowingTopSkeleton =
+    (loadingTopDestinations || isRefetching || refreshing) && topDestinations.length === 0;
+  const isErrorCombined =
+    !refreshing && !isRefetching && (isError || isTopError) && destinations.length === 0 && topDestinations.length === 0;
   const currentError = error || topError;
 
   return {
