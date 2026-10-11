@@ -9,7 +9,7 @@ const NAV_BG_HEIGHT = Math.round(SCREEN_WIDTH / NAV_BG_ASPECT_RATIO);
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#0A0A0A",
   },
   flex1: {
     flex: 1,
@@ -208,7 +208,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   newProfileBodyDark: {
-    backgroundColor: "#0C0C0E",
+    backgroundColor: "#0A0A0A",
   },
   newProfileBodyLight: {
     backgroundColor: "#FFFFFF",
@@ -1635,7 +1635,7 @@ export const getRotationStyle = (rotate) => ({
 });
 
 export const getContainerStyle = (isDarkMode) => ({
-  backgroundColor: isDarkMode ? "#0C0C0E" : "#FFFFFF",
+  backgroundColor: isDarkMode ? "#0A0A0A" : "#FFFFFF",
 });
 
 export const getScrollContentContainerStyle = (canScroll, navBarHeight) => [
@@ -1663,7 +1663,7 @@ export const getAvatarContainerDynamicStyle = (scale, avatarSize, avatarMarginTo
 export const getAvatarBorderedDynamicStyle = (isDarkMode, scale, avatarSize, avatarBorderWidth) => [
   styles.avatarBordered,
   {
-    borderColor: isDarkMode ? "#0C0C0E" : "#FFFFFF",
+    borderColor: isDarkMode ? "#0A0A0A" : "#FFFFFF",
     backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
     overflow: "hidden",
   },
