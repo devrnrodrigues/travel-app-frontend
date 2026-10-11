@@ -52,6 +52,7 @@ const ProfileUserCard = memo(function ProfileUserCard({
     bioFontSize,
     bioLineHeight,
     bioMarginBottom,
+    statsMarginTop = 0,
     statsPaddingVertical,
     statsMarginBottom,
     statValueFontSize,
@@ -209,7 +210,8 @@ const ProfileUserCard = memo(function ProfileUserCard({
           isDarkMode,
           scale,
           statsPaddingVertical,
-          statsMarginBottom
+          statsMarginBottom,
+          statsMarginTop
         )}
       >
         <View style={styles.statItem}>

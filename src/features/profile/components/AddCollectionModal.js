@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AnimatedProfileInput from "./AnimatedProfileInput";
@@ -37,6 +38,28 @@ const AddCollectionModal = memo(function AddCollectionModal({
   onRemovePhoto,
   onSaveCollection,
 }) {
+  const [internalFocused, setInternalFocused] = useState(false);
+  const isInputFocused =
+    isCollectionNameFocused !== undefined
+      ? isCollectionNameFocused
+      : internalFocused;
+
+  const handleInputFocus = useCallback(() => {
+    if (typeof setIsCollectionNameFocused === "function") {
+      setIsCollectionNameFocused(true);
+    } else {
+      setInternalFocused(true);
+    }
+  }, [setIsCollectionNameFocused]);
+
+  const handleInputBlur = useCallback(() => {
+    if (typeof setIsCollectionNameFocused === "function") {
+      setIsCollectionNameFocused(false);
+    } else {
+      setInternalFocused(false);
+    }
+  }, [setIsCollectionNameFocused]);
+
   const isBusy = isCreatingCollection || isPickingPhotos;
 
   const handleRequestClose = () => {
@@ -63,19 +86,21 @@ const AddCollectionModal = memo(function AddCollectionModal({
       navigationBarTranslucent={true}
       onRequestClose={handleRequestClose}
     >
-      <TouchableWithoutFeedback onPress={handleRequestClose}>
-        <View style={styles.addCollectionModalOverlay}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            style={styles.modalAvoidingView}
-          >
-            <TouchableWithoutFeedback>
-              <View
-                style={[
-                  styles.addCollectionModalCard,
-                  !isDarkMode && styles.addCollectionModalCardLight,
-                ]}
-              >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.addCollectionModalOverlay}
+      >
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={handleRequestClose}
+        />
+        <View
+          style={[
+            styles.addCollectionModalCard,
+            !isDarkMode && styles.addCollectionModalCardLight,
+          ]}
+        >
                 <View style={styles.addCollectionModalHeader}>
                   <Text
                     style={[
@@ -97,7 +122,7 @@ const AddCollectionModal = memo(function AddCollectionModal({
                   Nome
                 </Text>
                 <AnimatedProfileInput
-                  isFocused={isCollectionNameFocused}
+                  isFocused={isInputFocused}
                   currentTheme={currentTheme}
                   isDarkMode={isDarkMode}
                   maxLength={30}
@@ -110,8 +135,8 @@ const AddCollectionModal = memo(function AddCollectionModal({
                   }
                   value={newCollectionName}
                   onChangeText={setNewCollectionName}
-                  onFocus={() => setIsCollectionNameFocused(true)}
-                  onBlur={() => setIsCollectionNameFocused(false)}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
                 />
 
                 <Text
@@ -254,11 +279,8 @@ const AddCollectionModal = memo(function AddCollectionModal({
                   </TouchableOpacity>
                 </View>
               </View>
-            </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+            </KeyboardAvoidingView>
+          </Modal>
   );
 });
 

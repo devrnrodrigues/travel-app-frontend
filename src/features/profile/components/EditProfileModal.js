@@ -25,18 +25,10 @@ import {
   getCountryPillStyle,
   getFlagIconContainerStyle,
   getCountryPillTextStyle,
-  getCollectionCountBtnStyle,
-  getCollectionCountTextStyle,
-  getHideFavoritesBtnDynamicStyle,
-  getHideFavoritesBadgeDynamicStyle,
-  getHideFavoritesBadgeTextStyle,
-  getSaveButtonStyle,
   getRotationStyle,
 } from "../styles/profile.styles";
 
 const HIT_SLOP_12 = { top: 12, bottom: 12, left: 12, right: 12 };
-const GALLERY_COUNT_ROW_1 = [0, 1, 2, 3, 4];
-const GALLERY_COUNT_ROW_2 = [5, 6, 7, 8, "*"];
 
 const EditProfileModal = memo(function EditProfileModal({
   visible,
@@ -50,16 +42,13 @@ const EditProfileModal = memo(function EditProfileModal({
   setNationality,
   bio,
   setBio,
-  galleryCount,
-  onGalleryCountChange,
   aestheticMode = "minimalista",
   onAestheticModeChange,
   hideFavorites,
   onToggleHideFavorites,
-  onSaveProfile,
-  loadingData,
   onOpenAvatarModal,
   onOpenAddCollectionModal,
+  onOpenThemeModal,
   onOpenLogoutModal,
   insets,
 }) {
@@ -194,7 +183,13 @@ const EditProfileModal = memo(function EditProfileModal({
                 keyboardShouldPersistTaps="handled"
                 style={styles.modalScroll}
               >
-                <Text style={[styles.label, !isDarkMode && styles.labelLight]}>
+                <Text
+                  style={[
+                    styles.label,
+                    styles.firstLabel,
+                    !isDarkMode && styles.labelLight,
+                  ]}
+                >
                   Nome
                 </Text>
                 <AnimatedProfileInput
@@ -366,229 +361,46 @@ const EditProfileModal = memo(function EditProfileModal({
                   />
                 </TouchableOpacity>
 
-                <Text
-                  style={[
-                    styles.label,
-                    !isDarkMode && styles.labelLight,
-                    styles.labelMarginTop,
-                  ]}
-                >
-                  Estética
-                </Text>
-                <View
-                  style={[
-                    styles.aestheticSelectorTrack,
-                    !isDarkMode && styles.aestheticSelectorTrackLight,
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={[
-                      styles.aestheticSelectorOption,
-                      aestheticMode === "minimalista" && [
-                        styles.aestheticSelectorOptionActive,
-                        { backgroundColor: currentTheme.accent },
-                      ],
-                    ]}
-                    activeOpacity={0.75}
-                    onPress={() =>
-                      onAestheticModeChange &&
-                      onAestheticModeChange("minimalista")
-                    }
-                  >
-                    <Ionicons
-                      name="cube-outline"
-                      size={16}
-                      color={
-                        aestheticMode === "minimalista"
-                          ? "#000000"
-                          : !isDarkMode
-                          ? "rgba(0, 0, 0, 0.6)"
-                          : "rgba(255, 255, 255, 0.6)"
-                      }
-                      style={styles.aestheticSelectorIcon}
-                    />
-                    <Text
-                      style={[
-                        styles.aestheticSelectorText,
-                        !isDarkMode && styles.aestheticSelectorTextLight,
-                        aestheticMode === "minimalista" &&
-                          styles.aestheticSelectorTextActive,
-                      ]}
-                    >
-                      Minimalista
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.aestheticSelectorOption,
-                      aestheticMode === "decorativa" && [
-                        styles.aestheticSelectorOptionActive,
-                        { backgroundColor: currentTheme.accent },
-                      ],
-                    ]}
-                    activeOpacity={0.75}
-                    onPress={() =>
-                      onAestheticModeChange &&
-                      onAestheticModeChange("decorativa")
-                    }
-                  >
-                    <Ionicons
-                      name="color-palette-outline"
-                      size={16}
-                      color={
-                        aestheticMode === "decorativa"
-                          ? "#000000"
-                          : !isDarkMode
-                          ? "rgba(0, 0, 0, 0.6)"
-                          : "rgba(255, 255, 255, 0.6)"
-                      }
-                      style={styles.aestheticSelectorIcon}
-                    />
-                    <Text
-                      style={[
-                        styles.aestheticSelectorText,
-                        !isDarkMode && styles.aestheticSelectorTextLight,
-                        aestheticMode === "decorativa" &&
-                          styles.aestheticSelectorTextActive,
-                      ]}
-                    >
-                      Decorativa
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text
-                  style={[
-                    styles.label,
-                    !isDarkMode && styles.labelLight,
-                    styles.labelMarginTop,
-                  ]}
-                >
-                  Coleções na galeria
-                </Text>
-                <View style={styles.collectionCountGrid}>
-                  <View style={styles.collectionCountRow}>
-                    {GALLERY_COUNT_ROW_1.map((num) => {
-                      const isSelected = galleryCount === num;
-                      return (
-                        <TouchableOpacity
-                          key={num}
-                          style={getCollectionCountBtnStyle(
-                            isSelected,
-                            currentTheme.accent,
-                            isDarkMode
-                          )}
-                          activeOpacity={0.75}
-                          onPress={() => onGalleryCountChange(num)}
-                        >
-                          <Text
-                            style={getCollectionCountTextStyle(
-                              isSelected,
-                              isDarkMode
-                            )}
-                          >
-                            {num}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                  <View style={styles.collectionCountRow}>
-                    {GALLERY_COUNT_ROW_2.map((num) => {
-                      const isSelected = galleryCount === num;
-                      return (
-                        <TouchableOpacity
-                          key={String(num)}
-                          style={getCollectionCountBtnStyle(
-                            isSelected,
-                            currentTheme.accent,
-                            isDarkMode
-                          )}
-                          activeOpacity={0.75}
-                          onPress={() => onGalleryCountChange(num)}
-                        >
-                          <Text
-                            style={getCollectionCountTextStyle(
-                              isSelected,
-                              isDarkMode
-                            )}
-                          >
-                            {num}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-
-                <View style={styles.hideFavoritesSection}>
-                  <Text style={[styles.label, !isDarkMode && styles.labelLight]}>
-                    Visualização dos Favoritos
-                  </Text>
-                  <TouchableOpacity
-                    style={getHideFavoritesBtnDynamicStyle(
-                      hideFavorites,
-                      currentTheme.accent,
-                      isDarkMode
-                    )}
-                    activeOpacity={0.75}
-                    onPress={onToggleHideFavorites}
-                  >
-                    <View style={styles.hideFavoritesLeft}>
-                      <Ionicons
-                        name={hideFavorites ? "eye-off-outline" : "eye-outline"}
-                        size={20}
-                        color={
-                          hideFavorites
-                            ? currentTheme.accent
-                            : !isDarkMode
-                            ? "rgba(0,0,0,0.6)"
-                            : "rgba(255,255,255,0.7)"
-                        }
-                        style={styles.hideFavoritesIcon}
-                      />
-                      <Text
-                        style={[
-                          styles.hideFavoritesText,
-                          !isDarkMode && styles.hideFavoritesTextLight,
-                        ]}
-                      >
-                        {hideFavorites
-                          ? "Favoritos ocultos (ver vazio)"
-                          : "Favoritos visíveis"}
-                      </Text>
-                    </View>
-                    <View
-                      style={getHideFavoritesBadgeDynamicStyle(
-                        hideFavorites,
-                        currentTheme.accent
-                      )}
-                    >
-                      <Text
-                        style={getHideFavoritesBadgeTextStyle(hideFavorites)}
-                      >
-                        {hideFavorites ? "Oculto" : "Visível"}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
                 <TouchableOpacity
                   style={[
-                    styles.saveButton,
-                    getSaveButtonStyle(currentTheme.accent),
+                    styles.addCollectionTriggerBtn,
+                    !isDarkMode && styles.addCollectionTriggerBtnLight,
+                    styles.addCollectionTriggerBtnNoTopMargin,
                   ]}
-                  onPress={onSaveProfile}
-                  disabled={loadingData}
+                  activeOpacity={0.75}
+                  onPress={onOpenThemeModal}
                 >
-                  {loadingData ? (
-                    <ActivityIndicator color="#000" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>
-                      Salvar Alterações
+                  <View style={styles.addCollectionTriggerLeft}>
+                    <View
+                      style={[
+                        styles.addCollectionTriggerIconBox,
+                        !isDarkMode && styles.addCollectionTriggerIconBoxLight,
+                      ]}
+                    >
+                      <Ionicons
+                        name="color-palette"
+                        size={17}
+                        color={!isDarkMode ? "#000000" : "#FFFFFF"}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.addCollectionTriggerText,
+                        !isDarkMode && styles.addCollectionTriggerTextLight,
+                      ]}
+                    >
+                      Alterar tema
                     </Text>
-                  )}
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={
+                      !isDarkMode
+                        ? "rgba(0, 0, 0, 0.4)"
+                        : "rgba(255, 255, 255, 0.4)"
+                    }
+                  />
                 </TouchableOpacity>
               </ScrollView>
 
@@ -603,34 +415,58 @@ const EditProfileModal = memo(function EditProfileModal({
                   <Text style={styles.logoutText}>Sair</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={handleToggleTheme}
-                  disabled={isThemeLoading}
-                  activeOpacity={0.7}
-                  hitSlop={HIT_SLOP_12}
-                  style={[
-                    styles.themeToggleButton,
-                    !isDarkMode ? styles.themeToggleLight : styles.themeToggleDark,
-                  ]}
-                >
-                  {isThemeLoading ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={currentTheme.accent}
-                      style={styles.themeIndicator}
+                <View style={styles.footerRightActions}>
+                  <TouchableOpacity
+                    onPress={onToggleHideFavorites}
+                    activeOpacity={0.7}
+                    hitSlop={HIT_SLOP_12}
+                    style={[
+                      styles.themeToggleButton,
+                      !isDarkMode ? styles.themeToggleLight : styles.themeToggleDark,
+                    ]}
+                  >
+                    <Ionicons
+                      name={hideFavorites ? "eye-off" : "eye"}
+                      size={14}
+                      color={
+                        hideFavorites
+                          ? currentTheme.accent
+                          : !isDarkMode
+                          ? "#000000"
+                          : currentTheme.accent
+                      }
                     />
-                  ) : (
-                    <Animated.View style={getRotationStyle(iconRotation)}>
-                      <Ionicons
-                        name={isDarkMode ? "moon" : "sunny"}
-                        size={14}
-                        color={
-                          !isDarkMode ? "#000000" : currentTheme.accent
-                        }
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={handleToggleTheme}
+                    disabled={isThemeLoading}
+                    activeOpacity={0.7}
+                    hitSlop={HIT_SLOP_12}
+                    style={[
+                      styles.themeToggleButton,
+                      !isDarkMode ? styles.themeToggleLight : styles.themeToggleDark,
+                    ]}
+                  >
+                    {isThemeLoading ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={currentTheme.accent}
+                        style={styles.themeIndicator}
                       />
-                    </Animated.View>
-                  )}
-                </TouchableOpacity>
+                    ) : (
+                      <Animated.View style={getRotationStyle(iconRotation)}>
+                        <Ionicons
+                          name={isDarkMode ? "moon" : "sunny"}
+                          size={14}
+                          color={
+                            !isDarkMode ? "#000000" : currentTheme.accent
+                          }
+                        />
+                      </Animated.View>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </Animated.View>
           </TouchableWithoutFeedback>

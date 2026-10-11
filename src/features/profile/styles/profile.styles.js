@@ -495,9 +495,13 @@ export const styles = StyleSheet.create({
   label: {
     color: "#FFF",
     marginBottom: 8,
+    marginTop: 18,
     fontSize: 13,
     marginLeft: 5,
     fontWeight: "700",
+  },
+  firstLabel: {
+    marginTop: 0,
   },
   labelLight: {
     color: "#222222",
@@ -593,8 +597,13 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 20,
     width: "100%",
+  },
+  footerRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   logoutButton: {
     flexDirection: "row",
@@ -943,8 +952,8 @@ export const styles = StyleSheet.create({
     marginTop: 14,
     marginBottom: 4,
     paddingHorizontal: 16,
-    paddingVertical: 13,
-    borderRadius: 14,
+    paddingVertical: 15,
+    borderRadius: 16,
     backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
   addCollectionTriggerBtnLight: {
@@ -976,25 +985,34 @@ export const styles = StyleSheet.create({
   },
   addCollectionModalOverlay: {
     flex: 1,
+    width: "100%",
+    height: "100%",
     backgroundColor: "rgba(0, 0, 0, 0.85)",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
   },
   addCollectionModalCard: {
     width: "100%",
-    maxWidth: 380,
+    maxWidth: 360,
     backgroundColor: "#161616",
     borderRadius: 22,
     padding: 22,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
   },
   addCollectionModalCardLight: {
     backgroundColor: "#FFFFFF",
+    shadowOpacity: 0.15,
   },
   addCollectionModalHeader: {
+    width: "100%",
     alignItems: "flex-start",
     justifyContent: "flex-start",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   addCollectionModalTitle: {
     fontSize: 19,
@@ -1014,6 +1032,7 @@ export const styles = StyleSheet.create({
     color: "#000000",
   },
   addCollectionPhotoBox: {
+    width: "100%",
     borderRadius: 16,
     paddingVertical: 24,
     paddingHorizontal: 16,
@@ -1053,6 +1072,7 @@ export const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, 0.5)",
   },
   addCollectionModalActions: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -1090,6 +1110,8 @@ export const styles = StyleSheet.create({
     color: "#000000",
   },
   selectedCollectionImagesScroll: {
+    width: "100%",
+    maxWidth: "100%",
     marginTop: 10,
     marginBottom: 4,
   },
@@ -1156,9 +1178,6 @@ export const styles = StyleSheet.create({
   scale075: {
     transform: [{ scale: 0.75 }],
   },
-});
-
-export const dialogStyles = StyleSheet.create({
   overlay: {
     flex: 1,
     width: "100%",
@@ -1297,8 +1316,8 @@ export const dialogStyles = StyleSheet.create({
   },
   modalAvoidingView: {
     width: "100%",
-    maxWidth: 380,
     alignItems: "center",
+    justifyContent: "center",
   },
   pickingPhotosWrapper: {
     alignItems: "center",
@@ -1337,58 +1356,59 @@ export const dialogStyles = StyleSheet.create({
     marginBottom: 10,
   },
   bioInputMargin: {
-    marginBottom: 8,
+    marginBottom: 18,
   },
   addCollectionTriggerBtnSpacing: {
-    marginTop: 4,
-    marginBottom: 8,
+    marginTop: 0,
+    marginBottom: 12,
   },
   addCollectionTriggerBtnNoTopMargin: {
     marginTop: 0,
+    marginBottom: 12,
   },
-  aestheticSelectorTrack: {
-    flexDirection: "row",
-    backgroundColor: "rgba(255, 255, 255, 0.07)",
-    borderRadius: 14,
-    padding: 4,
-    gap: 4,
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  aestheticSelectorTrackLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-  },
-  aestheticSelectorOption: {
-    flex: 1,
+  aestheticRowBtn: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    justifyContent: "space-between",
+    marginTop: 0,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  aestheticRowBtnLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+  },
+  aestheticBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 10,
-    backgroundColor: "transparent",
+    borderWidth: 1,
+    gap: 6,
   },
-  aestheticSelectorOptionActive: {
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
+  aestheticBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  aestheticSelectorIcon: {
-    marginRight: 6,
-  },
-  aestheticSelectorText: {
-    fontSize: 13.5,
+  aestheticBadgeText: {
+    fontSize: 12.5,
     fontWeight: "600",
-    color: "rgba(255, 255, 255, 0.65)",
+    color: "#FFFFFF",
   },
-  aestheticSelectorTextLight: {
-    color: "rgba(0, 0, 0, 0.6)",
-  },
-  aestheticSelectorTextActive: {
+  aestheticBadgeTextLight: {
     color: "#000000",
-    fontWeight: "700",
+  },
+  aestheticRowSubtitle: {
+    fontSize: 11.5,
+    marginTop: 2,
+    color: "rgba(255, 255, 255, 0.45)",
+  },
+  aestheticRowSubtitleLight: {
+    color: "rgba(0, 0, 0, 0.45)",
   },
   labelMarginTop: {
     marginTop: 14,
@@ -1398,13 +1418,205 @@ export const dialogStyles = StyleSheet.create({
     marginBottom: 6,
   },
   photosSectionTitleMargin: {
-    marginTop: 4,
+    marginTop: 14,
     marginBottom: 6,
   },
   collectionNameInputSpacing: {
     marginBottom: 4,
   },
+  themeModalOverlay: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  themeModalCard: {
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: "#161616",
+    borderRadius: 22,
+    padding: 22,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  themeModalCardLight: {
+    backgroundColor: "#FFFFFF",
+    shadowOpacity: 0.15,
+  },
+  themeModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 18,
+  },
+  themeModalTitle: {
+    fontSize: 19,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  themeModalTitleLight: {
+    color: "#000000",
+  },
+  themeModalCloseBtn: {
+    padding: 4,
+  },
+  themeModalSectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 10,
+  },
+  themeModalSectionTitleLight: {
+    color: "#000000",
+  },
+  themeModalSectionTitleMarginTop: {
+    marginTop: 20,
+  },
+  themeGridThree: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  themeGridTwo: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  themeOptionCard: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 88,
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+  },
+  themeOptionCardLight: {
+    borderColor: "rgba(0, 0, 0, 0.08)",
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+  },
+  themeOptionIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  themeOptionIconBoxLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+  },
+  themeOptionLabel: {
+    fontSize: 11.5,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.75)",
+    textAlign: "center",
+    marginTop: 2,
+  },
+  themeOptionLabelLight: {
+    color: "rgba(0, 0, 0, 0.65)",
+  },
+  aestheticOptionCard: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 104,
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+  },
+  aestheticOptionCardLight: {
+    borderColor: "rgba(0, 0, 0, 0.08)",
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+  },
+  aestheticOptionIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  aestheticOptionIconBoxLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+  },
+  aestheticOptionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.85)",
+    textAlign: "center",
+  },
+  aestheticOptionLabelLight: {
+    color: "rgba(0, 0, 0, 0.8)",
+  },
+  aestheticOptionSub: {
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.5)",
+    marginTop: 4,
+    textAlign: "center",
+    lineHeight: 14,
+  },
+  aestheticOptionSubLight: {
+    color: "rgba(0, 0, 0, 0.5)",
+  },
+  themeAestheticList: {
+    flexDirection: "column",
+    gap: 10,
+  },
+  aestheticOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    minHeight: 50,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+  },
+  aestheticOptionRowLight: {
+    borderColor: "transparent",
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+  },
+  aestheticOptionRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  aestheticOptionRowIconBox: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
+  aestheticOptionRowIconBoxLight: {
+    backgroundColor: "transparent",
+  },
+  aestheticOptionRowLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.85)",
+  },
+  aestheticOptionRowLabelLight: {
+    color: "rgba(0, 0, 0, 0.8)",
+  },
 });
+
+export const dialogStyles = styles;
 
 export const getAccentColorStyle = (color) => ({
   color,
@@ -1507,12 +1719,19 @@ export const getBioDynamicStyle = (isDarkMode, scale, fontSize, lineHeight, marg
   },
 ];
 
-export const getStatsContainerDynamicStyle = (isDarkMode, scale, paddingVertical, marginBottom) => [
+export const getStatsContainerDynamicStyle = (
+  isDarkMode,
+  scale,
+  paddingVertical,
+  marginBottom,
+  marginTop = 0
+) => [
   styles.statsContainer,
   isDarkMode ? styles.statsContainerDark : styles.statsContainerLight,
-  scale < 1 && {
+  {
     paddingVertical,
     marginBottom,
+    marginTop,
   },
 ];
 

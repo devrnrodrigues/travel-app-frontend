@@ -59,10 +59,9 @@ export interface EditProfileModalProps {
   isSaving?: boolean;
   currentTheme: HomeTheme;
   isDarkMode: boolean;
-  galleryCount?: number | string;
-  onGalleryCountChange?: (count: number | string) => void;
   aestheticMode?: "minimalista" | "decorativa";
   onAestheticModeChange?: (mode: "minimalista" | "decorativa") => void;
+  onOpenThemeModal?: () => void;
 }
 
 export interface LogoutConfirmationModalProps {
