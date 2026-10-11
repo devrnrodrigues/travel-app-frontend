@@ -158,6 +158,8 @@ export function useExploreSearchBarAnimation(navigation, headerHeight, isLoading
           idleTimerRef.current = null;
         }
         dismissSearchFocus();
+        showSearchBar();
+        DeviceEventEmitter.emit("exploreSearchBarVisible", true);
       };
     }, [showSearchBar, dismissSearchFocus])
   );

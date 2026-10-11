@@ -30,7 +30,8 @@ export default function BottomTabBar({ state, navigation }) {
   const isExplore = currentRouteName === "Explore";
   const isFavorites = currentRouteName === "Favorites";
   const isMinimalist = aestheticMode === "minimalista";
-  const isTranslucentTab = !isMinimalist && (isHome || isExplore);
+  const isMinimalistExplore = isMinimalist && isExplore;
+  const isTranslucentTab = !isMinimalist && isExplore;
 
   const exploreRoute = state.routes.find((r) => r.name === "Explore");
   const [isExploreSearchVisible, setIsExploreSearchVisible] = useState(
@@ -53,6 +54,9 @@ export default function BottomTabBar({ state, navigation }) {
       if (typeof currentParam === "boolean") {
         setIsExploreSearchVisible(currentParam);
       }
+    } else {
+      setIsExploreSearchVisible(true);
+      exploreAnim.setValue(1);
     }
   }, [isExplore, state.index]);
 
@@ -68,6 +72,13 @@ export default function BottomTabBar({ state, navigation }) {
       useNativeDriver: true,
     }).start();
   }, [isExploreSearchVisible]);
+
+  const tabItemOpacity = isExplore
+    ? exploreAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.60, 1],
+      })
+    : 1;
 
 
 
@@ -181,8 +192,10 @@ export default function BottomTabBar({ state, navigation }) {
         styles.bottomTab,
         {
           backgroundColor: isMinimalist
-            ? isDarkMode
-              ? "#000000"
+            ? isExplore
+              ? "transparent"
+              : isDarkMode
+              ? "#161616"
               : "#F5F5F7"
             : isTranslucentTab
             ? "transparent"
@@ -198,9 +211,9 @@ export default function BottomTabBar({ state, navigation }) {
         },
       ]}
     >
-      {isTranslucentTab && (
+      {(isTranslucentTab || isMinimalistExplore) && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          {Platform.OS !== "android" && !isDarkMode && isExplore && (
+          {Platform.OS !== "android" && !isDarkMode && isExplore && !isMinimalist && (
             <BlurView
               intensity={20}
               tint="light"
@@ -211,21 +224,31 @@ export default function BottomTabBar({ state, navigation }) {
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: isDarkMode
-                  ? "rgba(0, 0, 0, 0.82)"
+                backgroundColor: isMinimalistExplore
+                  ? isDarkMode
+                    ? "rgba(22, 22, 22, 0.40)"
+                    : "rgba(245, 245, 247, 0.50)"
+                  : isDarkMode
+                  ? "rgba(0, 0, 0, 0.70)"
                   : "rgba(100, 100, 100, 0.80)",
               },
             ]}
           />
         </View>
       )}
-      {!isMinimalist && isExplore && (
+      {isExplore && (
         <Animated.View
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isDarkMode ? "#000000" : "rgba(100, 100, 100, 1)",
+              backgroundColor: isMinimalist
+                ? isDarkMode
+                  ? "#161616"
+                  : "#F5F5F7"
+                : isDarkMode
+                ? "#000000"
+                : "rgba(100, 100, 100, 1)",
               opacity: exploreAnim,
             },
           ]}
@@ -256,46 +279,50 @@ export default function BottomTabBar({ state, navigation }) {
         }
 
         return (
-          <TouchableOpacity
+          <Animated.View
             key={route.key}
-            onPress={onPress}
-            activeOpacity={0.8}
-            style={[
-              styles.tabItem,
-              isFocused && [
-                styles.activeTab,
-                {
-                  borderWidth: 0,
-                  borderColor: "transparent",
-                  backgroundColor: activeAccent,
-                },
-              ],
-            ]}
+            style={{ opacity: tabItemOpacity }}
           >
-            <Animated.View
-              style={
-                isFocused
-                  ? { transform: [{ translateY: activeIconTranslateY }] }
-                  : undefined
-              }
+            <TouchableOpacity
+              onPress={onPress}
+              activeOpacity={0.8}
+              style={[
+                styles.tabItem,
+                isFocused && [
+                  styles.activeTab,
+                  {
+                    borderWidth: 0,
+                    borderColor: "transparent",
+                    backgroundColor: activeAccent,
+                  },
+                ],
+              ]}
             >
-              <Feather
-                name={iconName}
-                size={24}
-                color={
+              <Animated.View
+                style={
                   isFocused
-                    ? "#FFFFFF"
-                    : isDarkMode
-                    ? "#FFFFFF"
-                    : isMinimalist
-                    ? "#000000"
-                    : isHome || isFavorites || isExplore
-                    ? "#FFFFFF"
-                    : "#000000"
+                    ? { transform: [{ translateY: activeIconTranslateY }] }
+                    : undefined
                 }
-              />
-            </Animated.View>
-          </TouchableOpacity>
+              >
+                <Feather
+                  name={iconName}
+                  size={24}
+                  color={
+                    isFocused
+                      ? "#FFFFFF"
+                      : isDarkMode
+                      ? "#FFFFFF"
+                      : isMinimalist
+                      ? "#000000"
+                      : isHome || isFavorites || isExplore
+                      ? "#FFFFFF"
+                      : "#000000"
+                  }
+                />
+              </Animated.View>
+            </TouchableOpacity>
+          </Animated.View>
         );
       })}
 
