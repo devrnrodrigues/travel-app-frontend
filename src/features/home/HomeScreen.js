@@ -34,6 +34,11 @@ const errorImage = require("../../../assets/images/error.png");
 const notFoundImage = require("../../../assets/images/not-found.png");
 const noConnectionImage = require("../../../assets/images/no-connection.png");
 
+const DEFAULT_DARK_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.72)", "rgba(0, 0, 0, 0.96)", "rgba(0, 0, 0, 0.98)"];
+const DARK_GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
+const HOME_LIGHT_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.25)", "rgba(0, 0, 0, 0.75)"];
+const HOME_LIGHT_LOCATIONS = [0, 0.45, 1];
+
 export default function Home({ navigation }) {
   const { user } = useAuth();
   const {
@@ -134,9 +139,27 @@ export default function Home({ navigation }) {
     setIsSearchVisible(false);
   }, []);
 
-  const gradientColors = useMemo(() => {
-    return ["rgba(0, 0, 0, 0.55)", "transparent", "rgba(0, 0, 0, 0.75)"];
-  }, []);
+  const { gradientColors, gradientLocations } = useMemo(() => {
+    if (isDarkMode) {
+      const colors =
+        currentTheme?.colors && currentTheme.colors.length >= 3
+          ? [
+              currentTheme.colors[0],
+              currentTheme.colors[1],
+              "rgba(0, 0, 0, 0.72)",
+              "rgba(0, 0, 0, 0.96)",
+            ]
+          : DEFAULT_DARK_GRADIENT;
+      return {
+        gradientColors: colors,
+        gradientLocations: DARK_GRADIENT_LOCATIONS,
+      };
+    }
+    return {
+      gradientColors: HOME_LIGHT_GRADIENT,
+      gradientLocations: HOME_LIGHT_LOCATIONS,
+    };
+  }, [isDarkMode, currentTheme?.colors]);
 
   const isErrorBg = Boolean(errorConfig);
   const isMinimalistDark = isDarkMode && isMinimalist;
@@ -304,7 +327,7 @@ export default function Home({ navigation }) {
         <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
           <LinearGradient
             colors={gradientColors}
-            locations={[0, 0.45, 1]}
+            locations={gradientLocations}
             style={styles.flex1}
           >
             <Animated.View
