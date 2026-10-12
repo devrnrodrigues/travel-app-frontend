@@ -41,6 +41,8 @@ export default function CollectionGalleryScreen({ route, navigation }) {
     captionText,
     setCaptionText,
     isSavingCaption,
+    captionErrors,
+    setCaptionErrors,
     handleOpenEditCaption,
     handleSaveCaption,
     isEditCollectionModalOpen,
@@ -48,14 +50,20 @@ export default function CollectionGalleryScreen({ route, navigation }) {
     editCollectionTitle,
     setEditCollectionTitle,
     selectedPhotoIdsToDelete,
+    setSelectedPhotoIdsToDelete,
     isSavingEditCollection,
+    editCollectionErrors,
+    setEditCollectionErrors,
     handleTogglePhotoDelete,
     handleSaveEditCollection,
     isAddPhotosModalOpen,
     setIsAddPhotosModalOpen,
     newPhotosToUpload,
+    setNewPhotosToUpload,
     isPickingPhotos,
     isSavingNewPhotos,
+    addPhotosErrors,
+    setAddPhotosErrors,
     handlePickNewPhotos,
     handleRemoveNewPhoto,
     handleSaveNewPhotos,
@@ -69,6 +77,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
     isDeletingPhoto,
     handleConfirmDeletePhoto,
     handleDeletePhoto,
+    handleSetCoverPhoto,
   } = useCollectionGallery(initialCollection, navigation);
 
   const {
@@ -86,7 +95,6 @@ export default function CollectionGalleryScreen({ route, navigation }) {
 
   const [activeViewerIndex, setActiveViewerIndex] = useState(0);
   const [isPinchingViewer, setIsPinchingViewer] = useState(false);
-  const [areViewerControlsVisible, setAreViewerControlsVisible] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isEditTitleFocused, setIsEditTitleFocused] = useState(false);
   const [menuCoords, setMenuCoords] = useState({ top: 68, left: 20 });
@@ -95,7 +103,6 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   const viewerFlatListRef = useRef(null);
   const captionInputRef = useRef(null);
 
-  const controlsOpacity = useRef(new Animated.Value(1)).current;
   const menuAnim = useRef(new Animated.Value(0)).current;
   const modalTranslateY = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.92)).current;
@@ -107,32 +114,17 @@ export default function CollectionGalleryScreen({ route, navigation }) {
 
   const photos = useMemo(() => collection?.photos || [], [collection?.photos]);
   const collectionTitle = collection?.title || "Galeria";
-  const currentViewerPhoto = photos[activeViewerIndex] || photos[0];
 
   const editablePhotos = useMemo(() => {
     return photos.filter((p) => !selectedPhotoIdsToDelete.includes(p.id));
   }, [photos, selectedPhotoIdsToDelete]);
 
-  const toggleViewerControls = useCallback(() => {
-    setAreViewerControlsVisible((prev) => {
-      const next = !prev;
-      Animated.timing(controlsOpacity, {
-        toValue: next ? 1 : 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-      return next;
-    });
-  }, [controlsOpacity]);
-
   useEffect(() => {
     if (selectedPhotoIndex !== null) {
-      setAreViewerControlsVisible(true);
-      controlsOpacity.setValue(1);
       setIsPinchingViewer(false);
       setActiveViewerIndex(selectedPhotoIndex);
     }
-  }, [selectedPhotoIndex, controlsOpacity]);
+  }, [selectedPhotoIndex]);
 
   const handleOpenMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -280,13 +272,16 @@ export default function CollectionGalleryScreen({ route, navigation }) {
 
   const handleOpenAddPhotos = useCallback(() => {
     setIsMenuOpen(false);
+    setNewPhotosToUpload([]);
     setIsAddPhotosModalOpen(true);
-  }, [setIsMenuOpen, setIsAddPhotosModalOpen]);
+  }, [setIsMenuOpen, setIsAddPhotosModalOpen, setNewPhotosToUpload]);
 
   const handleOpenEditCollection = useCallback(() => {
     setIsMenuOpen(false);
+    setEditCollectionTitle(collection?.title || "");
+    setSelectedPhotoIdsToDelete([]);
     setIsEditCollectionModalOpen(true);
-  }, [setIsMenuOpen, setIsEditCollectionModalOpen]);
+  }, [setIsMenuOpen, setIsEditCollectionModalOpen, collection?.title, setEditCollectionTitle, setSelectedPhotoIdsToDelete]);
 
   const handleOpenDeleteCollection = useCallback(() => {
     setIsMenuOpen(false);
@@ -296,18 +291,25 @@ export default function CollectionGalleryScreen({ route, navigation }) {
   const handleCloseEditCaption = useCallback(() => {
     Keyboard.dismiss();
     setIsInputFocused(false);
+    setCaptionErrors({});
     setIsEditingCaption(false);
-  }, [setIsEditingCaption]);
+  }, [setIsEditingCaption, setCaptionErrors]);
 
   const handleCloseEditCollection = useCallback(() => {
     Keyboard.dismiss();
     setIsEditTitleFocused(false);
+    setSelectedPhotoIdsToDelete([]);
+    setEditCollectionErrors({});
     setIsEditCollectionModalOpen(false);
-  }, [setIsEditCollectionModalOpen]);
+  }, [setIsEditCollectionModalOpen, setSelectedPhotoIdsToDelete, setEditCollectionErrors]);
 
   const handleCloseAddPhotos = useCallback(() => {
-    setIsAddPhotosModalOpen(false);
-  }, [setIsAddPhotosModalOpen]);
+    if (!isPickingPhotos && !isSavingNewPhotos) {
+      setNewPhotosToUpload([]);
+      setAddPhotosErrors({});
+      setIsAddPhotosModalOpen(false);
+    }
+  }, [isPickingPhotos, isSavingNewPhotos, setIsAddPhotosModalOpen, setNewPhotosToUpload, setAddPhotosErrors]);
 
   const handleCancelDeleteCollection = useCallback(() => {
     setIsDeleteCollectionModalOpen(false);
@@ -317,11 +319,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
     setIsDeletePhotoModalOpen(false);
   }, [setIsDeletePhotoModalOpen]);
 
-  const handlePromptDeleteCurrentPhoto = useCallback(() => {
-    if (currentViewerPhoto) {
-      handleConfirmDeletePhoto(currentViewerPhoto);
-    }
-  }, [currentViewerPhoto, handleConfirmDeletePhoto]);
+
 
   return (
     <SafeAreaView
@@ -377,17 +375,12 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         visible={selectedPhotoIndex !== null}
         photos={photos}
         selectedPhotoIndex={selectedPhotoIndex}
+        activeViewerIndex={activeViewerIndex}
         onClose={handleCloseViewer}
         isPinchingViewer={isPinchingViewer}
         setIsPinchingViewer={setIsPinchingViewer}
         viewerFlatListRef={viewerFlatListRef}
         setActiveViewerIndex={setActiveViewerIndex}
-        toggleViewerControls={toggleViewerControls}
-        areViewerControlsVisible={areViewerControlsVisible}
-        controlsOpacity={controlsOpacity}
-        currentViewerPhoto={currentViewerPhoto}
-        onOpenEditCaption={handleOpenEditCaption}
-        onOpenDeletePhoto={handlePromptDeleteCurrentPhoto}
         insets={insets}
         isDarkMode={isDarkMode}
       />
@@ -395,7 +388,12 @@ export default function CollectionGalleryScreen({ route, navigation }) {
       <EditCaptionModal
         visible={isEditingCaption}
         captionText={captionText}
-        onChangeCaptionText={setCaptionText}
+        onChangeCaptionText={(text) => {
+          setCaptionText(text);
+          if (captionErrors?.caption) {
+            setCaptionErrors((prev) => ({ ...prev, caption: null }));
+          }
+        }}
         isInputFocused={isInputFocused}
         onFocusInput={() => setIsInputFocused(true)}
         onBlurInput={() => setIsInputFocused(false)}
@@ -406,13 +404,19 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         onSave={handleSaveCaption}
         isDarkMode={isDarkMode}
         inputRef={captionInputRef}
+        errors={captionErrors}
       />
 
       <EditCollectionModal
         visible={isEditCollectionModalOpen}
         onClose={handleCloseEditCollection}
         editCollectionTitle={editCollectionTitle}
-        onChangeEditCollectionTitle={setEditCollectionTitle}
+        onChangeEditCollectionTitle={(text) => {
+          setEditCollectionTitle(text);
+          if (editCollectionErrors?.title) {
+            setEditCollectionErrors((prev) => ({ ...prev, title: null }));
+          }
+        }}
         isEditTitleFocused={isEditTitleFocused}
         onFocusTitle={() => setIsEditTitleFocused(true)}
         onBlurTitle={() => setIsEditTitleFocused(false)}
@@ -423,6 +427,7 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         editModalTranslateY={editModalTranslateY}
         editModalScale={editModalScale}
         isDarkMode={isDarkMode}
+        errors={editCollectionErrors}
       />
 
       <AddPhotosModal
@@ -432,9 +437,12 @@ export default function CollectionGalleryScreen({ route, navigation }) {
         onPickNewPhotos={handlePickNewPhotos}
         onRemoveNewPhoto={handleRemoveNewPhoto}
         isAddingPhotos={isSavingNewPhotos}
+        isPickingPhotos={isPickingPhotos}
+        currentTheme={currentTheme}
         onSave={handleSaveNewPhotos}
         addPhotosModalScale={addPhotosModalScale}
         isDarkMode={isDarkMode}
+        errors={addPhotosErrors}
       />
 
       <DeleteConfirmModal

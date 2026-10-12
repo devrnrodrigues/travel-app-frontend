@@ -28,6 +28,7 @@ const EditCaptionModal = memo(function EditCaptionModal({
   onSave,
   isDarkMode,
   inputRef,
+  errors,
 }) {
   return (
     <Modal
@@ -67,37 +68,50 @@ const EditCaptionModal = memo(function EditCaptionModal({
             Esse nome aparecerá escrito na foto do polaroid
           </Text>
 
-          <TextInput
-            ref={inputRef}
-            value={captionText}
-            onChangeText={onChangeCaptionText}
-            placeholder="Ex: Férias em Paris"
-            placeholderTextColor="#8E8E93"
-            onFocus={onFocusInput}
-            onBlur={onBlurInput}
+          <View
             style={[
-              styles.editDialogInput,
-              !isDarkMode && styles.editDialogInputLight,
+              styles.inputWithCounterContainer,
+              !isDarkMode && styles.inputWithCounterContainerLight,
               isInputFocused &&
                 (isDarkMode
                   ? styles.editDialogInputFocused
                   : styles.editDialogInputFocusedLight),
+              errors?.caption && styles.editDialogInputError,
             ]}
-            maxLength={30}
-            returnKeyType="done"
-            onSubmitEditing={onSave}
-          />
-
-          <View style={styles.charCountRow}>
+          >
+            <TextInput
+              ref={inputRef}
+              value={captionText}
+              onChangeText={onChangeCaptionText}
+              placeholder="Ex: Férias em Paris"
+              placeholderTextColor="#8E8E93"
+              onFocus={onFocusInput}
+              onBlur={onBlurInput}
+              style={[
+                styles.inputWithCounterField,
+                !isDarkMode && styles.inputWithCounterFieldLight,
+              ]}
+              maxLength={30}
+              returnKeyType="done"
+              onSubmitEditing={onSave}
+            />
             <Text
               style={[
-                styles.charCountText,
-                !isDarkMode && styles.charCountTextLight,
+                styles.inlineCharCountText,
+                !isDarkMode && styles.inlineCharCountTextLight,
               ]}
             >
               {captionText.length}/30
             </Text>
           </View>
+
+          {errors?.caption && (
+            <Text style={styles.modalFieldErrorText}>{errors.caption}</Text>
+          )}
+
+          {errors?.submit && (
+            <Text style={styles.modalFieldErrorText}>{errors.submit}</Text>
+          )}
 
           <View style={styles.editDialogButtons}>
             <TouchableOpacity

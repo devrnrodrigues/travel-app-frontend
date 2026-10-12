@@ -106,9 +106,12 @@ export default function ProfileScreen({ navigation }) {
     selectedCollectionPhotos,
     isPickingPhotos,
     isCreatingCollection,
+    formErrors,
+    setFormErrors,
     handlePickCollectionPhotos,
     handleRemoveCollectionPhoto,
     handleSaveCollection,
+    handleCloseModal,
   } = useCreateCollection(queryClient);
 
   const bgSource = useMemo(() => {
@@ -166,8 +169,8 @@ export default function ProfileScreen({ navigation }) {
   }, [setAddCollectionModalVisible]);
 
   const handleCloseAddCollectionModal = useCallback(() => {
-    setAddCollectionModalVisible(false);
-  }, [setAddCollectionModalVisible]);
+    handleCloseModal();
+  }, [handleCloseModal]);
 
   const handleOpenThemeModal = useCallback(() => {
     setThemeModalVisible(true);
@@ -414,6 +417,8 @@ export default function ProfileScreen({ navigation }) {
           onPickPhotos={handlePickCollectionPhotos}
           onRemovePhoto={handleRemoveCollectionPhoto}
           onSaveCollection={handleSaveCollection}
+          formErrors={formErrors}
+          setFormErrors={setFormErrors}
         />
 
         <ThemeModal

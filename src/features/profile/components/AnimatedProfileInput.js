@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { TextInput, Animated, Easing } from "react-native";
+import { TextInput, Text, Animated, Easing } from "react-native";
 import styles, {
   getInputAnimatedStyle,
   getTextInputStyle,
@@ -10,6 +10,9 @@ export default function AnimatedProfileInput({
   style,
   currentTheme,
   isDarkMode,
+  hasError,
+  charCount,
+  maxLength,
   ...props
 }) {
   const anim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
@@ -23,10 +26,12 @@ export default function AnimatedProfileInput({
     }).start();
   }, [isFocused, anim]);
 
-  const borderColor = anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["transparent", currentTheme.accent],
-  });
+  const borderColor = hasError
+    ? "#EF4444"
+    : anim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ["transparent", currentTheme.accent],
+      });
 
   const minHeight = props.multiline ? 80 : 50;
   const inputMinHeight = props.multiline ? 70 : 46;
@@ -47,8 +52,19 @@ export default function AnimatedProfileInput({
           getTextInputStyle(inputMinHeight),
           props.multiline ? styles.textInputMultiline : styles.textInputSingle,
         ]}
+        maxLength={maxLength}
         {...props}
       />
+      {charCount !== undefined && maxLength !== undefined && (
+        <Text
+          style={[
+            styles.inlineCounter,
+            !isDarkMode && styles.inlineCounterLight,
+          ]}
+        >
+          {charCount}/{maxLength}
+        </Text>
+      )}
     </Animated.View>
   );
 }

@@ -1,14 +1,13 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import {
   updatePhotoCaptionApi,
   updateCollectionApi,
   deleteCollectionApi,
   addPhotosToCollectionApi,
   deletePhotoApi,
+  setCoverPhotoApi,
 } from "../api/collectionService";
 
 export default function useCollectionGallery(initialCollection, navigation) {
@@ -22,16 +21,19 @@ export default function useCollectionGallery(initialCollection, navigation) {
   const [editingPhoto, setEditingPhoto] = useState(null);
   const [captionText, setCaptionText] = useState("");
   const [isSavingCaption, setIsSavingCaption] = useState(false);
+  const [captionErrors, setCaptionErrors] = useState({});
 
   const [isEditCollectionModalOpen, setIsEditCollectionModalOpen] = useState(false);
   const [editCollectionTitle, setEditCollectionTitle] = useState(initialCollection?.title || "");
   const [selectedPhotoIdsToDelete, setSelectedPhotoIdsToDelete] = useState([]);
   const [isSavingEditCollection, setIsSavingEditCollection] = useState(false);
+  const [editCollectionErrors, setEditCollectionErrors] = useState({});
 
   const [isAddPhotosModalOpen, setIsAddPhotosModalOpen] = useState(false);
   const [newPhotosToUpload, setNewPhotosToUpload] = useState([]);
   const [isPickingPhotos, setIsPickingPhotos] = useState(false);
   const [isSavingNewPhotos, setIsSavingNewPhotos] = useState(false);
+  const [addPhotosErrors, setAddPhotosErrors] = useState({});
 
   const [isDeleteCollectionModalOpen, setIsDeleteCollectionModalOpen] = useState(false);
   const [isDeletingCollection, setIsDeletingCollection] = useState(false);
@@ -43,25 +45,33 @@ export default function useCollectionGallery(initialCollection, navigation) {
   const handleOpenEditCaption = useCallback((photo) => {
     setEditingPhoto(photo);
     setCaptionText(photo.caption || "");
+    setCaptionErrors({});
     setIsEditingCaption(true);
   }, []);
 
   const handleSaveCaption = useCallback(async () => {
     if (!editingPhoto || !collection?.id) return;
+    const trimmedCaption = captionText ? captionText.trim() : "";
+    if (trimmedCaption.length > 30) {
+      setCaptionErrors({ caption: "A legenda deve ter no máximo 30 caracteres" });
+      return;
+    }
+    setCaptionErrors({});
     setIsSavingCaption(true);
     try {
-      const updated = await updatePhotoCaptionApi(collection.id, editingPhoto.id, captionText.trim());
+      const updated = await updatePhotoCaptionApi(collection.id, editingPhoto.id, trimmedCaption);
       setCollection((prev) => ({
         ...prev,
         photos: (prev.photos || []).map((p) =>
-          p.id === editingPhoto.id ? { ...p, caption: captionText.trim() } : p
+          p.id === editingPhoto.id ? { ...p, caption: trimmedCaption } : p
         ),
       }));
       await queryClient.invalidateQueries({ queryKey: ["collections"] });
       setIsEditingCaption(false);
       setEditingPhoto(null);
+      setCaptionErrors({});
     } catch {
-      Alert.alert("Erro", "Não foi possível salvar a legenda.");
+      setCaptionErrors({ submit: "Não foi possível salvar a legenda." });
     } finally {
       setIsSavingCaption(false);
     }
@@ -74,13 +84,22 @@ export default function useCollectionGallery(initialCollection, navigation) {
   }, []);
 
   const handleSaveEditCollection = useCallback(async () => {
+    const errors = {};
     const trimmed = editCollectionTitle.trim();
     if (!trimmed) {
-      Alert.alert("Atenção", "O título não pode ficar vazio.");
-      return;
+      errors.title = "Preencha o nome da coleção";
+    } else if (trimmed.length > 30) {
+      errors.title = "O nome deve ter no máximo 30 caracteres";
     }
+
     if (!collection?.id) return;
 
+    if (Object.keys(errors).length > 0) {
+      setEditCollectionErrors(errors);
+      return;
+    }
+
+    setEditCollectionErrors({});
     setIsSavingEditCollection(true);
     try {
       const updated = await updateCollectionApi(collection.id, {
@@ -95,8 +114,9 @@ export default function useCollectionGallery(initialCollection, navigation) {
       await queryClient.invalidateQueries({ queryKey: ["collections"] });
       setIsEditCollectionModalOpen(false);
       setSelectedPhotoIdsToDelete([]);
+      setEditCollectionErrors({});
     } catch {
-      Alert.alert("Erro", "Não foi possível atualizar a coleção.");
+      setEditCollectionErrors({ submit: "Não foi possível atualizar a coleção." });
     } finally {
       setIsSavingEditCollection(false);
     }
@@ -107,7 +127,7 @@ export default function useCollectionGallery(initialCollection, navigation) {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert("Permissão necessária", "Permita o acesso à galeria.");
+        setAddPhotosErrors({ photos: "Permita o acesso à galeria para selecionar fotos." });
         return;
       }
       setIsPickingPhotos(true);
@@ -121,9 +141,10 @@ export default function useCollectionGallery(initialCollection, navigation) {
           ...prev,
           ...res.assets.map((a) => a.uri),
         ]);
+        setAddPhotosErrors((prev) => ({ ...prev, photos: null }));
       }
     } catch {
-      Alert.alert("Erro", "Não foi possível selecionar fotos.");
+      setAddPhotosErrors({ photos: "Não foi possível selecionar fotos." });
     } finally {
       setIsPickingPhotos(false);
     }
@@ -134,7 +155,12 @@ export default function useCollectionGallery(initialCollection, navigation) {
   }, []);
 
   const handleSaveNewPhotos = useCallback(async () => {
-    if (newPhotosToUpload.length === 0 || !collection?.id) return;
+    if (!collection?.id) return;
+    if (!newPhotosToUpload || newPhotosToUpload.length === 0) {
+      setAddPhotosErrors({ photos: "Selecione no mínimo 1 foto para adicionar" });
+      return;
+    }
+    setAddPhotosErrors({});
     setIsSavingNewPhotos(true);
     try {
       const updated = await addPhotosToCollectionApi(collection.id, newPhotosToUpload);
@@ -143,6 +169,7 @@ export default function useCollectionGallery(initialCollection, navigation) {
       }
       await queryClient.invalidateQueries({ queryKey: ["collections"] });
       setNewPhotosToUpload([]);
+      setAddPhotosErrors({});
       setIsAddPhotosModalOpen(false);
     } catch (err) {
       console.error(err);
@@ -150,7 +177,7 @@ export default function useCollectionGallery(initialCollection, navigation) {
         err?.message ||
         (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
         "Não foi possível adicionar fotos.";
-      Alert.alert("Erro ao adicionar fotos", String(detail));
+      setAddPhotosErrors({ submit: String(detail) });
     } finally {
       setIsSavingNewPhotos(false);
     }
@@ -164,8 +191,8 @@ export default function useCollectionGallery(initialCollection, navigation) {
       await queryClient.invalidateQueries({ queryKey: ["collections"] });
       setIsDeleteCollectionModalOpen(false);
       navigation.goBack();
-    } catch {
-      Alert.alert("Erro", "Não foi possível excluir a coleção.");
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsDeletingCollection(false);
     }
@@ -191,12 +218,33 @@ export default function useCollectionGallery(initialCollection, navigation) {
       if (selectedPhotoIndex !== null) {
         setSelectedPhotoIndex(null);
       }
-    } catch {
-      Alert.alert("Erro", "Não foi possível excluir a foto.");
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsDeletingPhoto(false);
     }
   }, [photoToDelete, collection?.id, queryClient, selectedPhotoIndex]);
+
+  const handleSetCoverPhoto = useCallback(async (photo) => {
+    if (!photo?.id || !collection?.id) return;
+    try {
+      setCollection((prev) => {
+        const currentPhotos = prev?.photos || [];
+        const targetPhoto = currentPhotos.find((p) => p.id === photo.id);
+        if (!targetPhoto) return prev;
+        const reordered = [
+          targetPhoto,
+          ...currentPhotos.filter((p) => p.id !== photo.id),
+        ];
+        return { ...prev, photos: reordered };
+      });
+
+      await setCoverPhotoApi(collection.id, photo.id);
+      await queryClient.invalidateQueries({ queryKey: ["collections"] });
+    } catch {
+      await queryClient.invalidateQueries({ queryKey: ["collections"] });
+    }
+  }, [collection?.id, queryClient]);
 
   return {
     collection,
@@ -209,6 +257,8 @@ export default function useCollectionGallery(initialCollection, navigation) {
     captionText,
     setCaptionText,
     isSavingCaption,
+    captionErrors,
+    setCaptionErrors,
     handleOpenEditCaption,
     handleSaveCaption,
     isEditCollectionModalOpen,
@@ -216,14 +266,20 @@ export default function useCollectionGallery(initialCollection, navigation) {
     editCollectionTitle,
     setEditCollectionTitle,
     selectedPhotoIdsToDelete,
+    setSelectedPhotoIdsToDelete,
     isSavingEditCollection,
+    editCollectionErrors,
+    setEditCollectionErrors,
     handleTogglePhotoDelete,
     handleSaveEditCollection,
     isAddPhotosModalOpen,
     setIsAddPhotosModalOpen,
     newPhotosToUpload,
+    setNewPhotosToUpload,
     isPickingPhotos,
     isSavingNewPhotos,
+    addPhotosErrors,
+    setAddPhotosErrors,
     handlePickNewPhotos,
     handleRemoveNewPhoto,
     handleSaveNewPhotos,
@@ -237,5 +293,6 @@ export default function useCollectionGallery(initialCollection, navigation) {
     isDeletingPhoto,
     handleConfirmDeletePhoto,
     handleDeletePhoto,
+    handleSetCoverPhoto,
   };
 }

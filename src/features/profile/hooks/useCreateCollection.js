@@ -1,7 +1,5 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { createCollectionApi } from "../api/collectionService";
 
 export default function useCreateCollection(queryClient) {
@@ -11,16 +9,17 @@ export default function useCreateCollection(queryClient) {
   const [selectedCollectionPhotos, setSelectedCollectionPhotos] = useState([]);
   const [isPickingPhotos, setIsPickingPhotos] = useState(false);
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   const handlePickCollectionPhotos = useCallback(async () => {
     if (isPickingPhotos || isCreatingCollection) return;
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert(
-          "Permissão necessária",
-          "É necessário permitir o acesso à galeria para selecionar fotos da coleção."
-        );
+        setFormErrors((prev) => ({
+          ...prev,
+          photos: "Permita o acesso à galeria para selecionar fotos.",
+        }));
         return;
       }
 
@@ -40,8 +39,12 @@ export default function useCreateCollection(queryClient) {
         ...prev,
         ...result.assets.map((a) => a.uri),
       ]);
+      setFormErrors((prev) => ({ ...prev, photos: null }));
     } catch {
-      Alert.alert("Erro", "Não foi possível selecionar as fotos.");
+      setFormErrors((prev) => ({
+        ...prev,
+        photos: "Não foi possível selecionar as fotos.",
+      }));
     } finally {
       setIsPickingPhotos(false);
     }
@@ -52,20 +55,20 @@ export default function useCreateCollection(queryClient) {
   }, []);
 
   const handleSaveCollection = useCallback(async () => {
+    const errors = {};
     const trimmedTitle = newCollectionName.trim();
     if (!trimmedTitle) {
-      Alert.alert("Atenção", "Por favor, informe um nome para a coleção.");
-      return;
+      errors.title = "Preencha o nome da coleção";
+    } else if (trimmedTitle.length > 30) {
+      errors.title = "O nome deve ter no máximo 30 caracteres";
     }
-    if (trimmedTitle.length > 30) {
-      Alert.alert("Atenção", "O nome da coleção deve ter no máximo 30 caracteres.");
-      return;
-    }
-    if (!selectedCollectionPhotos || selectedCollectionPhotos.length === 0) {
-      Alert.alert("Atenção", "Por favor, selecione ao menos uma foto.");
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
+    setFormErrors({});
     setIsCreatingCollection(true);
     try {
       await createCollectionApi({
@@ -76,6 +79,7 @@ export default function useCreateCollection(queryClient) {
       await queryClient.invalidateQueries({ queryKey: ["collections"] });
       setNewCollectionName("");
       setSelectedCollectionPhotos([]);
+      setFormErrors({});
       setAddCollectionModalVisible(false);
     } catch (err) {
       console.error(err);
@@ -83,11 +87,18 @@ export default function useCreateCollection(queryClient) {
         err?.message ||
         (err?.data && typeof err.data === "object" && (err.data.message || err.data.error)) ||
         "Não foi possível criar a coleção.";
-      Alert.alert("Erro ao criar coleção", String(detail));
+      setFormErrors({ submit: String(detail) });
     } finally {
       setIsCreatingCollection(false);
     }
   }, [newCollectionName, selectedCollectionPhotos, queryClient]);
+
+  const handleCloseModal = useCallback(() => {
+    if (!isCreatingCollection && !isPickingPhotos) {
+      setFormErrors({});
+      setAddCollectionModalVisible(false);
+    }
+  }, [isCreatingCollection, isPickingPhotos]);
 
   return {
     addCollectionModalVisible,
@@ -100,8 +111,11 @@ export default function useCreateCollection(queryClient) {
     setSelectedCollectionPhotos,
     isPickingPhotos,
     isCreatingCollection,
+    formErrors,
+    setFormErrors,
     handlePickCollectionPhotos,
     handleRemoveCollectionPhoto,
     handleSaveCollection,
+    handleCloseModal,
   };
 }

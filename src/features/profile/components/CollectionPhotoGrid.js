@@ -127,7 +127,7 @@ const CollectionPhotoGrid = memo(function CollectionPhotoGrid({
             !isDarkMode && styles.emptyListSubtitleLight,
           ]}
         >
-          Toque nos três pontos acima para adicionar fotos.
+          Toque no nome da coleção pra adicionar fotos.
         </Text>
       </View>
     );

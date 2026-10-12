@@ -7,18 +7,29 @@ export default StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1.5,
     width: "100%",
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   containerLight: {
     backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   textInput: {
+    flex: 1,
     fontSize: 15,
     paddingVertical: 0,
     color: "#FFFFFF",
   },
   textInputLight: {
     color: "#000000",
+  },
+  inlineCounter: {
+    fontSize: 12,
+    color: "#8E8E93",
+    marginLeft: 8,
+  },
+  inlineCounterLight: {
+    color: "#666666",
   },
   textInputSingle: {
     height: 48,

@@ -1104,6 +1104,18 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  modalFieldErrorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 4,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  addCollectionPhotoBoxError: {
+    borderColor: "#EF4444",
+    borderWidth: 1.5,
+  },
   addCollectionSaveText: {
     fontSize: 14,
     fontWeight: "700",

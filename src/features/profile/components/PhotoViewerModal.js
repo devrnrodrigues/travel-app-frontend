@@ -1,21 +1,18 @@
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import {
   View,
   Text,
   Modal,
   FlatList,
   TouchableOpacity,
-  Animated,
+  Image,
   Dimensions,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import ViewerSlide from "./ViewerSlide";
-import {
-  styles,
-  getModalCloseButtonAnimatedStyle,
-  getControlsOpacityAnimatedStyle,
-} from "../styles/collectionGallery.styles";
+import { styles } from "../styles/collectionGallery.styles";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -23,134 +20,152 @@ const PhotoViewerModal = memo(function PhotoViewerModal({
   visible,
   photos,
   selectedPhotoIndex,
+  activeViewerIndex,
   onClose,
   isPinchingViewer,
   setIsPinchingViewer,
   viewerFlatListRef,
   setActiveViewerIndex,
-  toggleViewerControls,
-  areViewerControlsVisible,
-  controlsOpacity,
-  currentViewerPhoto,
-  onOpenEditCaption,
-  onOpenDeletePhoto,
   insets,
   isDarkMode,
 }) {
-  const closeButtonTop = Math.max(insets.top + 10, 24);
+  const currentIndex = activeViewerIndex ?? selectedPhotoIndex ?? 0;
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || !visible) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowLeft") {
+        setActiveViewerIndex((prev) => (prev - 1 + photos.length) % photos.length);
+      } else if (e.key === "ArrowRight") {
+        setActiveViewerIndex((prev) => (prev + 1) % photos.length);
+      } else if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [visible, photos.length, setActiveViewerIndex, onClose]);
+
+  const currentWebPhoto = photos[currentIndex] || photos[0];
 
   return (
     <Modal
       visible={visible}
-      transparent={false}
+      transparent={true}
       animationType="fade"
       statusBarTranslucent={true}
       onRequestClose={onClose}
     >
       <GestureHandlerRootView style={styles.fullSize}>
         <View style={styles.modalBackdrop}>
-          <FlatList
-            ref={viewerFlatListRef}
-            scrollEnabled={!isPinchingViewer}
-            style={styles.fullSize}
-            data={photos}
-            horizontal
-            pagingEnabled
-            initialScrollIndex={selectedPhotoIndex || 0}
-            getItemLayout={(_, index) => ({
-              length: SCREEN_WIDTH,
-              offset: SCREEN_WIDTH * index,
-              index,
-            })}
-            keyExtractor={(item) => String(item.id)}
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(e) => {
-              const nextIdx = Math.round(
-                e.nativeEvent.contentOffset.x / SCREEN_WIDTH
-              );
-              if (nextIdx >= 0 && nextIdx < photos.length) {
-                setActiveViewerIndex(nextIdx);
-              }
-            }}
-            renderItem={({ item }) => (
-              <ViewerSlide
-                item={item}
-                onToggleControls={toggleViewerControls}
-                onPinchActiveChange={setIsPinchingViewer}
-              />
-            )}
-          />
+          {Platform.OS === "web" ? (
+            <View style={styles.webViewerContainer}>
+              {photos.length > 1 && (
+                <TouchableOpacity
+                  style={[
+                    styles.webNavButton,
+                    styles.webNavButtonLeft,
+                    !isDarkMode && styles.webNavButtonLight,
+                  ]}
+                  onPress={() => {
+                    const prevIdx =
+                      (currentIndex - 1 + photos.length) % photos.length;
+                    setActiveViewerIndex(prevIdx);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={28}
+                    color={isDarkMode ? "#FFFFFF" : "#000000"}
+                  />
+                </TouchableOpacity>
+              )}
 
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.bottomTranslucentBar,
-              !isDarkMode && styles.bottomTranslucentBarLight,
-              getControlsOpacityAnimatedStyle(controlsOpacity),
-            ]}
-          />
+              <View style={styles.webImageWrapper}>
+                <Image
+                  source={{ uri: currentWebPhoto?.url }}
+                  style={styles.webModalImage}
+                  resizeMode="contain"
+                />
+              </View>
 
-          <Animated.View
-            pointerEvents={areViewerControlsVisible ? "auto" : "none"}
-            style={[
-              styles.captionPill,
-              !isDarkMode && styles.captionPillLight,
-              getControlsOpacityAnimatedStyle(controlsOpacity),
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.captionPillContent}
-              activeOpacity={0.8}
-              onPress={() => onOpenEditCaption(currentViewerPhoto)}
+              {photos.length > 1 && (
+                <TouchableOpacity
+                  style={[
+                    styles.webNavButton,
+                    styles.webNavButtonRight,
+                    !isDarkMode && styles.webNavButtonLight,
+                  ]}
+                  onPress={() => {
+                    const nextIdx = (currentIndex + 1) % photos.length;
+                    setActiveViewerIndex(nextIdx);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="chevron-forward"
+                    size={28}
+                    color={isDarkMode ? "#FFFFFF" : "#000000"}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <FlatList
+              ref={viewerFlatListRef}
+              scrollEnabled={!isPinchingViewer}
+              style={styles.fullSize}
+              data={photos}
+              horizontal
+              pagingEnabled
+              initialScrollIndex={selectedPhotoIndex || 0}
+              getItemLayout={(_, index) => ({
+                length: SCREEN_WIDTH,
+                offset: SCREEN_WIDTH * index,
+                index,
+              })}
+              keyExtractor={(item) => String(item.id)}
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(e) => {
+                const nextIdx = Math.round(
+                  e.nativeEvent.contentOffset.x / SCREEN_WIDTH
+                );
+                if (nextIdx >= 0 && nextIdx < photos.length) {
+                  setActiveViewerIndex(nextIdx);
+                }
+              }}
+              renderItem={({ item }) => (
+                <ViewerSlide
+                  item={item}
+                  onPinchActiveChange={setIsPinchingViewer}
+                />
+              )}
+            />
+          )}
+
+          {photos && photos.length > 0 && (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.viewerCounterBadge,
+                !isDarkMode && styles.viewerCounterBadgeLight,
+                { bottom: Math.max(insets?.bottom ? insets.bottom + 16 : 24, 24) },
+              ]}
             >
-              <Ionicons
-                name="pencil"
-                size={13}
-                color={isDarkMode ? "#FFFFFF" : "#000000"}
-                style={styles.captionPillIcon}
-              />
-              <Text
-                style={[
-                  styles.captionPillText,
-                  !isDarkMode && styles.captionPillTextLight,
-                ]}
-                numberOfLines={1}
-              >
-                {currentViewerPhoto?.caption || "Adicionar nome"}
+              <Text style={styles.viewerCounterText}>
+                {`${currentIndex + 1}/${photos.length}`}
               </Text>
-            </TouchableOpacity>
-          </Animated.View>
+            </View>
+          )}
 
-          <Animated.View
-            pointerEvents={areViewerControlsVisible ? "auto" : "none"}
-            style={[
-              styles.modalDeleteButton,
-              !isDarkMode && styles.modalDeleteButtonLight,
-              getControlsOpacityAnimatedStyle(controlsOpacity),
-            ]}
-          >
+          {Platform.OS === "web" && (
             <TouchableOpacity
-              style={styles.touchableFill}
-              activeOpacity={0.7}
-              onPress={onOpenDeletePhoto}
-            >
-              <Ionicons name="trash-outline" size={20} color="#FF453A" />
-            </TouchableOpacity>
-          </Animated.View>
-
-          <Animated.View
-            pointerEvents={areViewerControlsVisible ? "auto" : "none"}
-            style={[
-              styles.modalCloseButton,
-              !isDarkMode && styles.modalCloseButtonLight,
-              getModalCloseButtonAnimatedStyle(
-                closeButtonTop,
-                controlsOpacity
-              ),
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.touchableFill}
+              style={[
+                styles.modalCloseButton,
+                !isDarkMode && styles.modalCloseButtonLight,
+                { top: Math.max(insets?.top ? insets.top + 10 : 24, 24) },
+              ]}
               onPress={onClose}
               activeOpacity={0.7}
             >
@@ -160,7 +175,7 @@ const PhotoViewerModal = memo(function PhotoViewerModal({
                 color={isDarkMode ? "#FFFFFF" : "#000000"}
               />
             </TouchableOpacity>
-          </Animated.View>
+          )}
         </View>
       </GestureHandlerRootView>
     </Modal>

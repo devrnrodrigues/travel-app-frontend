@@ -37,6 +37,8 @@ const AddCollectionModal = memo(function AddCollectionModal({
   onPickPhotos,
   onRemovePhoto,
   onSaveCollection,
+  formErrors,
+  setFormErrors,
 }) {
   const [internalFocused, setInternalFocused] = useState(false);
   const isInputFocused =
@@ -67,6 +69,16 @@ const AddCollectionModal = memo(function AddCollectionModal({
       onClose();
     }
   };
+
+  const handleNameChange = useCallback(
+    (text) => {
+      setNewCollectionName(text);
+      if (formErrors?.title && typeof setFormErrors === "function") {
+        setFormErrors((prev) => ({ ...prev, title: null }));
+      }
+    },
+    [setNewCollectionName, formErrors, setFormErrors]
+  );
 
   const hasPhotos = selectedCollectionPhotos.length > 0;
   const photoCountText = `${selectedCollectionPhotos.length} foto${
@@ -126,18 +138,23 @@ const AddCollectionModal = memo(function AddCollectionModal({
                   currentTheme={currentTheme}
                   isDarkMode={isDarkMode}
                   maxLength={30}
+                  charCount={newCollectionName.length}
                   style={styles.collectionNameInputSpacing}
-                  placeholder="Ex: viagem para europa, praias..."
+                  placeholder="Título da coleção"
                   placeholderTextColor={
                     !isDarkMode
                       ? "rgba(0, 0, 0, 0.40)"
                       : "rgba(255, 255, 255, 0.5)"
                   }
                   value={newCollectionName}
-                  onChangeText={setNewCollectionName}
+                  onChangeText={handleNameChange}
                   onFocus={handleInputFocus}
                   onBlur={handleInputBlur}
+                  hasError={!!formErrors?.title}
                 />
+                {formErrors?.title && (
+                  <Text style={styles.modalFieldErrorText}>{formErrors.title}</Text>
+                )}
 
                 <Text
                   style={[
@@ -240,6 +257,10 @@ const AddCollectionModal = memo(function AddCollectionModal({
                       </View>
                     ))}
                   </ScrollView>
+                )}
+
+                {formErrors?.submit && (
+                  <Text style={styles.modalFieldErrorText}>{formErrors.submit}</Text>
                 )}
 
                 <View style={styles.addCollectionModalActions}>

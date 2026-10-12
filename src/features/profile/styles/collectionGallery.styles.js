@@ -99,10 +99,40 @@ export const styles = StyleSheet.create({
   modalOverlayLight: {
     backgroundColor: "rgba(255, 255, 255, 0.90)",
   },
+  modalBackdrop: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000000",
+  },
+  fullSize: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000000",
+  },
+
+  viewerCounterBadge: {
+    position: "absolute",
+    alignSelf: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  viewerCounterBadgeLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+  },
+  viewerCounterText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
   modalCloseButton: {
     position: "absolute",
     top: 24,
-    right: 24,
+    left: 20,
     width: 42,
     height: 42,
     borderRadius: 21,
@@ -114,21 +144,8 @@ export const styles = StyleSheet.create({
   modalCloseButtonLight: {
     backgroundColor: "#E5E5EA",
   },
-  modalDeleteButton: {
-    position: "absolute",
-    bottom: 34,
-    right: 20,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#2C2C2E",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 30,
-  },
-  modalDeleteButtonLight: {
-    backgroundColor: "#E5E5EA",
-  },
+
+
   webViewerContainer: {
     flex: 1,
     width: "100%",
@@ -142,6 +159,12 @@ export const styles = StyleSheet.create({
     height: "82%",
     maxWidth: 1200,
     maxHeight: 850,
+  },
+  webImageWrapper: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   webNavButton: {
     position: "absolute",
@@ -174,29 +197,7 @@ export const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     height: "100%",
   },
-  captionPill: {
-    position: "absolute",
-    bottom: 34,
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 22,
-    backgroundColor: "#2C2C2E",
-    maxWidth: SCREEN_WIDTH - 130,
-    zIndex: 20,
-  },
-  captionPillLight: {
-    backgroundColor: "#E5E5EA",
-  },
-  captionPillContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  captionPillIcon: {
-    marginRight: 6,
-  },
+
   menuBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.25)",
@@ -256,16 +257,7 @@ export const styles = StyleSheet.create({
   menuDividerLight: {
     backgroundColor: "rgba(0, 0, 0, 0.08)",
   },
-  captionPillText: {
-    fontFamily: "Caveat-Bold",
-    fontSize: 17,
-    color: "#FFFFFF",
-    paddingRight: 6,
-    paddingLeft: 2,
-  },
-  captionPillTextLight: {
-    color: "#000000",
-  },
+
   editDialogOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.85)",
@@ -331,6 +323,40 @@ export const styles = StyleSheet.create({
   },
   editDialogInputFocusedLight: {
     borderColor: "#000000",
+  },
+  inputWithCounterContainer: {
+    height: 50,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#111111",
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  inputWithCounterContainerLight: {
+    backgroundColor: "#F2F2F7",
+    borderColor: "transparent",
+  },
+  inputWithCounterField: {
+    flex: 1,
+    height: "100%",
+    fontSize: 16,
+    color: "#FFFFFF",
+    paddingVertical: 0,
+    paddingRight: 8,
+  },
+  inputWithCounterFieldLight: {
+    color: "#000000",
+  },
+  inlineCharCountText: {
+    fontSize: 12,
+    color: "#8E8E93",
+    fontWeight: "500",
+  },
+  inlineCharCountTextLight: {
+    color: "#666666",
   },
   charCountRow: {
     alignItems: "flex-end",
@@ -501,6 +527,29 @@ export const styles = StyleSheet.create({
   modalSubmitButtonLight: {
     backgroundColor: "#000000",
   },
+  modalFieldErrorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 4,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  uploadPhotoBoxError: {
+    borderColor: "#EF4444",
+    borderWidth: 1.5,
+  },
+  editDialogInputError: {
+    borderColor: "#EF4444",
+    borderWidth: 1.5,
+  },
+  pickingPhotosWrapper: {
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  pickingPhotosIndicator: {
+    marginBottom: 8,
+  },
   modalSubmitButtonText: {
     fontSize: 14,
     fontWeight: "700",
@@ -668,28 +717,7 @@ export const styles = StyleSheet.create({
   confirmCancelTextLight: {
     color: "#000000",
   },
-  bottomTranslucentBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 96,
-    backgroundColor: "rgba(0, 0, 0, 0.52)",
-    zIndex: 15,
-  },
-  bottomTranslucentBarLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.70)",
-  },
-  touchableFill: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fullSize: {
-    width: "100%",
-    height: "100%",
-  },
+
   gridRow: {
     gap: 2,
   },
@@ -730,14 +758,7 @@ export const getViewerSlideAnimatedStyle = (scale) => ({
   transform: [{ scale }],
 });
 
-export const getModalCloseButtonAnimatedStyle = (top, opacity) => ({
-  top,
-  opacity,
-});
 
-export const getControlsOpacityAnimatedStyle = (opacity) => ({
-  opacity,
-});
 
 export const getMenuDropdownAnimatedStyle = (top, left, opacity, translateY, scale) => ({
   top,

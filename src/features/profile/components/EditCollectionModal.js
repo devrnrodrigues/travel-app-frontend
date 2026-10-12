@@ -33,6 +33,7 @@ const EditCollectionModal = memo(function EditCollectionModal({
   editModalTranslateY,
   editModalScale,
   isDarkMode,
+  errors,
 }) {
   const handleClose = () => {
     Keyboard.dismiss();
@@ -89,35 +90,44 @@ const EditCollectionModal = memo(function EditCollectionModal({
             Nome
           </Text>
 
-          <TextInput
-            value={editCollectionTitle}
-            onChangeText={onChangeEditCollectionTitle}
-            placeholder="Ex: viagem para europa, praias..."
-            placeholderTextColor="#8E8E93"
-            onFocus={onFocusTitle}
-            onBlur={onBlurTitle}
+          <View
             style={[
-              styles.editDialogInput,
-              !isDarkMode && styles.editDialogInputLight,
+              styles.inputWithCounterContainer,
+              !isDarkMode && styles.inputWithCounterContainerLight,
               isEditTitleFocused &&
                 (isDarkMode
                   ? styles.editDialogInputFocused
                   : styles.editDialogInputFocusedLight),
+              errors?.title && styles.editDialogInputError,
             ]}
-            maxLength={30}
-            returnKeyType="done"
-          />
-
-          <View style={styles.charCountRow}>
+          >
+            <TextInput
+              value={editCollectionTitle}
+              onChangeText={onChangeEditCollectionTitle}
+              placeholder="Título da coleção"
+              placeholderTextColor="#8E8E93"
+              onFocus={onFocusTitle}
+              onBlur={onBlurTitle}
+              style={[
+                styles.inputWithCounterField,
+                !isDarkMode && styles.inputWithCounterFieldLight,
+              ]}
+              maxLength={30}
+              returnKeyType="done"
+            />
             <Text
               style={[
-                styles.charCountText,
-                !isDarkMode && styles.charCountTextLight,
+                styles.inlineCharCountText,
+                !isDarkMode && styles.inlineCharCountTextLight,
               ]}
             >
               {editCollectionTitle.length}/30
             </Text>
           </View>
+
+          {errors?.title && (
+            <Text style={styles.modalFieldErrorText}>{errors.title}</Text>
+          )}
 
           <View style={styles.editPhotosHeader}>
             <Text
@@ -175,6 +185,10 @@ const EditCollectionModal = memo(function EditCollectionModal({
                 Nenhuma foto restante nesta coleção
               </Text>
             </View>
+          )}
+
+          {errors?.submit && (
+            <Text style={styles.modalFieldErrorText}>{errors.submit}</Text>
           )}
 
           <View style={styles.modalActionRow}>

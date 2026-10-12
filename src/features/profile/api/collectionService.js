@@ -52,3 +52,7 @@ export async function addPhotosToCollectionApi(collectionId, imageUris) {
 export async function deletePhotoApi(collectionId, photoId) {
   return apiClient.delete(`/collections/${collectionId}/photos/${photoId}`);
 }
+
+export async function setCoverPhotoApi(collectionId, photoId) {
+  return apiClient.put(`/collections/${collectionId}/photos/${photoId}/cover`);
+}

@@ -16,9 +16,9 @@ import {
 
 const ViewerSlide = memo(function ViewerSlide({
   item,
-  onToggleControls,
   onPinchActiveChange,
 }) {
+  const pinchRef = useRef(null);
   const baseScale = useRef(1);
   const currentScale = useRef(1);
   const scale = useRef(new Animated.Value(1)).current;
@@ -60,7 +60,7 @@ const ViewerSlide = memo(function ViewerSlide({
     }
   };
 
-  const handleTap = () => {
+  const handleDoubleTap = () => {
     const now = Date.now();
     if (now - lastTap.current < 280) {
       lastTap.current = 0;
@@ -87,23 +87,18 @@ const ViewerSlide = memo(function ViewerSlide({
       }
     } else {
       lastTap.current = now;
-      setTimeout(() => {
-        if (lastTap.current !== 0 && Date.now() - lastTap.current >= 260) {
-          lastTap.current = 0;
-          onToggleControls();
-        }
-      }, 280);
     }
   };
 
   return (
     <View style={styles.modalSlide}>
       <PinchGestureHandler
+        ref={pinchRef}
         onGestureEvent={handlePinchGesture}
         onHandlerStateChange={handlePinchStateChange}
       >
         <Animated.View style={getViewerSlideAnimatedStyle(scale)}>
-          <TouchableWithoutFeedback onPress={handleTap}>
+          <TouchableWithoutFeedback onPress={handleDoubleTap}>
             <Image
               source={{ uri: item.url }}
               style={styles.modalImage}

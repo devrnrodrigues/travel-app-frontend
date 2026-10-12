@@ -23,13 +23,22 @@ const AddPhotosModal = memo(function AddPhotosModal({
   onPickNewPhotos,
   onRemoveNewPhoto,
   isAddingPhotos,
+  isPickingPhotos,
+  currentTheme,
   onSave,
   addPhotosModalScale,
   isDarkMode,
+  errors,
 }) {
   const photoCountText = `${selectedNewPhotos.length} foto${
     selectedNewPhotos.length !== 1 ? "s" : ""
   } selecionada${selectedNewPhotos.length !== 1 ? "s" : ""}`;
+
+  const handleClose = () => {
+    if (!isAddingPhotos && !isPickingPhotos) {
+      onClose();
+    }
+  };
 
   return (
     <Modal
@@ -37,13 +46,13 @@ const AddPhotosModal = memo(function AddPhotosModal({
       transparent={true}
       animationType="fade"
       statusBarTranslucent={true}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.editDialogOverlay}>
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
-          onPress={onClose}
+          onPress={handleClose}
         />
         <Animated.View
           style={[
@@ -82,43 +91,64 @@ const AddPhotosModal = memo(function AddPhotosModal({
             style={[
               styles.uploadPhotoBox,
               !isDarkMode && styles.uploadPhotoBoxLight,
+              errors?.photos && styles.uploadPhotoBoxError,
             ]}
             activeOpacity={0.75}
             onPress={onPickNewPhotos}
-            disabled={isAddingPhotos}
+            disabled={isAddingPhotos || isPickingPhotos}
           >
-            <View
-              style={[
-                styles.uploadPhotoIconCircle,
-                !isDarkMode && styles.uploadPhotoIconCircleLight,
-              ]}
-            >
-              <Ionicons
-                name="cloud-upload-outline"
-                size={26}
-                color={isDarkMode ? "#FFFFFF" : "#000000"}
-              />
-            </View>
-            <Text
-              style={[
-                styles.uploadPhotoTitle,
-                !isDarkMode && styles.uploadPhotoTitleLight,
-              ]}
-            >
-              {selectedNewPhotos.length > 0
-                ? "Adicionar mais fotos"
-                : "Inserir fotos"}
-            </Text>
-            <Text
-              style={[
-                styles.uploadPhotoSubtitle,
-                !isDarkMode && styles.uploadPhotoSubtitleLight,
-              ]}
-            >
-              {selectedNewPhotos.length > 0
-                ? photoCountText
-                : "Toque para escolher fotos do dispositivo"}
-            </Text>
+            {isPickingPhotos ? (
+              <View style={styles.pickingPhotosWrapper}>
+                <ActivityIndicator
+                  size="small"
+                  color={currentTheme?.accent || (isDarkMode ? "#FFFFFF" : "#000000")}
+                  style={styles.pickingPhotosIndicator}
+                />
+                <Text
+                  style={[
+                    styles.uploadPhotoTitle,
+                    !isDarkMode && styles.uploadPhotoTitleLight,
+                  ]}
+                >
+                  Processando fotos...
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View
+                  style={[
+                    styles.uploadPhotoIconCircle,
+                    !isDarkMode && styles.uploadPhotoIconCircleLight,
+                  ]}
+                >
+                  <Ionicons
+                    name="cloud-upload-outline"
+                    size={26}
+                    color={currentTheme?.accent || (isDarkMode ? "#FFFFFF" : "#000000")}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.uploadPhotoTitle,
+                    !isDarkMode && styles.uploadPhotoTitleLight,
+                  ]}
+                >
+                  {selectedNewPhotos.length > 0
+                    ? "Adicionar mais fotos"
+                    : "Inserir fotos"}
+                </Text>
+                <Text
+                  style={[
+                    styles.uploadPhotoSubtitle,
+                    !isDarkMode && styles.uploadPhotoSubtitleLight,
+                  ]}
+                >
+                  {selectedNewPhotos.length > 0
+                    ? photoCountText
+                    : "Toque para escolher fotos do dispositivo"}
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {selectedNewPhotos.length > 0 && (
@@ -155,15 +185,23 @@ const AddPhotosModal = memo(function AddPhotosModal({
             </ScrollView>
           )}
 
+          {errors?.photos && (
+            <Text style={styles.modalFieldErrorText}>{errors.photos}</Text>
+          )}
+
+          {errors?.submit && (
+            <Text style={styles.modalFieldErrorText}>{errors.submit}</Text>
+          )}
+
           <View style={styles.modalActionRow}>
             <TouchableOpacity
               style={[
                 styles.modalCancelButton,
                 !isDarkMode && styles.modalCancelButtonLight,
               ]}
-              onPress={onClose}
+              onPress={handleClose}
               activeOpacity={0.7}
-              disabled={isAddingPhotos}
+              disabled={isAddingPhotos || isPickingPhotos}
             >
               <Text
                 style={[
@@ -181,7 +219,7 @@ const AddPhotosModal = memo(function AddPhotosModal({
                 !isDarkMode && styles.modalSubmitButtonLight,
               ]}
               activeOpacity={0.8}
-              disabled={isAddingPhotos || selectedNewPhotos.length === 0}
+              disabled={isAddingPhotos || isPickingPhotos}
               onPress={onSave}
             >
               {isAddingPhotos ? (
