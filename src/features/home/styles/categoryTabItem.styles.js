@@ -33,7 +33,7 @@ export const getCategoryTextColor = (isActive, accentColor, isMinimalist, isDark
   color: isActive
     ? accentColor
     : isMinimalist && !isDarkMode
-    ? "#6B7280"
+    ? "#111827"
     : "#FFFFFF",
 });
 
