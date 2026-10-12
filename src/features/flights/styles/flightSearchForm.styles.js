@@ -82,7 +82,7 @@ export default StyleSheet.create({
     borderColor: "#EF4444",
     borderWidth: 1,
     borderRadius: 16,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   textInputField: {
     borderRadius: 16,
@@ -107,15 +107,17 @@ export default StyleSheet.create({
   fieldErrorText: {
     color: "#EF4444",
     fontSize: 12,
-    marginTop: -14,
+    fontWeight: "500",
+    marginTop: 0,
     marginBottom: 16,
     marginLeft: 4,
   },
   fieldErrorTextCentered: {
     color: "#EF4444",
     fontSize: 12,
+    fontWeight: "500",
     textAlign: "center",
-    marginTop: 4,
+    marginTop: 6,
     marginBottom: 0,
   },
   autocompleteContainer: {
@@ -177,7 +179,7 @@ export default StyleSheet.create({
   inputError: {
     borderColor: "#EF4444",
     borderWidth: 1,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   selectContainerRow: {
     flexDirection: "row",
