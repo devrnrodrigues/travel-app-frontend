@@ -6,11 +6,12 @@ export const getHomeDimensions = (
   windowWidth = width,
   windowHeight = height,
   insetsTop = 0,
-  insetsBottom = 0
+  insetsBottom = 0,
+  isMinimalist = true
 ) => {
   const topInset = insetsTop || 0;
   const bottomInset = insetsBottom || 0;
-  const bottomBarHeight = 54 + bottomInset;
+  const bottomBarHeight = (isMinimalist ? 54 : 115) + bottomInset;
   const availableHeight = windowHeight - topInset - bottomBarHeight;
 
   const isSmallScreen = availableHeight < 640;
@@ -29,14 +30,18 @@ export const getHomeDimensions = (
   const topDestHeaderMarginBottom = isSmallScreen ? 8 : isTallScreen ? 12 : 12;
   const topDestSectionHeight = topDestTitleSize + topDestHeaderMarginBottom + topCardHeight;
 
+  const cardMarginTop = isSmallScreen ? 10 : isTallScreen ? 16 : 12;
+  const cardMarginBottom = isSmallScreen ? 10 : isTallScreen ? 16 : 14;
+  const cardVerticalSpacing = cardMarginTop + cardMarginBottom;
+
   const bottomSpacing = isSmallScreen ? 10 : isTallScreen ? 16 : 12;
 
   const baseDestHeight = isSmallScreen ? 109 : 132;
-  const totalBaseHeights = headerHeight + categoriesHeight + baseDestHeight;
+  const totalBaseHeights = headerHeight + categoriesHeight + baseDestHeight + cardVerticalSpacing;
   const availableForCard = availableHeight - bottomSpacing - totalBaseHeights;
 
-  const rawCardHeight = Math.round(availableForCard * 0.94);
-  const cardHeight = Math.round(Math.max(290, Math.min(rawCardHeight, 505)));
+  const rawCardHeight = Math.round(availableForCard * (isTallScreen ? 0.90 : 0.94));
+  const cardHeight = Math.round(Math.max(260, Math.min(rawCardHeight, 490)));
   const cardWidth = Math.round(Math.min(windowWidth * 0.76, 360, cardHeight * 0.74));
 
   const cardInfoBottom = Math.round(Math.max(14, Math.min(25, cardHeight * 0.055)));
@@ -63,6 +68,8 @@ export const getHomeDimensions = (
     topDestHeaderMarginBottom,
     bottomBarHeight,
     bottomSpacing,
+    cardMarginTop,
+    cardMarginBottom,
   };
 };
 
@@ -351,4 +358,9 @@ export const getTopFooterLoading = (height) => ({
 
 export const getDimAnimStyle = (opacity) => ({
   opacity,
+});
+
+export const getContentContainerMargin = (marginTop = 12, marginBottom = 14) => ({
+  marginTop: marginTop ?? 12,
+  marginBottom: marginBottom ?? 14,
 });

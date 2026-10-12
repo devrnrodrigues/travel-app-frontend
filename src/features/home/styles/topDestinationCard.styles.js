@@ -21,7 +21,7 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   cardContainerLight: {
-    backgroundColor: "rgba(100, 100, 100, 0.80)",
+    backgroundColor: "rgba(100, 100, 100, 0.40)",
     borderWidth: 0,
   },
   cardContainerMinimalist: {

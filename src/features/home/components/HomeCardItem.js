@@ -5,7 +5,6 @@ import { Ionicons } from "@expo/vector-icons";
 import styles, {
   getCardDimensionsStyle,
   getCardInfoPosition,
-  getAndroidBackgroundDimensions,
   getImageOpacityStyle,
   getRatingColorStyle,
 } from "../styles/homeCardItem.styles";
@@ -88,39 +87,31 @@ const HomeCardItem = React.memo(function HomeCardItem({
             : styles.cardInfoLight,
         ]}
       >
-        {Platform.OS === "android" && !isDarkMode && !isMinimalist && cardImgSource && (
-          <Image
-            source={cardImgSource}
-            blurRadius={4}
-            style={[
-              styles.cardFullBackground,
-              getAndroidBackgroundDimensions(cardWidth),
-            ]}
-          />
+        {!isDarkMode && !isMinimalist && (
+          Platform.OS === "android" && cardImgSource ? (
+            <Image
+              source={cardImgSource}
+              blurRadius={3}
+              style={[
+                styles.cardFullBackground,
+                cardWidth ? { width: cardWidth, left: -(cardWidth * 0.06) } : null,
+              ]}
+            />
+          ) : (
+            <BlurView
+              intensity={20}
+              tint="light"
+              style={styles.cardOverlayImage}
+            />
+          )
         )}
 
         <View
           style={[
-            styles.overlayBase,
-            isMinimalist
-              ? isDarkMode
-                ? styles.overlayMinimalistDark
-                : styles.overlayMinimalist
-              : isDarkMode
-              ? styles.overlayDark
-              : styles.overlayLight,
+            styles.cardInfoInner,
+            !isDarkMode && !isMinimalist && styles.cardOverlayLight,
           ]}
-        />
-
-        {Platform.OS !== "android" && !isDarkMode && !isMinimalist && (
-          <BlurView
-            intensity={20}
-            tint="light"
-            style={styles.cardOverlayImage}
-          />
-        )}
-
-        <View style={styles.cardInfoInner}>
+        >
           <View
             style={[
               styles.cardInfoLeft,

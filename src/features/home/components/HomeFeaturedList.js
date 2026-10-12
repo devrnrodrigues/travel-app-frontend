@@ -3,7 +3,7 @@ import { View, FlatList, ActivityIndicator } from "react-native";
 import { HomeSkeletonList } from "../../../shared/components/Skeleton";
 import FadeInView from "../../../shared/components/FadeInView";
 import HomeCardItem from "./HomeCardItem";
-import styles from "../styles/home.styles";
+import styles, { getContentContainerMargin } from "../styles/home.styles";
 
 const HomeFeaturedList = React.memo(function HomeFeaturedList({
   flatListRef,
@@ -48,7 +48,12 @@ const HomeFeaturedList = React.memo(function HomeFeaturedList({
 
   if (isShowingSkeleton) {
     return (
-      <View style={styles.contentContainer}>
+      <View
+        style={[
+          styles.contentContainer,
+          getContentContainerMargin(dims?.cardMarginTop, dims?.cardMarginBottom),
+        ]}
+      >
         <HomeSkeletonList
           isDarkMode={isDarkMode}
           currentTheme={currentTheme}
@@ -63,7 +68,12 @@ const HomeFeaturedList = React.memo(function HomeFeaturedList({
   }
 
   return (
-    <View style={styles.contentContainer}>
+    <View
+      style={[
+        styles.contentContainer,
+        getContentContainerMargin(dims?.cardMarginTop, dims?.cardMarginBottom),
+      ]}
+    >
       <FadeInView key={selectedCategory} duration={280} style={styles.fullWidth}>
         <FlatList
           ref={flatListRef}

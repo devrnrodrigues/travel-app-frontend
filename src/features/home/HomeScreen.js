@@ -57,8 +57,8 @@ export default function Home({ navigation }) {
   const insets = useSafeAreaInsets();
   const topInset = insets.top || (Platform.OS === "android" ? (StatusBar.currentHeight || 0) : 0);
   const dims = useMemo(
-    () => getHomeDimensions(windowWidth, windowHeight, topInset, insets.bottom),
-    [windowWidth, windowHeight, topInset, insets.bottom]
+    () => getHomeDimensions(windowWidth, windowHeight, topInset, insets.bottom, isMinimalist),
+    [windowWidth, windowHeight, topInset, insets.bottom, isMinimalist]
   );
 
   const userName = useMemo(() => {
@@ -135,16 +135,8 @@ export default function Home({ navigation }) {
   }, []);
 
   const gradientColors = useMemo(() => {
-    if (currentTheme?.colors && currentTheme.colors.length >= 3) {
-      return [
-        currentTheme.colors[0],
-        currentTheme.colors[1],
-        "rgba(0, 0, 0, 0.72)",
-        "rgba(0, 0, 0, 0.96)",
-      ];
-    }
-    return ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)", "rgba(0, 0, 0, 0.98)"];
-  }, [currentTheme?.colors]);
+    return ["rgba(0, 0, 0, 0.55)", "transparent", "rgba(0, 0, 0, 0.75)"];
+  }, []);
 
   const isErrorBg = Boolean(errorConfig);
   const isMinimalistDark = isDarkMode && isMinimalist;
@@ -312,7 +304,7 @@ export default function Home({ navigation }) {
         <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
           <LinearGradient
             colors={gradientColors}
-            locations={[0, 0.38, 0.72, 1]}
+            locations={[0, 0.45, 1]}
             style={styles.flex1}
           >
             <Animated.View

@@ -51,17 +51,7 @@ export default StyleSheet.create({
     alignSelf: "center",
     width: "88%",
     borderRadius: 25,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "transparent",
     borderWidth: 0,
-    shadowColor: "transparent",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
     overflow: "hidden",
   },
   cardInfoMinimalist: {
@@ -73,11 +63,11 @@ export default StyleSheet.create({
     borderWidth: 0,
   },
   cardInfoDark: {
-    backgroundColor: "rgba(12, 12, 12, 0.68)",
+    backgroundColor: "rgba(12, 12, 12, 0.82)",
     borderWidth: 0,
   },
   cardInfoLight: {
-    backgroundColor: "rgba(116, 116, 116, 0.4)",
+    backgroundColor: "transparent",
     borderWidth: 0,
   },
   cardFullBackground: {
@@ -85,31 +75,14 @@ export default StyleSheet.create({
     height: 500,
     bottom: -25,
     borderRadius: 25,
-  },
-  overlayBase: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 25,
-    borderWidth: 0,
-  },
-  overlayDark: {
-    backgroundColor: "rgba(12, 12, 12, 0.68)",
-    borderWidth: 0,
-  },
-  overlayLight: {
-    backgroundColor: "rgba(116, 116, 116, 0.4)",
-    borderWidth: 0,
-  },
-  overlayMinimalist: {
-    backgroundColor: "rgba(255, 255, 255, 0.94)",
-    borderWidth: 0,
-  },
-  overlayMinimalistDark: {
-    backgroundColor: "#161616",
-    borderWidth: 0,
+    zIndex: 0,
   },
   cardOverlayImage: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 25,
+  },
+  cardOverlayLight: {
+    backgroundColor: "rgba(100, 100, 100, 0.40)",
   },
   cardInfoInner: {
     flex: 1,
@@ -117,6 +90,7 @@ export default StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
+    borderRadius: 25,
   },
   cardInfoLeft: {
     flex: 1,
@@ -219,10 +193,6 @@ export const getCardDimensionsStyle = (cardWidth, cardHeight, avgColor) => ({
 export const getCardInfoPosition = (bottom, height) => ({
   ...(bottom !== undefined ? { bottom } : {}),
   ...(height !== undefined ? { height } : {}),
-});
-
-export const getAndroidBackgroundDimensions = (cardWidth) => ({
-  ...(cardWidth ? { width: cardWidth, left: -(cardWidth * 0.06) } : {}),
 });
 
 export const getImageOpacityStyle = (opacity) => ({

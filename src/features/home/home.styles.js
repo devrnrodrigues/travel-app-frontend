@@ -11,6 +11,7 @@ import styles, {
   getTopDestTitleSize,
   getTopFooterLoading,
   getDimAnimStyle,
+  getContentContainerMargin,
 } from "./styles/home.styles";
 import { filterModalStyles as countryModalStyles } from "./styles/filterModal.styles";
 
@@ -29,4 +30,5 @@ export {
   getTopDestTitleSize,
   getTopFooterLoading,
   getDimAnimStyle,
+  getContentContainerMargin,
 };
