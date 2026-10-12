@@ -26,8 +26,10 @@ import useFavoritesList from "./hooks/useFavoritesList";
 import useFavoriteDelete from "./hooks/useFavoriteDelete";
 
 const foliageImage = require("../../../assets/images/image.png");
-const DEFAULT_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.72)", "rgba(0, 0, 0, 0.96)", "rgba(0, 0, 0, 0.98)"];
-const GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
+const DEFAULT_DARK_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.72)", "rgba(0, 0, 0, 0.96)", "rgba(0, 0, 0, 0.98)"];
+const DARK_GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
+const HOME_LIGHT_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.25)", "rgba(0, 0, 0, 0.75)"];
+const HOME_LIGHT_LOCATIONS = [0, 0.45, 1];
 
 export default function Favorites({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -129,17 +131,27 @@ export default function Favorites({ navigation }) {
   const accentColor = currentTheme.accent || "#007AFF";
   const bgSource = typeof currentTheme?.bg === "string" ? { uri: currentTheme.bg } : currentTheme?.bg;
 
-  const gradientColors = useMemo(() => {
-    if (currentTheme?.colors && currentTheme.colors.length >= 3) {
-      return [
-        currentTheme.colors[0],
-        currentTheme.colors[1],
-        "rgba(0, 0, 0, 0.72)",
-        "rgba(0, 0, 0, 0.96)",
-      ];
+  const { gradientColors, gradientLocations } = useMemo(() => {
+    if (isDarkMode) {
+      const colors =
+        currentTheme?.colors && currentTheme.colors.length >= 3
+          ? [
+              currentTheme.colors[0],
+              currentTheme.colors[1],
+              "rgba(0, 0, 0, 0.72)",
+              "rgba(0, 0, 0, 0.96)",
+            ]
+          : DEFAULT_DARK_GRADIENT;
+      return {
+        gradientColors: colors,
+        gradientLocations: DARK_GRADIENT_LOCATIONS,
+      };
     }
-    return DEFAULT_GRADIENT;
-  }, [currentTheme?.colors]);
+    return {
+      gradientColors: HOME_LIGHT_GRADIENT,
+      gradientLocations: HOME_LIGHT_LOCATIONS,
+    };
+  }, [isDarkMode, currentTheme?.colors]);
 
   const contentContainerStyle = useMemo(() => [
     {
@@ -313,7 +325,7 @@ export default function Favorites({ navigation }) {
         <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
           <LinearGradient
             colors={gradientColors}
-            locations={GRADIENT_LOCATIONS}
+            locations={gradientLocations}
             style={styles.flex1}
           >
             {favoritesBody}
