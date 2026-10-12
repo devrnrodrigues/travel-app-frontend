@@ -1,14 +1,18 @@
 import React from "react";
 import {
   View,
+  Image,
   TextInput,
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
   Animated,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import styles from "../styles/exploreHeader.styles";
+
+const foliageImage = require("../../../../assets/images/image.png");
 
 export const ExploreHeader = React.memo(function ExploreHeader({
   headerPaddingTop,
@@ -35,7 +39,11 @@ export const ExploreHeader = React.memo(function ExploreHeader({
       pointerEvents={isSearchBarVisible || isSearchFocused ? "auto" : "none"}
       style={[
         styles.headerBar,
-        isMinimalist && (isDarkMode ? styles.headerBarDark : styles.headerBarLight),
+        isMinimalist
+          ? isDarkMode
+            ? styles.headerBarDark
+            : styles.headerBarLight
+          : styles.headerBarDecorative,
         {
           paddingTop: headerPaddingTop + (isMinimalist ? 0 : 8),
           transform: [{ translateY: searchTranslateY }],
@@ -43,6 +51,31 @@ export const ExploreHeader = React.memo(function ExploreHeader({
         },
       ]}
     >
+      {isMinimalist && (
+        <View pointerEvents="none" style={styles.foliageContainer}>
+          <Image
+            source={foliageImage}
+            style={styles.foliageHeader}
+            resizeMode="cover"
+          />
+          <View
+            style={
+              isDarkMode
+                ? styles.foliageDarkFilter
+                : styles.foliageWhiteFilter
+            }
+          />
+          <LinearGradient
+            colors={
+              isDarkMode
+                ? ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.4)", "#000000"]
+                : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.4)", "#FFFFFF"]
+            }
+            locations={[0, 0.5, 1]}
+            style={styles.foliageGradient}
+          />
+        </View>
+      )}
       <View style={styles.searchBarRow}>
         <Pressable
           style={[
