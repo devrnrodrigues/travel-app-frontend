@@ -520,7 +520,7 @@ export function TopDestinationCardSkeleton({
     ? "rgba(26, 26, 26, 0.78)"
     : isMinimalist
     ? "#F3F4F6"
-    : "#FFFFFF";
+    : "rgba(100, 100, 100, 0.40)";
   const imgBg = isDarkMode
     ? "rgba(255, 255, 255, 0.08)"
     : isMinimalist
