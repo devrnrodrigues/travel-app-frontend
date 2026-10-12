@@ -965,15 +965,14 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
   addCollectionTriggerIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    backgroundColor: "transparent",
   },
   addCollectionTriggerIconBoxLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
+    backgroundColor: "transparent",
   },
   addCollectionTriggerText: {
     fontSize: 14,

@@ -22,7 +22,7 @@ const AESTHETIC_OPTIONS = [
   {
     key: "minimalista",
     label: "Minimalista",
-    icon: "diamond-outline",
+    icon: "shapes-outline",
   },
   {
     key: "decorativa",
