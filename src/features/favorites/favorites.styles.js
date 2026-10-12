@@ -15,8 +15,8 @@ export const getCardDimensions = (
   const cardWidth = Math.floor((windowWidth - HORIZONTAL_PADDING * 2 - CARD_GAP) / 2);
   const bottomInset = insetsBottom || 0;
   const topInset = insetsTop || 0;
-  const estimatedHeaderHeight = 128;
-  const tabHeight = (isMinimalist ? 54 : 115) + bottomInset;
+  const estimatedHeaderHeight = isMinimalist ? 127 : 135;
+  const tabHeight = isMinimalist ? 54 + bottomInset : 107;
 
   const visibleHeight =
     measuredContainerHeight > 0
@@ -26,10 +26,12 @@ export const getCardDimensions = (
   const isSmallScreen = windowHeight < 740 || visibleHeight < 460;
   const targetRows = isSmallScreen ? 2 : 3;
 
-  const verticalPadding = CARD_GAP;
-  const totalVerticalSpacing = (targetRows + 1) * CARD_GAP;
+  const totalVerticalSpacing = targetRows * CARD_GAP;
   const usableCardsHeight = visibleHeight - totalVerticalSpacing;
   const cardHeight = Math.max(140, Math.floor(usableCardsHeight / targetRows));
+
+  const remainder = Math.max(0, usableCardsHeight - cardHeight * targetRows);
+  const topPadding = Math.floor(remainder / 2);
 
   return {
     cardWidth,
@@ -37,8 +39,9 @@ export const getCardDimensions = (
     isSmallScreen,
     targetRows,
     tabBarHeight: tabHeight,
-    verticalPadding,
+    verticalPadding: CARD_GAP,
     scrollPaddingBottom: tabHeight,
+    topPadding,
   };
 };
 

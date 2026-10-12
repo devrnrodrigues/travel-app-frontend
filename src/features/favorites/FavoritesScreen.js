@@ -155,6 +155,7 @@ export default function Favorites({ navigation }) {
 
   const contentContainerStyle = useMemo(() => [
     {
+      paddingTop: cardDimensions.topPadding || 0,
       paddingBottom:
         favorites.length > cardDimensions.targetRows * 2
           ? cardDimensions.scrollPaddingBottom

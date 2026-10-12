@@ -23,13 +23,20 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
   handleClearSearch,
   isMinimalist,
 }) {
+  const isDecorativeLight = !isMinimalist && !isDarkMode;
+  const isLightText = isDarkMode || !isMinimalist;
+
   const iconColor = isFocused
     ? accentColor
-    : isDarkMode
+    : isDecorativeLight
+    ? "#FFFFFF"
+    : isLightText
     ? "rgba(255, 255, 255, 0.45)"
     : "rgba(0, 0, 0, 0.55)";
 
-  const placeholderColor = isDarkMode
+  const placeholderColor = isDecorativeLight
+    ? "rgba(255, 255, 255, 0.75)"
+    : isLightText
     ? "rgba(255, 255, 255, 0.45)"
     : "rgba(0, 0, 0, 0.50)";
 
@@ -65,17 +72,20 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
         <View
           style={[
             styles.searchBox,
+            !isMinimalist && styles.searchBoxDecorative,
             isDarkMode
               ? styles.searchBoxDark
               : isMinimalist
               ? styles.searchBoxMinimalist
+              : isFocused
+              ? styles.searchBoxLightFocused
               : styles.searchBoxLight,
             isFocused && { borderColor: accentColor },
           ]}
         >
           <Feather
             name="search"
-            size={18}
+            size={isMinimalist ? 18 : 20}
             color={iconColor}
             style={styles.searchIcon}
           />
@@ -83,7 +93,7 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
             ref={searchInputRef}
             style={[
               styles.searchInput,
-              isDarkMode ? styles.searchInputDark : styles.searchInputLight,
+              isLightText ? styles.searchInputDark : styles.searchInputLight,
             ]}
             placeholder="Buscar"
             placeholderTextColor={placeholderColor}
@@ -104,8 +114,14 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
             >
               <Ionicons
                 name="close-circle"
-                size={18}
-                color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.55)"}
+                size={isMinimalist ? 18 : 20}
+                color={
+                  isDecorativeLight
+                    ? "#FFFFFF"
+                    : isLightText
+                    ? "rgba(255, 255, 255, 0.5)"
+                    : "rgba(0, 0, 0, 0.55)"
+                }
               />
             </TouchableOpacity>
           ) : (
@@ -120,7 +136,7 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
             >
               <Ionicons
                 name="mic"
-                size={18}
+                size={isMinimalist ? 18 : 20}
                 color={iconColor}
               />
             </TouchableOpacity>

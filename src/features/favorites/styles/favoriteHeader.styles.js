@@ -48,11 +48,19 @@ export const favoriteHeaderStyles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "transparent",
   },
+  searchBoxDecorative: {
+    height: 52,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+  },
   searchBoxDark: {
     backgroundColor: "rgba(28, 28, 30, 0.75)",
   },
   searchBoxLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.80)",
+    backgroundColor: "rgba(100, 100, 100, 0.40)",
+  },
+  searchBoxLightFocused: {
+    backgroundColor: "rgb(100, 100, 100)",
   },
   searchBoxMinimalist: {
     backgroundColor: "#F5F5F7",
