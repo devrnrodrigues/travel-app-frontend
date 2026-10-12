@@ -26,6 +26,15 @@ export const styles = StyleSheet.create({
     shadowRadius: 0,
     shadowOffset: { width: 0, height: 0 },
   },
+  bottomTabFloating: {
+    bottom: 35,
+    left: 20,
+    right: 20,
+    height: 72,
+    borderRadius: 36,
+    maxWidth: 500,
+    alignSelf: "center",
+  },
   bottomTabLight: {
     borderTopWidth: 0,
     borderColor: "transparent",
@@ -37,10 +46,18 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 21,
   },
+  tabItemFloating: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
   activeTab: {
     borderWidth: 1.5,
     borderRadius: 21,
     backgroundColor: "transparent",
+  },
+  activeTabFloating: {
+    borderRadius: 24,
   },
   horizontalSweepContainer: {
     position: "absolute",

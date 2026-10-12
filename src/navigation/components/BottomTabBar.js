@@ -178,18 +178,27 @@ export default function BottomTabBar({ state, navigation }) {
         "rgba(255, 255, 255, 0.02)",
         "rgba(255, 255, 255, 0)",
       ]
-    : [
+    : isMinimalist
+    ? [
         "rgba(0, 0, 0, 0)",
         "rgba(0, 0, 0, 0.02)",
         "rgba(0, 0, 0, 0.06)",
         "rgba(0, 0, 0, 0.02)",
         "rgba(0, 0, 0, 0)",
+      ]
+    : [
+        "rgba(255, 255, 255, 0)",
+        "rgba(255, 255, 255, 0.04)",
+        "rgba(255, 255, 255, 0.16)",
+        "rgba(255, 255, 255, 0.04)",
+        "rgba(255, 255, 255, 0)",
       ];
 
   return (
     <View
       style={[
         styles.bottomTab,
+        !isMinimalist && styles.bottomTabFloating,
         {
           backgroundColor: isMinimalist
             ? isExplore
@@ -197,58 +206,41 @@ export default function BottomTabBar({ state, navigation }) {
               : isDarkMode
               ? "#161616"
               : "#F5F5F7"
-            : isTranslucentTab
-            ? "transparent"
             : isDarkMode
-            ? "#000000"
-            : isFavorites
-            ? "rgba(100, 100, 100, 1)"
-            : "#FFFFFF",
-          height: TAB_HEIGHT + insets.bottom,
-          paddingBottom: insets.bottom,
+            ? "rgba(10, 10, 10, 0.85)"
+            : isExplore
+            ? "rgba(100, 100, 100, 0.82)"
+            : "rgba(100, 100, 100, 0.40)",
+          height: isMinimalist ? TAB_HEIGHT + insets.bottom : 72,
+          paddingBottom: isMinimalist ? insets.bottom : 0,
           borderTopWidth: 0,
           borderTopColor: "transparent",
         },
       ]}
     >
-      {(isTranslucentTab || isMinimalistExplore) && (
+      {isMinimalistExplore && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          {Platform.OS !== "android" && !isDarkMode && isExplore && !isMinimalist && (
-            <BlurView
-              intensity={20}
-              tint="light"
-              style={StyleSheet.absoluteFill}
-            />
-          )}
           <View
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: isMinimalistExplore
-                  ? isDarkMode
-                    ? "rgba(22, 22, 22, 0.40)"
-                    : "rgba(245, 245, 247, 0.50)"
-                  : isDarkMode
-                  ? "rgba(0, 0, 0, 0.70)"
-                  : "rgba(100, 100, 100, 0.80)",
+                backgroundColor: isDarkMode
+                  ? "rgba(22, 22, 22, 0.40)"
+                  : "rgba(245, 245, 247, 0.50)",
               },
             ]}
           />
         </View>
       )}
-      {isExplore && (
+      {isMinimalist && isExplore && (
         <Animated.View
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isMinimalist
-                ? isDarkMode
-                  ? "#161616"
-                  : "#F5F5F7"
-                : isDarkMode
-                ? "#000000"
-                : "rgba(100, 100, 100, 1)",
+              backgroundColor: isDarkMode
+                ? "#161616"
+                : "#F5F5F7",
               opacity: exploreAnim,
             },
           ]}
@@ -288,13 +280,21 @@ export default function BottomTabBar({ state, navigation }) {
               activeOpacity={0.8}
               style={[
                 styles.tabItem,
+                !isMinimalist && styles.tabItemFloating,
                 isFocused && [
                   styles.activeTab,
-                  {
-                    borderWidth: 0,
-                    borderColor: "transparent",
-                    backgroundColor: activeAccent,
-                  },
+                  !isMinimalist && styles.activeTabFloating,
+                  isMinimalist
+                    ? {
+                        borderWidth: 0,
+                        borderColor: "transparent",
+                        backgroundColor: activeAccent,
+                      }
+                    : {
+                        borderWidth: 1.5,
+                        borderColor: activeAccent,
+                        backgroundColor: "transparent",
+                      },
                 ],
               ]}
             >
@@ -307,15 +307,15 @@ export default function BottomTabBar({ state, navigation }) {
               >
                 <Feather
                   name={iconName}
-                  size={24}
+                  size={!isMinimalist ? 22 : 24}
                   color={
-                    isFocused
+                    !isMinimalist
+                      ? isFocused
+                        ? activeAccent
+                        : "#FFFFFF"
+                      : isFocused
                       ? "#FFFFFF"
                       : isDarkMode
-                      ? "#FFFFFF"
-                      : isMinimalist
-                      ? "#000000"
-                      : isHome || isFavorites || isExplore
                       ? "#FFFFFF"
                       : "#000000"
                   }
