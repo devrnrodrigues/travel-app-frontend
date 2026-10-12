@@ -1658,12 +1658,12 @@ export const getProfileBodyDynamicStyle = (isDarkMode, scale, bodyOverlap) => [
   styles.newProfileBody,
   isDarkMode ? styles.newProfileBodyDark : styles.newProfileBodyLight,
   { opacity: 1, flex: 1, paddingBottom: 0 },
-  scale < 1 && { marginTop: -bodyOverlap },
+  bodyOverlap !== undefined && { marginTop: -bodyOverlap },
 ];
 
 export const getAvatarContainerDynamicStyle = (scale, avatarSize, avatarMarginTop, avatarMarginBottom) => [
   styles.avatarContainer,
-  scale < 1 && {
+  {
     width: avatarSize,
     height: avatarSize,
     marginTop: avatarMarginTop,
@@ -1677,8 +1677,6 @@ export const getAvatarBorderedDynamicStyle = (isDarkMode, scale, avatarSize, ava
     borderColor: isDarkMode ? "#0A0A0A" : "#FFFFFF",
     backgroundColor: isDarkMode ? "#1A1A1E" : "#E5E7EB",
     overflow: "hidden",
-  },
-  scale < 1 && {
     width: avatarSize,
     height: avatarSize,
     borderRadius: avatarSize / 2,
@@ -1688,7 +1686,7 @@ export const getAvatarBorderedDynamicStyle = (isDarkMode, scale, avatarSize, ava
 
 export const getAvatarImageDynamicStyle = (scale, avatarSize) => [
   styles.avatarImageBig,
-  scale < 1 && {
+  {
     width: avatarSize,
     height: avatarSize,
     borderRadius: avatarSize / 2,
@@ -1706,13 +1704,13 @@ export const getSkeletonWrapperStyle = (height, marginTop = 0, marginBottom = 0)
 export const getUserNameDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
   styles.newUserName,
   isDarkMode ? styles.newUserNameDark : styles.newUserNameLight,
-  scale < 1 && { fontSize, lineHeight },
+  fontSize !== undefined && { fontSize, lineHeight },
 ];
 
 export const getNationalityDynamicStyle = (accentColor, scale, fontSize, lineHeight, marginTop, marginBottom) => [
   styles.newNationalityText,
   { color: accentColor },
-  scale < 1 && {
+  fontSize !== undefined && {
     fontSize,
     lineHeight,
     marginTop,
@@ -1723,7 +1721,7 @@ export const getNationalityDynamicStyle = (accentColor, scale, fontSize, lineHei
 export const getBioDynamicStyle = (isDarkMode, scale, fontSize, lineHeight, marginBottom) => [
   styles.newBioText,
   isDarkMode ? styles.newBioTextDark : styles.newBioTextLight,
-  scale < 1 && {
+  fontSize !== undefined && {
     fontSize,
     lineHeight,
     marginBottom,
@@ -1749,13 +1747,13 @@ export const getStatsContainerDynamicStyle = (
 export const getStatValueDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
   styles.statValue,
   isDarkMode ? styles.statValueDark : styles.statValueLight,
-  scale < 1 && { fontSize, lineHeight },
+  fontSize !== undefined && { fontSize, lineHeight },
 ];
 
 export const getStatLabelDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
   styles.statLabelText,
   isDarkMode ? styles.statLabelTextDark : styles.statLabelTextLight,
-  scale < 1 && { fontSize, lineHeight },
+  fontSize !== undefined && { fontSize, lineHeight },
 ];
 
 export const getStatDividerDynamicStyle = (isDarkMode, scale, height) => [
@@ -1763,37 +1761,37 @@ export const getStatDividerDynamicStyle = (isDarkMode, scale, height) => [
   {
     backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)",
   },
-  scale < 1 && { height },
+  height !== undefined && { height },
 ];
 
 export const getCollectionsSectionDynamicStyle = (scale, marginTop) => [
   styles.collectionsSection,
-  scale < 1 && { marginTop },
+  marginTop !== undefined && { marginTop },
 ];
 
 export const getCollectionsHeaderDynamicStyle = (scale, marginBottom) => [
   styles.collectionsHeader,
-  scale < 1 && { marginBottom },
+  marginBottom !== undefined && { marginBottom },
 ];
 
 export const getCollectionsHeadingDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
   styles.collectionsHeading,
   isDarkMode ? styles.collectionsHeadingDark : styles.collectionsHeadingLight,
-  scale < 1 && { fontSize, lineHeight },
+  fontSize !== undefined && { fontSize, lineHeight },
 ];
 
 export const getCollectionsScrollContentDynamicStyle = (scale) => [
   styles.collectionsScrollContent,
-  scale < 1 && {
+  scale !== undefined && {
     gap: Math.round(14 * scale),
-    paddingTop: Math.round(6 * scale),
-    paddingBottom: Math.round(14 * scale),
+    paddingTop: Math.round(4 * scale),
+    paddingBottom: Math.round(8 * scale),
   },
 ];
 
 export const getAddCardItemDynamicStyle = (scale, width, height, borderRadius) => [
   styles.addCardItem,
-  scale < 1 && {
+  height !== undefined && {
     width,
     height,
     borderRadius,
@@ -1802,7 +1800,7 @@ export const getAddCardItemDynamicStyle = (scale, width, height, borderRadius) =
 
 export const getAddCardCircleDynamicStyle = (scale, size, marginBottom) => [
   styles.addCardCircle,
-  scale < 1 && {
+  size !== undefined && {
     width: size,
     height: size,
     borderRadius: size / 2,
@@ -1812,7 +1810,7 @@ export const getAddCardCircleDynamicStyle = (scale, size, marginBottom) => [
 
 export const getAddCardTextDynamicStyle = (scale, fontSize, lineHeight) => [
   styles.addCardText,
-  scale < 1 && {
+  fontSize !== undefined && {
     fontSize,
     lineHeight,
   },
@@ -1820,7 +1818,7 @@ export const getAddCardTextDynamicStyle = (scale, fontSize, lineHeight) => [
 
 export const getCollectionCardItemDynamicStyle = (scale, width, height, borderRadius) => [
   styles.collectionCardItem,
-  scale < 1 && {
+  height !== undefined && {
     width,
     height,
     borderRadius,
@@ -1829,7 +1827,7 @@ export const getCollectionCardItemDynamicStyle = (scale, width, height, borderRa
 
 export const getCollectionCardGradientDynamicStyle = (scale, height, padding) => [
   styles.collectionCardGradient,
-  scale < 1 && {
+  height !== undefined && {
     height,
     padding,
   },
@@ -1837,12 +1835,12 @@ export const getCollectionCardGradientDynamicStyle = (scale, height, padding) =>
 
 export const getCollectionCardTitleDynamicStyle = (scale, fontSize) => [
   styles.collectionCardTitle,
-  scale < 1 && { fontSize },
+  fontSize !== undefined && { fontSize },
 ];
 
 export const getCollectionCardSubDynamicStyle = (scale, fontSize) => [
   styles.collectionCardSub,
-  scale < 1 && { fontSize },
+  fontSize !== undefined && { fontSize },
 ];
 
 export const getBottomNavBgContainerDynamicStyle = (opacity) => [
@@ -1852,7 +1850,7 @@ export const getBottomNavBgContainerDynamicStyle = (opacity) => [
 
 export const getCoverBannerDynamicStyle = (scale, height) => [
   styles.coverBanner,
-  scale < 1 && { height },
+  height !== undefined && { height },
 ];
 
 export const getModalContentDynamicStyle = (translateY, paddingBottom) => ({

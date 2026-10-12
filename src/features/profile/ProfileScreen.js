@@ -294,7 +294,7 @@ export default function ProfileScreen({ navigation }) {
           <Animated.ScrollView
             style={styles.flex1}
             contentContainerStyle={getScrollContentContainerStyle(
-              true,
+              canScroll,
               navBarHeight
             )}
             scrollEnabled={true}
