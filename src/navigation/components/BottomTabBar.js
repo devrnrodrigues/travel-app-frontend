@@ -73,12 +73,13 @@ export default function BottomTabBar({ state, navigation }) {
     }).start();
   }, [isExploreSearchVisible]);
 
-  const tabItemOpacity = isExplore
-    ? exploreAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.60, 1],
-      })
-    : 1;
+  const tabItemOpacity =
+    isMinimalist && isExplore
+      ? exploreAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.60, 1],
+        })
+      : 1;
 
 
 
