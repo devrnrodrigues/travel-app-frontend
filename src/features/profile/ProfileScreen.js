@@ -74,6 +74,8 @@ export default function ProfileScreen({ navigation }) {
     queryClient,
   } = useProfileData();
 
+  const isMinimalist = aestheticMode === "minimalista";
+
   const {
     avatarModalVisible,
     setAvatarModalVisible,
@@ -94,7 +96,7 @@ export default function ProfileScreen({ navigation }) {
     handleRootLayout,
     handleBodyLayout,
     handleLastElementLayout,
-  } = useProfileLayout(insets);
+  } = useProfileLayout(insets, isMinimalist);
 
   const {
     addCollectionModalVisible,

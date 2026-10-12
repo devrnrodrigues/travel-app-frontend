@@ -4,7 +4,7 @@ import { useWindowDimensions, Animated, Dimensions } from "react-native";
 const { height: WINDOW_HEIGHT } = Dimensions.get("window");
 const BASE_HEIGHT = 680;
 
-export default function useProfileLayout(insets) {
+export default function useProfileLayout(insets, isMinimalist = true) {
   const { height: windowHeight } = useWindowDimensions();
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -87,7 +87,7 @@ export default function useProfileLayout(insets) {
     }
   }, [lastElementBottom]);
 
-  const navBarHeight = 54 + insets.bottom;
+  const navBarHeight = (isMinimalist ? 54 : 115) + insets.bottom;
   const isBehindNavbar = totalElementsBottom > screenHeight - navBarHeight;
   const canScroll = isBehindNavbar;
 
