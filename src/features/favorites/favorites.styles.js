@@ -9,13 +9,14 @@ export const getCardDimensions = (
   windowHeight = height,
   insetsBottom = 0,
   insetsTop = 0,
-  measuredContainerHeight = 0
+  measuredContainerHeight = 0,
+  isMinimalist = true
 ) => {
   const cardWidth = Math.floor((windowWidth - HORIZONTAL_PADDING * 2 - CARD_GAP) / 2);
   const bottomInset = insetsBottom || 0;
   const topInset = insetsTop || 0;
   const estimatedHeaderHeight = 128;
-  const tabHeight = 54 + bottomInset;
+  const tabHeight = (isMinimalist ? 54 : 115) + bottomInset;
 
   const visibleHeight =
     measuredContainerHeight > 0

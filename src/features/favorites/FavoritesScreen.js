@@ -41,19 +41,20 @@ export default function Favorites({ navigation }) {
     }
   }, [containerHeight]);
 
+  const { currentTheme, isDarkMode, aestheticMode } = useTheme();
+  const isMinimalist = aestheticMode === "minimalista";
+  const { user } = useAuth();
+
   const cardDimensions = useMemo(() => {
     return getCardDimensions(
       windowWidth,
       windowHeight,
       insets.bottom,
       insets.top,
-      containerHeight
+      containerHeight,
+      isMinimalist
     );
-  }, [windowWidth, windowHeight, insets.bottom, insets.top, containerHeight]);
-
-  const { currentTheme, isDarkMode, aestheticMode } = useTheme();
-  const isMinimalist = aestheticMode === "minimalista";
-  const { user } = useAuth();
+  }, [windowWidth, windowHeight, insets.bottom, insets.top, containerHeight, isMinimalist]);
 
   const {
     searchQuery,
