@@ -25,12 +25,12 @@ const GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
 
 export default function Explore({ navigation }) {
   const { currentTheme, isDarkMode, aestheticMode } = useTheme();
-  const isMinimalist = !isDarkMode && aestheticMode === "minimalista";
+  const isMinimalist = aestheticMode === "minimalista";
   const insets = useSafeAreaInsets();
   const flatListRef = useRef(null);
 
   const headerPaddingTop = insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10);
-  const headerHeight = headerPaddingTop + 60;
+  const headerHeight = headerPaddingTop + (isMinimalist ? 60 : 78);
   const bottomPadding = (insets.bottom || 0) + (isMinimalist ? 85 : 125);
 
   const {
@@ -105,7 +105,7 @@ export default function Explore({ navigation }) {
   const dynamicContentContainerStyle = useMemo(() => [
     styles.flatListContent,
     {
-      paddingTop: headerHeight,
+      paddingTop: isMinimalist ? headerHeight : 0,
       paddingBottom: bottomPadding,
     },
     destinations.length === 0 && {
@@ -114,10 +114,10 @@ export default function Explore({ navigation }) {
       alignItems: "center",
     },
     isDarkMode ? styles.bgDark : styles.bgLight,
-  ], [headerHeight, bottomPadding, isDarkMode, destinations.length]);
+  ], [headerHeight, bottomPadding, isDarkMode, destinations.length, isMinimalist]);
 
-  const isPlainBg = isMinimalist || isError;
-  const isWhiteBg = isMinimalist || (Boolean(isError) && !isDarkMode);
+  const isPlainBg = (isMinimalist && !isDarkMode) || isError;
+  const isWhiteBg = (isMinimalist && !isDarkMode) || (Boolean(isError) && !isDarkMode);
 
   const bodyContent = (
     <View style={styles.container}>

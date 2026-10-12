@@ -26,20 +26,18 @@ export const ExploreHeader = React.memo(function ExploreHeader({
   isMinimalist,
 }) {
   const accentColor = currentTheme?.accent || "#4CAF50";
-  const placeholderColor = isDarkMode ? "#8E8E93" : "#767676";
+  const placeholderColor = isMinimalist
+    ? (isDarkMode ? "#8E8E93" : "#767676")
+    : (isDarkMode ? "#8E8E93" : "rgba(255, 255, 255, 0.70)");
 
   return (
     <Animated.View
       pointerEvents={isSearchBarVisible || isSearchFocused ? "auto" : "none"}
       style={[
         styles.headerBar,
-        isMinimalist
-          ? styles.headerBarMinimalist
-          : isDarkMode
-          ? styles.headerBarDark
-          : styles.headerBarLight,
+        isMinimalist && (isDarkMode ? styles.headerBarDark : styles.headerBarLight),
         {
-          paddingTop: headerPaddingTop,
+          paddingTop: headerPaddingTop + (isMinimalist ? 0 : 8),
           transform: [{ translateY: searchTranslateY }],
           opacity: searchOpacity,
         },
@@ -50,24 +48,28 @@ export const ExploreHeader = React.memo(function ExploreHeader({
           style={[
             styles.searchBarInputWrapper,
             isMinimalist
-              ? styles.searchBarInputMinimalist
+              ? isDarkMode
+                ? styles.searchBarInputDark
+                : styles.searchBarInputLight
               : isDarkMode
-              ? styles.searchBarInputDark
-              : styles.searchBarInputLight,
+              ? styles.searchBarInputDecorativeDark
+              : styles.searchBarInputDecorativeLight,
             isSearchFocused && [
               { borderColor: accentColor },
-              !isMinimalist && (
-                isDarkMode
+              isMinimalist
+                ? isDarkMode
                   ? styles.searchBarInputFocusedDark
                   : styles.searchBarInputFocusedLight
-              ),
+                : isDarkMode
+                ? styles.searchBarInputFocusedDecorativeDark
+                : styles.searchBarInputFocusedDecorativeLight,
             ],
           ]}
           onPress={() => searchInputRef.current?.focus()}
         >
           <Feather
             name="search"
-            size={19}
+            size={isMinimalist ? 19 : 21}
             color={
               isSearchFocused
                 ? accentColor
@@ -79,7 +81,11 @@ export const ExploreHeader = React.memo(function ExploreHeader({
             ref={searchInputRef}
             style={[
               styles.searchInput,
-              isDarkMode ? styles.searchInputDark : styles.searchInputLight,
+              isMinimalist
+                ? isDarkMode
+                  ? styles.searchInputDark
+                  : styles.searchInputLight
+                : styles.searchInputDark,
             ]}
             placeholder="Pesquisar"
             placeholderTextColor={placeholderColor}
@@ -116,18 +122,20 @@ export const ExploreHeader = React.memo(function ExploreHeader({
           style={[
             styles.photoIconButton,
             isMinimalist
-              ? styles.photoIconButtonMinimalist
+              ? isDarkMode
+                ? styles.photoIconButtonDark
+                : styles.photoIconButtonLight
               : isDarkMode
-              ? styles.photoIconButtonDark
-              : styles.photoIconButtonLight,
+              ? styles.photoIconButtonDecorativeDark
+              : styles.photoIconButtonDecorativeLight,
           ]}
           activeOpacity={0.7}
           onPress={() => {}}
         >
           <Ionicons
             name="images-outline"
-            size={22}
-            color={isDarkMode ? "#FFFFFF" : "#000000"}
+            size={isMinimalist ? 22 : 25}
+            color={isMinimalist ? (isDarkMode ? "#FFFFFF" : "#000000") : "#FFFFFF"}
           />
         </TouchableOpacity>
       </View>

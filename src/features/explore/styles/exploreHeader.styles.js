@@ -15,7 +15,7 @@ export const exploreHeaderStyles = StyleSheet.create({
     backgroundColor: "#000000",
   },
   headerBarLight: {
-    backgroundColor: "rgba(100, 100, 100, 1)",
+    backgroundColor: "#FFFFFF",
   },
   headerBarMinimalist: {
     backgroundColor: "#FFFFFF",
@@ -29,26 +29,50 @@ export const exploreHeaderStyles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    height: 44,
-    borderRadius: 12,
-    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: "transparent",
   },
   searchBarInputDark: {
+    height: 44,
+    borderRadius: 12,
+    paddingHorizontal: 12,
     backgroundColor: "rgba(38, 38, 38, 0.72)",
   },
   searchBarInputLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.75)",
+    height: 44,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#F5F5F7",
   },
   searchBarInputMinimalist: {
+    height: 44,
+    borderRadius: 12,
+    paddingHorizontal: 12,
     backgroundColor: "#F5F5F7",
+  },
+  searchBarInputDecorativeDark: {
+    height: 54,
+    borderRadius: 27,
+    paddingHorizontal: 14,
+    backgroundColor: "rgba(10, 10, 10, 0.85)",
+  },
+  searchBarInputDecorativeLight: {
+    height: 54,
+    borderRadius: 27,
+    paddingHorizontal: 14,
+    backgroundColor: "rgba(100, 100, 100, 0.82)",
   },
   searchBarInputFocusedDark: {
     backgroundColor: "#1F1F1F",
   },
   searchBarInputFocusedLight: {
     backgroundColor: "#FFFFFF",
+  },
+  searchBarInputFocusedDecorativeDark: {
+    backgroundColor: "rgba(10, 10, 10, 0.95)",
+  },
+  searchBarInputFocusedDecorativeLight: {
+    backgroundColor: "rgba(100, 100, 100, 0.95)",
   },
   searchIcon: {
     marginRight: 8,
@@ -73,21 +97,39 @@ export const exploreHeaderStyles = StyleSheet.create({
   },
   photoIconButton: {
     marginLeft: 10,
-    width: 44,
-    height: 44,
-    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 0,
   },
   photoIconButtonDark: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: "rgba(38, 38, 38, 0.72)",
   },
   photoIconButtonLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.75)",
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#F5F5F7",
   },
   photoIconButtonMinimalist: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: "#F5F5F7",
+  },
+  photoIconButtonDecorativeDark: {
+    width: 54,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: "rgba(10, 10, 10, 0.85)",
+  },
+  photoIconButtonDecorativeLight: {
+    width: 54,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: "rgba(100, 100, 100, 0.82)",
   },
 });
 
