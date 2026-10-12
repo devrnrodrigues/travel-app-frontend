@@ -31,7 +31,7 @@ export default function Explore({ navigation }) {
 
   const headerPaddingTop = insets.top > 0 ? insets.top + 4 : (Platform.OS === "android" ? 34 : 10);
   const headerHeight = headerPaddingTop + 60;
-  const bottomPadding = (insets.bottom || 0) + 85;
+  const bottomPadding = (insets.bottom || 0) + (isMinimalist ? 85 : 125);
 
   const {
     searchQuery,
