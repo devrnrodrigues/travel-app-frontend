@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   View,
   Animated,
@@ -7,6 +7,8 @@ import {
   Alert,
   Image,
   StyleSheet,
+  StatusBar,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,6 +38,20 @@ import {
 
 const BOTTOM_EDGES = ["bottom"];
 
+const DEFAULT_DARK_GRADIENT = [
+  "rgba(0, 0, 0, 0.55)",
+  "rgba(0, 0, 0, 0.72)",
+  "rgba(0, 0, 0, 0.96)",
+  "rgba(0, 0, 0, 0.98)",
+];
+const DARK_GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
+const HOME_LIGHT_GRADIENT = [
+  "rgba(0, 0, 0, 0.55)",
+  "rgba(0, 0, 0, 0.25)",
+  "rgba(0, 0, 0, 0.75)",
+];
+const HOME_LIGHT_LOCATIONS = [0, 0.45, 1];
+
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { logout, updateUser } = useAuth();
@@ -52,6 +68,16 @@ export default function ProfileScreen({ navigation }) {
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const themeModalTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (themeModalTimeoutRef.current) {
+        clearTimeout(themeModalTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const {
     user,
@@ -117,14 +143,36 @@ export default function ProfileScreen({ navigation }) {
   } = useCreateCollection(queryClient);
 
   const bgSource = useMemo(() => {
-    return typeof currentTheme.bg === "string"
+    return typeof currentTheme?.bg === "string"
       ? { uri: currentTheme.bg }
-      : currentTheme.bg;
-  }, [currentTheme.bg]);
+      : currentTheme?.bg;
+  }, [currentTheme?.bg]);
 
   const displayedCollections = useMemo(() => {
     return userCollections || [];
   }, [userCollections]);
+
+  const { gradientColors, gradientLocations } = useMemo(() => {
+    if (isDarkMode) {
+      const colors =
+        currentTheme?.colors && currentTheme.colors.length >= 3
+          ? [
+              currentTheme.colors[0],
+              currentTheme.colors[1],
+              "rgba(0, 0, 0, 0.72)",
+              "rgba(0, 0, 0, 0.96)",
+            ]
+          : DEFAULT_DARK_GRADIENT;
+      return {
+        gradientColors: colors,
+        gradientLocations: DARK_GRADIENT_LOCATIONS,
+      };
+    }
+    return {
+      gradientColors: HOME_LIGHT_GRADIENT,
+      gradientLocations: HOME_LIGHT_LOCATIONS,
+    };
+  }, [isDarkMode, currentTheme?.colors]);
 
   const handleRefresh = useCallback(async () => {
     await triggerRefresh();
@@ -159,6 +207,7 @@ export default function ProfileScreen({ navigation }) {
   }, [logout]);
 
   const handleOpenAvatarModal = useCallback(() => {
+    setModalVisible(false);
     setAvatarModalVisible(true);
   }, [setAvatarModalVisible]);
 
@@ -167,6 +216,7 @@ export default function ProfileScreen({ navigation }) {
   }, [setAvatarModalVisible]);
 
   const handleOpenAddCollectionModal = useCallback(() => {
+    setModalVisible(false);
     setAddCollectionModalVisible(true);
   }, [setAddCollectionModalVisible]);
 
@@ -174,13 +224,7 @@ export default function ProfileScreen({ navigation }) {
     handleCloseModal();
   }, [handleCloseModal]);
 
-  const handleOpenThemeModal = useCallback(() => {
-    setThemeModalVisible(true);
-  }, [setThemeModalVisible]);
 
-  const handleCloseThemeModal = useCallback(() => {
-    setThemeModalVisible(false);
-  }, [setThemeModalVisible]);
 
   const handleNavigateToCollection = useCallback(
     (col) => {
@@ -261,6 +305,25 @@ export default function ProfileScreen({ navigation }) {
     handleSaveProfile();
   }, [handleSaveProfile]);
 
+  const handleOpenThemeModal = useCallback(() => {
+    setThemeModalVisible(true);
+    handleSaveProfile();
+    if (themeModalTimeoutRef.current) {
+      clearTimeout(themeModalTimeoutRef.current);
+    }
+    themeModalTimeoutRef.current = setTimeout(() => {
+      setModalVisible(false);
+    }, 350);
+  }, [setThemeModalVisible, handleSaveProfile]);
+
+  const handleCloseThemeModal = useCallback(() => {
+    if (themeModalTimeoutRef.current) {
+      clearTimeout(themeModalTimeoutRef.current);
+    }
+    setModalVisible(false);
+    setThemeModalVisible(false);
+  }, [setThemeModalVisible]);
+
   useFocusEffect(
     useCallback(() => {
       AsyncStorage.getItem("@debug_hide_favorites").then((val) => {
@@ -284,156 +347,203 @@ export default function ProfileScreen({ navigation }) {
     />
   );
 
-  return (
-    <View
-      style={[styles.container, getContainerStyle(isDarkMode)]}
-      onLayout={handleRootLayout}
-    >
-      <SafeAreaView edges={BOTTOM_EDGES} style={styles.flex1}>
-        <View style={styles.flex1}>
-          <Animated.ScrollView
-            style={styles.flex1}
-            contentContainerStyle={getScrollContentContainerStyle(
-              canScroll,
-              navBarHeight
-            )}
-            scrollEnabled={true}
-            showsVerticalScrollIndicator={false}
-            bounces={true}
-            alwaysBounceVertical={true}
-            overScrollMode="always"
-            pointerEvents="auto"
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: Platform.OS !== "web" }
-            )}
-            scrollEventThrottle={16}
-            refreshControl={refreshControl}
-          >
-            <View key={refreshKey} style={styles.flex1}>
-              <ProfileHeader
-                bgSource={bgSource}
+  const profileContent = (
+    <SafeAreaView edges={BOTTOM_EDGES} style={styles.flex1}>
+      <View style={styles.flex1}>
+        <Animated.ScrollView
+          style={styles.flex1}
+          contentContainerStyle={getScrollContentContainerStyle(
+            canScroll,
+            navBarHeight
+          )}
+          scrollEnabled={true}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          alwaysBounceVertical={true}
+          overScrollMode="always"
+          pointerEvents="auto"
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: Platform.OS !== "web" }
+          )}
+          scrollEventThrottle={16}
+          refreshControl={refreshControl}
+        >
+          <View key={refreshKey} style={styles.flex1}>
+            <ProfileHeader
+              bgSource={bgSource}
+              currentTheme={currentTheme}
+              scale={scale}
+              bannerHeight={bannerHeight}
+              onOpenSettings={handleOpenSettings}
+              isMinimalist={isMinimalist}
+              insets={insets}
+            />
+
+            <Animated.View
+              style={
+                isMinimalist
+                  ? getProfileBodyDynamicStyle(
+                      isDarkMode,
+                      scale,
+                      bodyOverlap
+                    )
+                  : styles.decorativeBody
+              }
+              onLayout={handleBodyLayout}
+            >
+              <ProfileUserCard
+                user={user}
+                name={name}
+                nationality={nationality}
+                bio={bio}
+                commentsCount={commentsCount}
+                collectionsCount={displayedCollections.length}
+                favoritesCount={favoritesCount}
+                refreshKey={refreshKey}
+                loading={loadingCollections}
+                isDarkMode={isDarkMode}
                 currentTheme={currentTheme}
                 scale={scale}
-                bannerHeight={bannerHeight}
+                avatarDimensions={avatarDimensions}
+                onOpenAvatarModal={handleOpenAvatarModal}
                 onOpenSettings={handleOpenSettings}
+                isMinimalist={isMinimalist}
               />
 
-              <Animated.View
-                style={getProfileBodyDynamicStyle(
-                  isDarkMode,
-                  scale,
-                  bodyOverlap
-                )}
-                onLayout={handleBodyLayout}
-              >
-                <ProfileUserCard
-                  user={user}
-                  name={name}
-                  nationality={nationality}
-                  bio={bio}
-                  commentsCount={commentsCount}
-                  collectionsCount={displayedCollections.length}
-                  favoritesCount={favoritesCount}
-                  refreshKey={refreshKey}
-                  loading={loadingCollections}
-                  isDarkMode={isDarkMode}
-                  currentTheme={currentTheme}
-                  scale={scale}
-                  avatarDimensions={avatarDimensions}
-                  onOpenAvatarModal={handleOpenAvatarModal}
-                />
+              <ProfileCollectionsSection
+                displayedCollections={displayedCollections}
+                loading={loadingCollections}
+                isDarkMode={isDarkMode}
+                currentTheme={currentTheme}
+                scale={scale}
+                collectionDimensions={collectionDimensions}
+                onOpenAddCollectionModal={handleOpenAddCollectionModal}
+                onNavigateToCollection={handleNavigateToCollection}
+                isMinimalist={isMinimalist}
+              />
 
-                <ProfileCollectionsSection
-                  displayedCollections={displayedCollections}
-                  loading={loadingCollections}
-                  isDarkMode={isDarkMode}
-                  currentTheme={currentTheme}
-                  scale={scale}
-                  collectionDimensions={collectionDimensions}
-                  onOpenAddCollectionModal={handleOpenAddCollectionModal}
-                  onNavigateToCollection={handleNavigateToCollection}
-                />
+              <View
+                style={styles.layoutAnchor}
+                onLayout={handleLastElementLayout}
+              />
+            </Animated.View>
+          </View>
+        </Animated.ScrollView>
+      </View>
 
-                <View
-                  style={styles.layoutAnchor}
-                  onLayout={handleLastElementLayout}
-                />
-              </Animated.View>
-            </View>
-          </Animated.ScrollView>
-        </View>
+    </SafeAreaView>
+  );
 
-        <EditProfileModal
-          visible={modalVisible}
-          onClose={handleCloseEditModal}
-          isDarkMode={isDarkMode}
-          currentTheme={currentTheme}
-          toggleThemeMode={toggleThemeMode}
-          name={name}
-          setName={setName}
-          nationality={nationality}
-          setNationality={setNationality}
-          bio={bio}
-          setBio={setBio}
-          aestheticMode={aestheticMode}
-          onAestheticModeChange={handleAestheticModeChange}
-          hideFavorites={hideFavorites}
-          onToggleHideFavorites={handleToggleHideFavorites}
-          onOpenAvatarModal={handleOpenAvatarModal}
-          onOpenAddCollectionModal={handleOpenAddCollectionModal}
-          onOpenThemeModal={handleOpenThemeModal}
-          onOpenLogoutModal={handleOpenLogoutModal}
-          insets={insets}
-        />
+  return (
+    <View
+      style={[
+        styles.container,
+        isMinimalist
+          ? getContainerStyle(isDarkMode)
+          : { backgroundColor: "#0A0A0A" },
+      ]}
+      onLayout={handleRootLayout}
+    >
+      <StatusBar
+        barStyle={
+          isMinimalist
+            ? isDarkMode
+              ? "light-content"
+              : "dark-content"
+            : "light-content"
+        }
+        backgroundColor="transparent"
+        translucent
+      />
+      {isMinimalist ? (
+        profileContent
+      ) : (
+        <ImageBackground
+          source={bgSource}
+          style={styles.backgroundImage}
+          imageStyle={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <LinearGradient
+            colors={gradientColors}
+            locations={gradientLocations}
+            style={styles.flex1}
+          >
+            {profileContent}
+          </LinearGradient>
+        </ImageBackground>
+      )}
 
-        <LogoutConfirmationModal
-          visible={logoutModalVisible}
-          isLoggingOut={isLoggingOut}
-          isDarkMode={isDarkMode}
-          onConfirm={confirmLogout}
-          onCancel={handleCancelLogout}
-        />
+      <EditProfileModal
+        visible={modalVisible}
+        onClose={handleCloseEditModal}
+        isDarkMode={isDarkMode}
+        currentTheme={currentTheme}
+        toggleThemeMode={toggleThemeMode}
+        name={name}
+        setName={setName}
+        nationality={nationality}
+        setNationality={setNationality}
+        bio={bio}
+        setBio={setBio}
+        aestheticMode={aestheticMode}
+        onAestheticModeChange={handleAestheticModeChange}
+        hideFavorites={hideFavorites}
+        onToggleHideFavorites={handleToggleHideFavorites}
+        onOpenAvatarModal={handleOpenAvatarModal}
+        onOpenAddCollectionModal={handleOpenAddCollectionModal}
+        onOpenThemeModal={handleOpenThemeModal}
+        onOpenLogoutModal={handleOpenLogoutModal}
+        insets={insets}
+      />
 
-        <AvatarViewerModal
-          visible={avatarModalVisible}
-          avatarUrl={user?.avatarUrl}
-          isUploading={isUploadingAvatar}
-          accentColor={currentTheme.accent}
-          onClose={handleCloseAvatarModal}
-          onPickAndUploadAvatar={handlePickAndUploadAvatar}
-        />
+      <LogoutConfirmationModal
+        visible={logoutModalVisible}
+        isLoggingOut={isLoggingOut}
+        isDarkMode={isDarkMode}
+        onConfirm={confirmLogout}
+        onCancel={handleCancelLogout}
+      />
 
-        <AddCollectionModal
-          visible={addCollectionModalVisible}
-          onClose={handleCloseAddCollectionModal}
-          isDarkMode={isDarkMode}
-          currentTheme={currentTheme}
-          newCollectionName={newCollectionName}
-          setNewCollectionName={setNewCollectionName}
-          isCollectionNameFocused={isCollectionNameFocused}
-          setIsCollectionNameFocused={setIsCollectionNameFocused}
-          selectedCollectionPhotos={selectedCollectionPhotos}
-          isPickingPhotos={isPickingPhotos}
-          isCreatingCollection={isCreatingCollection}
-          onPickPhotos={handlePickCollectionPhotos}
-          onRemovePhoto={handleRemoveCollectionPhoto}
-          onSaveCollection={handleSaveCollection}
-          formErrors={formErrors}
-          setFormErrors={setFormErrors}
-        />
+      <AvatarViewerModal
+        visible={avatarModalVisible}
+        avatarUrl={user?.avatarUrl}
+        isUploading={isUploadingAvatar}
+        accentColor={currentTheme.accent}
+        onClose={handleCloseAvatarModal}
+        onPickAndUploadAvatar={handlePickAndUploadAvatar}
+      />
 
-        <ThemeModal
-          visible={themeModalVisible}
-          onClose={handleCloseThemeModal}
-          isDarkMode={isDarkMode}
-          currentTheme={currentTheme}
-          themePreference={themePreference}
-          onThemePreferenceChange={setThemePreference}
-          aestheticMode={aestheticMode}
-          onAestheticModeChange={handleAestheticModeChange}
-        />
-      </SafeAreaView>
+      <AddCollectionModal
+        visible={addCollectionModalVisible}
+        onClose={handleCloseAddCollectionModal}
+        isDarkMode={isDarkMode}
+        currentTheme={currentTheme}
+        newCollectionName={newCollectionName}
+        setNewCollectionName={setNewCollectionName}
+        isCollectionNameFocused={isCollectionNameFocused}
+        setIsCollectionNameFocused={setIsCollectionNameFocused}
+        selectedCollectionPhotos={selectedCollectionPhotos}
+        isPickingPhotos={isPickingPhotos}
+        isCreatingCollection={isCreatingCollection}
+        onPickPhotos={handlePickCollectionPhotos}
+        onRemovePhoto={handleRemoveCollectionPhoto}
+        onSaveCollection={handleSaveCollection}
+        formErrors={formErrors}
+        setFormErrors={setFormErrors}
+      />
+
+      <ThemeModal
+        visible={themeModalVisible}
+        onClose={handleCloseThemeModal}
+        isDarkMode={isDarkMode}
+        currentTheme={currentTheme}
+        themePreference={themePreference}
+        onThemePreferenceChange={setThemePreference}
+        aestheticMode={aestheticMode}
+        onAestheticModeChange={handleAestheticModeChange}
+      />
     </View>
   );
 }

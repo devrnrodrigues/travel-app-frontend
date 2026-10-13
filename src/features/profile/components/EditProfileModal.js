@@ -13,6 +13,8 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
+  Keyboard,
+  StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AnimatedProfileInput from "./AnimatedProfileInput";
@@ -140,6 +142,11 @@ const EditProfileModal = memo(function EditProfileModal({
     );
   }, [isDarkMode]);
 
+  const handleOpenTheme = useCallback(() => {
+    Keyboard.dismiss();
+    onOpenThemeModal?.();
+  }, [onOpenThemeModal]);
+
   return (
     <Modal
       animationType="fade"
@@ -149,10 +156,13 @@ const EditProfileModal = memo(function EditProfileModal({
       navigationBarTranslucent={true}
       onRequestClose={handleCloseModal}
     >
-      <TouchableWithoutFeedback onPress={handleCloseModal}>
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback>
-            <Animated.View
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={handleCloseModal}
+        />
+        <Animated.View
               style={[
                 styles.modalContent,
                 getModalContentDynamicStyle(modalSlideAnim, modalPaddingBottom),
@@ -180,7 +190,7 @@ const EditProfileModal = memo(function EditProfileModal({
 
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
+                keyboardShouldPersistTaps="always"
                 style={styles.modalScroll}
               >
                 <Text
@@ -284,6 +294,7 @@ const EditProfileModal = memo(function EditProfileModal({
                     styles.addCollectionTriggerBtnSpacing,
                   ]}
                   activeOpacity={0.75}
+                  delayPressIn={0}
                   onPress={onOpenAvatarModal}
                 >
                   <View style={styles.addCollectionTriggerLeft}>
@@ -326,6 +337,7 @@ const EditProfileModal = memo(function EditProfileModal({
                     styles.addCollectionTriggerBtnNoTopMargin,
                   ]}
                   activeOpacity={0.75}
+                  delayPressIn={0}
                   onPress={onOpenAddCollectionModal}
                 >
                   <View style={styles.addCollectionTriggerLeft}>
@@ -368,7 +380,8 @@ const EditProfileModal = memo(function EditProfileModal({
                     styles.addCollectionTriggerBtnNoTopMargin,
                   ]}
                   activeOpacity={0.75}
-                  onPress={onOpenThemeModal}
+                  delayPressIn={0}
+                  onPress={handleOpenTheme}
                 >
                   <View style={styles.addCollectionTriggerLeft}>
                     <View
@@ -469,9 +482,7 @@ const EditProfileModal = memo(function EditProfileModal({
                 </View>
               </View>
             </Animated.View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
+      </View>
     </Modal>
   );
 });

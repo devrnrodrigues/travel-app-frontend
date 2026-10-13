@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { View, TouchableOpacity, ImageBackground, Animated } from "react-native";
+import { View, TouchableOpacity, ImageBackground, Animated, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -13,7 +13,15 @@ const ProfileHeader = memo(function ProfileHeader({
   scale,
   bannerHeight,
   onOpenSettings,
+  isMinimalist = true,
+  insets,
 }) {
+  const hitSlopSettings = { top: 12, bottom: 12, left: 12, right: 12 };
+
+  if (!isMinimalist) {
+    return null;
+  }
+
   const gradientColors =
     currentTheme?.colors && currentTheme.colors.length >= 3
       ? [
@@ -25,7 +33,6 @@ const ProfileHeader = memo(function ProfileHeader({
       : ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.65)", "rgba(0, 0, 0, 0.95)"];
 
   const gradientLocations = [0, 0.38, 0.72, 1];
-  const hitSlopSettings = { top: 12, bottom: 12, left: 12, right: 12 };
 
   return (
     <Animated.View>

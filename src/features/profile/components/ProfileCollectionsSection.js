@@ -34,6 +34,7 @@ const ProfileCollectionsSection = memo(function ProfileCollectionsSection({
   collectionDimensions,
   onOpenAddCollectionModal,
   onNavigateToCollection,
+  isMinimalist = true,
 }) {
   const {
     cardWidth,
@@ -62,7 +63,8 @@ const ProfileCollectionsSection = memo(function ProfileCollectionsSection({
     <View
       style={getCollectionsSectionDynamicStyle(
         scale,
-        collectionsSectionMarginTop
+        collectionsSectionMarginTop,
+        isMinimalist
       )}
     >
       <View
@@ -76,7 +78,8 @@ const ProfileCollectionsSection = memo(function ProfileCollectionsSection({
             isDarkMode,
             scale,
             collectionsHeadingFontSize,
-            collectionsHeadingLineHeight
+            collectionsHeadingLineHeight,
+            isMinimalist
           )}
         >
           Minhas coleções

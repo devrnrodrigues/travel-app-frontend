@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from "react";
-import { useWindowDimensions, Animated, Dimensions } from "react-native";
+import { useWindowDimensions, Animated, Dimensions, Platform } from "react-native";
 
 const { height: WINDOW_HEIGHT } = Dimensions.get("window");
 
@@ -7,18 +7,17 @@ export default function useProfileLayout(insets, isMinimalist = true) {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  const topInset = insets?.top || (Platform.OS === "android" ? 24 : 0);
   const bottomInset = insets?.bottom || 0;
   const navBarHeight = (isMinimalist ? 54 : 115) + bottomInset;
 
   const availableHeight = Math.max(480, windowHeight - navBarHeight);
   const scale = Math.max(0.70, Math.min(1.20, availableHeight / 720));
 
-  const bannerRatio = availableHeight < 640 ? 0.24 : availableHeight < 740 ? 0.26 : 0.275;
-  let bannerHeight = Math.round(Math.max(135, availableHeight * bannerRatio));
-
-  let bodyOverlap = Math.round(Math.max(16, Math.min(30, bannerHeight * 0.12)));
-  let bodyTop = bannerHeight - bodyOverlap;
-  let spaceForBody = availableHeight - bodyTop;
+  let bannerHeight = 0;
+  let bodyOverlap = 0;
+  let bodyTop = 0;
+  let spaceForBody = 0;
 
   const avatarSize = Math.round(Math.max(76, Math.min(106, 92 * scale)));
   const avatarMarginTop = -Math.round(avatarSize * 0.50);
@@ -38,7 +37,7 @@ export default function useProfileLayout(insets, isMinimalist = true) {
   const bioLineHeight = Math.round(bioFontSize * 1.35);
   const bioMarginBottom = Math.round(Math.max(6, Math.min(12, 9 * scale)));
 
-  const statsPaddingVertical = Math.round(Math.max(10, Math.min(18, 14 * scale)));
+  let statsPaddingVertical = Math.round(Math.max(10, Math.min(18, 14 * scale)));
   const statValueFontSize = Math.round(Math.max(18, Math.min(22, 20.5 * scale)));
   const statValueLineHeight = Math.round(statValueFontSize * 1.22);
   const statLabelFontSize = Math.round(Math.max(9.5, Math.min(11, 10.5 * scale)));
@@ -47,7 +46,7 @@ export default function useProfileLayout(insets, isMinimalist = true) {
   let statsMarginTop = Math.round(Math.max(2, Math.min(8, 4 * scale)));
   let statsMarginBottom = Math.round(Math.max(8, Math.min(16, 12 * scale)));
 
-  const collectionsSectionMarginTop = Math.round(Math.max(4, Math.min(10, 6 * scale)));
+  let collectionsSectionMarginTop = Math.round(Math.max(4, Math.min(10, 6 * scale)));
   const collectionsHeadingFontSize = Math.round(Math.max(15, Math.min(18, 16.5 * scale)));
   const collectionsHeadingLineHeight = Math.round(collectionsHeadingFontSize * 1.25);
   let collectionsHeaderMarginBottom = Math.round(Math.max(6, Math.min(12, 8 * scale)));
@@ -59,30 +58,78 @@ export default function useProfileLayout(insets, isMinimalist = true) {
   const statsContentHeight = statValueLineHeight + statLabelLineHeight + 4;
   let statsTotalHeight = statsMarginTop + (statsPaddingVertical * 2) + statsContentHeight + statsMarginBottom;
   let collectionsHeaderTotalHeight = collectionsSectionMarginTop + collectionsHeadingLineHeight + collectionsHeaderMarginBottom;
-  const bottomBuffer = Math.round(Math.max(18, Math.min(32, 24 * scale)));
+  const bottomBuffer = Math.round(Math.max(16, Math.min(28, 20 * scale)));
 
-  let upperBodyHeight = avatarInsideBody + nameHeight + nationalityHeight + bioHeight + statsTotalHeight + collectionsHeaderTotalHeight;
+  let decorativeTopMargin = 0;
+  let decorativeCardPadding = 0;
+  let decorativeStatsPaddingVertical = 0;
+  let decorativeStatsMarginTop = 0;
 
-  let spaceForCards = spaceForBody - upperBodyHeight - bottomBuffer;
-
+  let spaceForCards = 0;
   const targetCardBaseline = Math.round(Math.max(185, Math.min(265, 240 * scale)));
-  if (spaceForCards > targetCardBaseline) {
-    const extraSpace = spaceForCards - targetCardBaseline;
-    const bannerExtra = Math.round(extraSpace * 0.35);
-    bannerHeight += bannerExtra;
-    bodyOverlap = Math.round(Math.max(16, Math.min(32, bannerHeight * 0.12)));
+
+  if (isMinimalist) {
+    const bannerRatio = availableHeight < 640 ? 0.24 : availableHeight < 740 ? 0.26 : 0.275;
+    bannerHeight = Math.round(Math.max(135, availableHeight * bannerRatio));
+
+    bodyOverlap = Math.round(Math.max(16, Math.min(30, bannerHeight * 0.12)));
     bodyTop = bannerHeight - bodyOverlap;
     spaceForBody = availableHeight - bodyTop;
 
-    const spacingExtra = Math.round(extraSpace * 0.15);
-    const halfSpacing = Math.round(spacingExtra * 0.5);
-    statsMarginBottom += halfSpacing;
-    collectionsHeaderMarginBottom += halfSpacing;
-    statsTotalHeight += halfSpacing;
-    collectionsHeaderTotalHeight += halfSpacing;
-    upperBodyHeight += spacingExtra;
-
+    let upperBodyHeight = avatarInsideBody + nameHeight + nationalityHeight + bioHeight + statsTotalHeight + collectionsHeaderTotalHeight;
     spaceForCards = spaceForBody - upperBodyHeight - bottomBuffer;
+
+    if (spaceForCards > targetCardBaseline) {
+      const extraSpace = spaceForCards - targetCardBaseline;
+      const bannerExtra = Math.round(extraSpace * 0.35);
+      bannerHeight += bannerExtra;
+      bodyOverlap = Math.round(Math.max(16, Math.min(32, bannerHeight * 0.12)));
+      bodyTop = bannerHeight - bodyOverlap;
+      spaceForBody = availableHeight - bodyTop;
+
+      const spacingExtra = Math.round(extraSpace * 0.15);
+      const halfSpacing = Math.round(spacingExtra * 0.5);
+      statsMarginBottom += halfSpacing;
+      collectionsHeaderMarginBottom += halfSpacing;
+      statsTotalHeight += halfSpacing;
+      collectionsHeaderTotalHeight += halfSpacing;
+      upperBodyHeight += spacingExtra;
+
+      spaceForCards = spaceForBody - upperBodyHeight - bottomBuffer;
+    }
+  } else {
+    decorativeTopMargin = Math.round(topInset + Math.max(4, Math.min(12, 6 * scale)));
+    decorativeCardPadding = Math.round(Math.max(12, Math.min(18, 14 * scale)));
+    decorativeStatsPaddingVertical = Math.round(Math.max(9, Math.min(14, 11 * scale)));
+    decorativeStatsMarginTop = Math.round(Math.max(6, Math.min(12, 9 * scale)));
+    collectionsSectionMarginTop = Math.round(Math.max(6, Math.min(14, 10 * scale)));
+    collectionsHeaderMarginBottom = Math.round(Math.max(4, Math.min(10, 6 * scale)));
+
+    const collectionsScrollPaddingBottom = Math.round(8 * scale);
+    const decorativeStatsContentHeight = statValueLineHeight + statLabelLineHeight + 4;
+    let decorativeStatsTotalHeight = decorativeStatsMarginTop + (decorativeStatsPaddingVertical * 2) + decorativeStatsContentHeight;
+
+    let decorativeCardHeight = (decorativeCardPadding * 2) + avatarSize + avatarMarginBottom + nameHeight + nationalityHeight + bioHeight + decorativeStatsTotalHeight;
+    collectionsHeaderTotalHeight = collectionsHeadingLineHeight + collectionsHeaderMarginBottom;
+    const bottomBuffer = Math.round(Math.max(16, Math.min(26, 20 * scale))) + collectionsScrollPaddingBottom;
+
+    spaceForCards = availableHeight - decorativeTopMargin - decorativeCardHeight - collectionsSectionMarginTop - collectionsHeaderTotalHeight - bottomBuffer;
+
+    if (spaceForCards > targetCardBaseline) {
+      const extraSpace = spaceForCards - targetCardBaseline;
+      const spacingExtra = Math.round(extraSpace * 0.15);
+      const halfSpacing = Math.round(spacingExtra * 0.5);
+
+      collectionsSectionMarginTop += halfSpacing;
+      decorativeStatsMarginTop += halfSpacing;
+      const cardPaddingExtra = Math.round(extraSpace * 0.10);
+      decorativeCardPadding += cardPaddingExtra;
+
+      decorativeStatsTotalHeight += halfSpacing;
+      decorativeCardHeight += (cardPaddingExtra * 2) + halfSpacing;
+
+      spaceForCards = availableHeight - decorativeTopMargin - decorativeCardHeight - collectionsSectionMarginTop - collectionsHeaderTotalHeight - bottomBuffer;
+    }
   }
 
   const cardHeight = Math.round(Math.max(185, Math.min(360, spaceForCards)));
@@ -100,7 +147,7 @@ export default function useProfileLayout(insets, isMinimalist = true) {
   const cardGradientPadding = Math.round(Math.max(10, Math.min(18, 14 * scale)));
 
   const [screenHeight, setScreenHeight] = useState(WINDOW_HEIGHT);
-  const [bodyY, setBodyY] = useState(206);
+  const [bodyY, setBodyY] = useState(isMinimalist ? 206 : 0);
   const [lastElementBottom, setLastElementBottom] = useState(570);
   const totalElementsBottom = bodyY + lastElementBottom;
 
@@ -113,7 +160,7 @@ export default function useProfileLayout(insets, isMinimalist = true) {
 
   const handleBodyLayout = useCallback((e) => {
     const y = e.nativeEvent.layout.y;
-    if (y > 0 && Math.abs(y - bodyY) > 1) {
+    if (y >= 0 && Math.abs(y - bodyY) > 1) {
       setBodyY(y);
     }
   }, [bodyY]);
@@ -166,6 +213,10 @@ export default function useProfileLayout(insets, isMinimalist = true) {
     statLabelFontSize,
     statLabelLineHeight,
     statDividerHeight,
+    decorativeTopMargin,
+    decorativeCardPadding,
+    decorativeStatsPaddingVertical,
+    decorativeStatsMarginTop,
   }), [
     avatarSize,
     avatarMarginTop,
@@ -189,6 +240,10 @@ export default function useProfileLayout(insets, isMinimalist = true) {
     statLabelFontSize,
     statLabelLineHeight,
     statDividerHeight,
+    decorativeTopMargin,
+    decorativeCardPadding,
+    decorativeStatsPaddingVertical,
+    decorativeStatsMarginTop,
   ]);
 
   const collectionDimensions = useMemo(() => ({

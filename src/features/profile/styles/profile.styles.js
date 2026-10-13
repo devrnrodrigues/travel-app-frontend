@@ -11,6 +11,11 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0A0A0A",
   },
+  backgroundImage: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
   flex1: {
     flex: 1,
   },
@@ -55,6 +60,118 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0,
     shadowRadius: 0,
     elevation: 0,
+  },
+  decorativeTopBar: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  decorativeBody: {
+    flex: 1,
+    paddingTop: 0,
+    backgroundColor: "transparent",
+  },
+  decorativeCard: {
+    marginHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 16,
+    borderRadius: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    borderWidth: 0,
+    borderColor: "transparent",
+    position: "relative",
+  },
+  decorativeSettingsButton: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  decorativeCardDark: {
+    backgroundColor: "rgba(10, 10, 10, 0.72)",
+  },
+  decorativeCardLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.35)",
+  },
+  decorativeAvatarWrapper: {
+    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  decorativeAvatarBordered: {
+    borderWidth: 0,
+    borderColor: "transparent",
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  decorativeUserName: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    letterSpacing: -0.3,
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  decorativeBioText: {
+    color: "rgba(255, 255, 255, 0.85)",
+    textAlign: "center",
+    maxWidth: 310,
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  decorativeStatsContainer: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 14,
+    borderWidth: 0,
+    borderColor: "transparent",
+  },
+  decorativeStatsContainerDark: {
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+  },
+  decorativeStatsContainerLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.12)",
+  },
+  decorativeStatValue: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    letterSpacing: -0.3,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  decorativeStatLabel: {
+    color: "rgba(255, 255, 255, 0.70)",
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginTop: 4,
+  },
+  decorativeStatDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+  },
+  collectionsHeadingDecorative: {
+    color: "#FFFFFF",
+    textShadowColor: "rgba(0, 0, 0, 0.7)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   settingsButton: {
     position: "absolute",
@@ -1764,8 +1881,9 @@ export const getStatDividerDynamicStyle = (isDarkMode, scale, height) => [
   height !== undefined && { height },
 ];
 
-export const getCollectionsSectionDynamicStyle = (scale, marginTop) => [
+export const getCollectionsSectionDynamicStyle = (scale, marginTop, isMinimalist = true) => [
   styles.collectionsSection,
+  !isMinimalist && { marginHorizontal: 0 },
   marginTop !== undefined && { marginTop },
 ];
 
@@ -1774,9 +1892,13 @@ export const getCollectionsHeaderDynamicStyle = (scale, marginBottom) => [
   marginBottom !== undefined && { marginBottom },
 ];
 
-export const getCollectionsHeadingDynamicStyle = (isDarkMode, scale, fontSize, lineHeight) => [
+export const getCollectionsHeadingDynamicStyle = (isDarkMode, scale, fontSize, lineHeight, isMinimalist = true) => [
   styles.collectionsHeading,
-  isDarkMode ? styles.collectionsHeadingDark : styles.collectionsHeadingLight,
+  !isMinimalist
+    ? styles.collectionsHeadingDecorative
+    : isDarkMode
+    ? styles.collectionsHeadingDark
+    : styles.collectionsHeadingLight,
   fontSize !== undefined && { fontSize, lineHeight },
 ];
 

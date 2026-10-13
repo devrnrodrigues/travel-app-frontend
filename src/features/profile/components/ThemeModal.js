@@ -99,8 +99,6 @@ const ThemeModal = memo(function ThemeModal({
     [optimisticAesthetic, loadingKey, onAestheticModeChange]
   );
 
-  if (!visible) return null;
-
   return (
     <Modal
       visible={visible}
