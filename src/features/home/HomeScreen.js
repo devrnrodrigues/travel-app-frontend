@@ -29,7 +29,6 @@ import useHomeData from "./hooks/useHomeData";
 import useHomeCategories from "./hooks/useHomeCategories";
 import useHomeAnimations from "./hooks/useHomeAnimations";
 
-const foliageImage = require("../../../assets/images/image.png");
 const errorImage = require("../../../assets/images/error.png");
 const notFoundImage = require("../../../assets/images/not-found.png");
 const noConnectionImage = require("../../../assets/images/no-connection.png");
@@ -293,34 +292,7 @@ export default function Home({ navigation }) {
       />
 
       {isMinimalist ? (
-        <View style={styles.flex1}>
-          {!isErrorBg && (
-            <View pointerEvents="none" style={styles.foliageContainer}>
-              <Image
-                source={foliageImage}
-                style={styles.foliageHeader}
-                resizeMode="cover"
-              />
-              <View
-                style={
-                  isDarkMode
-                    ? styles.foliageDarkFilter
-                    : styles.foliageWhiteFilter
-                }
-              />
-              <LinearGradient
-                colors={
-                  isDarkMode
-                    ? ["rgba(0, 0, 0, 0)", "rgba(10, 10, 10, 0.6)", "#0A0A0A"]
-                    : ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.6)", "#FFFFFF"]
-                }
-                locations={[0, 0.45, 1]}
-                style={styles.foliageGradient}
-              />
-            </View>
-          )}
-          {homeBody}
-        </View>
+        <View style={styles.flex1}>{homeBody}</View>
       ) : isErrorBg ? (
         <View style={styles.flex1}>{homeBody}</View>
       ) : (
