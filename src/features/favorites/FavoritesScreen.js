@@ -123,6 +123,11 @@ export default function Favorites({ navigation }) {
     return () => sub.remove();
   }, [handleDeactivateSearch]);
 
+  useEffect(() => {
+    scrollY.setValue(0);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [aestheticMode, scrollY, flatListRef]);
+
   const isErrorBg = Boolean(isError);
   const isWhiteBg = !isDarkMode && (isMinimalist || isErrorBg);
 
@@ -231,7 +236,7 @@ export default function Favorites({ navigation }) {
           <Animated.FlatList
             ref={flatListRef}
             data={favorites}
-            key={`favorites-grid-${cardDimensions.isSmallScreen ? "small" : "std"}`}
+            key={`favorites-grid-${aestheticMode}-${cardDimensions.isSmallScreen ? "small" : "std"}`}
             numColumns={2}
             columnWrapperStyle={styles.columnWrapper}
             contentContainerStyle={contentContainerStyle}
