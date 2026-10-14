@@ -74,7 +74,7 @@ export default function Details({ route, navigation }) {
         styles.mainContainer,
         isDarkMode ? styles.containerDark : styles.containerLight,
         {
-          opacity: themeAnim.screenFadeAnim,
+          transform: [{ translateY: themeAnim.screenSlideAnim }],
         },
       ]}
     >

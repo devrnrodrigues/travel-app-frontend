@@ -64,7 +64,7 @@ export function useEstimatedPriceModal({ visible, onClose, data, currentTheme })
         }),
         Animated.timing(opacityAnim, {
           toValue: 1,
-          duration: 180,
+          duration: 90,
           useNativeDriver: true,
         }),
       ]).start();
@@ -74,12 +74,12 @@ export function useEstimatedPriceModal({ visible, onClose, data, currentTheme })
       Animated.parallel([
         Animated.timing(scaleAnim, {
           toValue: 0.95,
-          duration: 160,
+          duration: 80,
           useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
           toValue: 0,
-          duration: 160,
+          duration: 80,
           useNativeDriver: true,
         }),
       ]).start(() => {
@@ -94,12 +94,12 @@ export function useEstimatedPriceModal({ visible, onClose, data, currentTheme })
     Animated.parallel([
       Animated.timing(scaleAnim, {
         toValue: 0.95,
-        duration: 160,
+        duration: 80,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
         toValue: 0,
-        duration: 160,
+        duration: 80,
         useNativeDriver: true,
       }),
     ]).start(() => {

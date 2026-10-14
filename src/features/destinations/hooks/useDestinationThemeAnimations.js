@@ -1,32 +1,34 @@
 import { useRef, useEffect, useCallback } from "react";
-import { Animated, Easing, BackHandler } from "react-native";
+import { Animated, Easing, BackHandler, Dimensions } from "react-native";
+
+const SCREEN_HEIGHT = Math.max(Dimensions.get("screen").height, Dimensions.get("window").height) + 100;
 
 export function useDestinationThemeAnimations(isDarkMode, navigation, isModalOpen, onCloseModal) {
   const themeAnim = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
   const iconRotateAnim = useRef(new Animated.Value(isDarkMode ? 1 : 0)).current;
-  const screenFadeAnim = useRef(new Animated.Value(0)).current;
+  const screenSlideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const isExitingRef = useRef(false);
 
   useEffect(() => {
-    Animated.timing(screenFadeAnim, {
-      toValue: 1,
-      duration: 180,
-      easing: Easing.out(Easing.ease),
+    Animated.timing(screenSlideAnim, {
+      toValue: 0,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [screenFadeAnim]);
+  }, [screenSlideAnim]);
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(themeAnim, {
         toValue: isDarkMode ? 1 : 0,
-        duration: 380,
+        duration: 180,
         easing: Easing.inOut(Easing.cubic),
         useNativeDriver: false,
       }),
       Animated.timing(iconRotateAnim, {
         toValue: isDarkMode ? 1 : 0,
-        duration: 400,
+        duration: 200,
         easing: Easing.out(Easing.back(1.4)),
         useNativeDriver: true,
       }),
@@ -36,10 +38,10 @@ export function useDestinationThemeAnimations(isDarkMode, navigation, isModalOpe
   const handleGoBack = useCallback(() => {
     if (isExitingRef.current) return;
     isExitingRef.current = true;
-    Animated.timing(screenFadeAnim, {
-      toValue: 0,
+    Animated.timing(screenSlideAnim, {
+      toValue: SCREEN_HEIGHT,
       duration: 180,
-      easing: Easing.in(Easing.ease),
+      easing: Easing.in(Easing.cubic),
       useNativeDriver: true,
     }).start(() => {
       if (navigation.canGoBack()) {
@@ -48,7 +50,7 @@ export function useDestinationThemeAnimations(isDarkMode, navigation, isModalOpe
         navigation.navigate("Main");
       }
     });
-  }, [navigation, screenFadeAnim]);
+  }, [navigation, screenSlideAnim]);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -81,7 +83,7 @@ export function useDestinationThemeAnimations(isDarkMode, navigation, isModalOpe
   });
 
   return {
-    screenFadeAnim,
+    screenSlideAnim,
     infoSectionBg,
     statCardBg,
     footerPriceBg,
