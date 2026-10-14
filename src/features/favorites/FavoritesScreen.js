@@ -128,8 +128,7 @@ export default function Favorites({ navigation }) {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [aestheticMode, scrollY, flatListRef]);
 
-  const isErrorBg = Boolean(isError);
-  const isWhiteBg = !isDarkMode && (isMinimalist || isErrorBg);
+  const isWhiteBg = !isDarkMode && isMinimalist;
 
   const primaryTextColor = isWhiteBg ? "#111827" : "#FFFFFF";
   const secondaryTextColor = isWhiteBg ? "rgba(0, 0, 0, 0.60)" : "rgba(255, 255, 255, 0.70)";
@@ -283,6 +282,7 @@ export default function Favorites({ navigation }) {
                 onExplorePress={handleExplorePress}
                 accentColor={accentColor}
                 isDarkMode={isDarkMode}
+                isMinimalist={isMinimalist}
               />
             }
           />
@@ -325,8 +325,6 @@ export default function Favorites({ navigation }) {
           </View>
           {favoritesBody}
         </>
-      ) : isErrorBg ? (
-        favoritesBody
       ) : (
         <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">
           <LinearGradient

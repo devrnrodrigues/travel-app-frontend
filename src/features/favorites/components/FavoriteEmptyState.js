@@ -1,4 +1,5 @@
 import React from "react";
+import { useTheme } from "../../../theme/ThemeContext";
 import StateFeedbackView from "../../../shared/components/StateFeedbackView";
 
 const notFoundImage = require("../../../../assets/images/not-found.png");
@@ -14,7 +15,12 @@ export const FavoriteEmptyState = React.memo(function FavoriteEmptyState({
   onClearSearch,
   onExplorePress,
   isDarkMode = true,
+  isMinimalist: propIsMinimalist,
 }) {
+  const { aestheticMode } = useTheme();
+  const isMinimalist = propIsMinimalist !== undefined ? propIsMinimalist : aestheticMode === "minimalista";
+  const isDecorativeLight = !isMinimalist && !isDarkMode;
+
   if (isError) {
     if (error?.status === 404) {
       return (
@@ -26,6 +32,7 @@ export const FavoriteEmptyState = React.memo(function FavoriteEmptyState({
           onButtonPress={onRetry}
           isDarkMode={isDarkMode}
           showDarkFilter={false}
+          forceLightText={isDecorativeLight}
         />
       );
     }
@@ -40,6 +47,7 @@ export const FavoriteEmptyState = React.memo(function FavoriteEmptyState({
           onButtonPress={onRetry}
           isDarkMode={isDarkMode}
           showDarkFilter={false}
+          forceLightText={isDecorativeLight}
         />
       );
     }
@@ -53,6 +61,7 @@ export const FavoriteEmptyState = React.memo(function FavoriteEmptyState({
         onButtonPress={onRetry}
         isDarkMode={isDarkMode}
         showDarkFilter={false}
+        forceLightText={isDecorativeLight}
       />
     );
   }
@@ -69,6 +78,7 @@ export const FavoriteEmptyState = React.memo(function FavoriteEmptyState({
         onButtonPress={onClearSearch}
         isDarkMode={isDarkMode}
         showDarkFilter={false}
+        forceLightText={isDecorativeLight}
       />
     );
   }
@@ -84,6 +94,7 @@ export const FavoriteEmptyState = React.memo(function FavoriteEmptyState({
       onButtonPress={onExplorePress}
       isDarkMode={isDarkMode}
       showDarkFilter={false}
+      forceLightText={isDecorativeLight}
     />
   );
 });
