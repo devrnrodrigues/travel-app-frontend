@@ -28,16 +28,31 @@ export default function useProfileData() {
     if (user?.bio !== undefined && user?.bio !== null) setBio(user.bio);
   }, [user]);
 
-  const { data: userCollections = [], refetch: refetchCollections, isLoading: loadingCollections } = useQuery({
+  const {
+    data: userCollections = [],
+    refetch: refetchCollections,
+    isLoading: loadingCollections,
+    isError: isCollectionsError,
+    error: collectionsError,
+  } = useQuery({
     queryKey: ["collections"],
     queryFn: getCollectionsApi,
   });
 
-  const { data: profileData, refetch: refetchProfile, isLoading: loadingProfile } = useQuery({
+  const {
+    data: profileData,
+    refetch: refetchProfile,
+    isLoading: loadingProfile,
+    isError: isProfileError,
+    error: profileError,
+  } = useQuery({
     queryKey: ["profile"],
     queryFn: getProfileApi,
     staleTime: 1000 * 60,
   });
+
+  const isError = Boolean(isProfileError || isCollectionsError);
+  const error = profileError || collectionsError;
 
   const { data: favoritesData = [], refetch: refetchFavorites } = useQuery({
     queryKey: ["favorites", "profile_count"],
@@ -118,6 +133,8 @@ export default function useProfileData() {
     loadingCollections,
     profileData,
     loadingProfile,
+    isError,
+    error,
     favoritesCount,
     commentsCount,
     name,

@@ -29,12 +29,17 @@ import LogoutConfirmationModal from "./components/LogoutConfirmationModal";
 import AvatarViewerModal from "./components/AvatarViewerModal";
 import AddCollectionModal from "./components/AddCollectionModal";
 import ThemeModal from "./components/ThemeModal";
+import StateFeedbackView from "../../shared/components/StateFeedbackView";
 import {
   styles,
   getContainerStyle,
   getScrollContentContainerStyle,
   getProfileBodyDynamicStyle,
 } from "./styles/profile.styles";
+
+const notFoundImage = require("../../../assets/images/not-found.png");
+const errorImage = require("../../../assets/images/error.png");
+const noConnectionImage = require("../../../assets/images/no-connection.png");
 
 const BOTTOM_EDGES = ["bottom"];
 
@@ -83,6 +88,7 @@ export default function ProfileScreen({ navigation }) {
     user,
     userCollections,
     loadingCollections,
+    loadingProfile,
     commentsCount,
     favoritesCount,
     name,
@@ -98,7 +104,11 @@ export default function ProfileScreen({ navigation }) {
     refreshing,
     handleRefresh: triggerRefresh,
     queryClient,
+    isError,
+    error,
   } = useProfileData();
+
+  const isProfileLoading = loadingCollections || loadingProfile;
 
   const isMinimalist = aestheticMode === "minimalista";
 
@@ -178,6 +188,32 @@ export default function ProfileScreen({ navigation }) {
     await triggerRefresh();
     setRefreshKey((prev) => prev + 1);
   }, [triggerRefresh]);
+
+  const errorConfig = useMemo(() => {
+    if (!isError) return null;
+    if (error?.status === 404) {
+      return {
+        title: "Perfil não encontrado",
+        message: "Não foi possível localizar os dados do seu perfil.",
+        buttonText: "Tentar novamente",
+        imageSource: notFoundImage,
+      };
+    }
+    if (error?.status >= 500) {
+      return {
+        title: "Erro ao carregar perfil",
+        message: "Ocorreu uma instabilidade ao carregar seus dados. Tente novamente em instantes.",
+        buttonText: "Tentar novamente",
+        imageSource: errorImage,
+      };
+    }
+    return {
+      title: "Sem conexão",
+      message: "Não foi possível carregar as informações do seu perfil. Verifique sua conexão com a internet.",
+      buttonText: "Tentar novamente",
+      imageSource: noConnectionImage,
+    };
+  }, [isError, error]);
 
   const handleOpenSettings = useCallback(() => {
     setModalVisible(true);
@@ -392,41 +428,66 @@ export default function ProfileScreen({ navigation }) {
               }
               onLayout={handleBodyLayout}
             >
-              <ProfileUserCard
-                user={user}
-                name={name}
-                nationality={nationality}
-                bio={bio}
-                commentsCount={commentsCount}
-                collectionsCount={displayedCollections.length}
-                favoritesCount={favoritesCount}
-                refreshKey={refreshKey}
-                loading={loadingCollections}
-                isDarkMode={isDarkMode}
-                currentTheme={currentTheme}
-                scale={scale}
-                avatarDimensions={avatarDimensions}
-                onOpenAvatarModal={handleOpenAvatarModal}
-                onOpenSettings={handleOpenSettings}
-                isMinimalist={isMinimalist}
-              />
+              {errorConfig ? (
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingVertical: 36,
+                    minHeight: 380,
+                  }}
+                >
+                  <StateFeedbackView
+                    imageSource={errorConfig.imageSource}
+                    title={errorConfig.title}
+                    message={errorConfig.message}
+                    buttonText={errorConfig.buttonText}
+                    onButtonPress={handleRefresh}
+                    isDarkMode={isDarkMode}
+                    showDarkFilter={false}
+                    forceLightText={!isMinimalist && !isDarkMode}
+                  />
+                </View>
+              ) : (
+                <>
+                  <ProfileUserCard
+                    user={user}
+                    name={name}
+                    nationality={nationality}
+                    bio={bio}
+                    commentsCount={commentsCount}
+                    collectionsCount={displayedCollections.length}
+                    favoritesCount={favoritesCount}
+                    refreshKey={refreshKey}
+                    loading={isProfileLoading}
+                    isDarkMode={isDarkMode}
+                    currentTheme={currentTheme}
+                    scale={scale}
+                    avatarDimensions={avatarDimensions}
+                    onOpenAvatarModal={handleOpenAvatarModal}
+                    onOpenSettings={handleOpenSettings}
+                    isMinimalist={isMinimalist}
+                  />
 
-              <ProfileCollectionsSection
-                displayedCollections={displayedCollections}
-                loading={loadingCollections}
-                isDarkMode={isDarkMode}
-                currentTheme={currentTheme}
-                scale={scale}
-                collectionDimensions={collectionDimensions}
-                onOpenAddCollectionModal={handleOpenAddCollectionModal}
-                onNavigateToCollection={handleNavigateToCollection}
-                isMinimalist={isMinimalist}
-              />
+                  <ProfileCollectionsSection
+                    displayedCollections={displayedCollections}
+                    loading={isProfileLoading}
+                    isDarkMode={isDarkMode}
+                    currentTheme={currentTheme}
+                    scale={scale}
+                    collectionDimensions={collectionDimensions}
+                    onOpenAddCollectionModal={handleOpenAddCollectionModal}
+                    onNavigateToCollection={handleNavigateToCollection}
+                    isMinimalist={isMinimalist}
+                  />
 
-              <View
-                style={styles.layoutAnchor}
-                onLayout={handleLastElementLayout}
-              />
+                  <View
+                    style={styles.layoutAnchor}
+                    onLayout={handleLastElementLayout}
+                  />
+                </>
+              )}
             </Animated.View>
           </View>
         </Animated.ScrollView>
