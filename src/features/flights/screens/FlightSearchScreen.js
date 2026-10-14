@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { View, StatusBar, Animated } from "react-native";
+import { View, StatusBar, Animated, StyleSheet } from "react-native";
 import { useTheme } from "../../../theme/ThemeContext";
 import { CABIN_CLASS_MAP, SORT_MAP } from "../api/flightApi";
 import { useFlightSearchForm } from "../hooks/useFlightSearchForm";
@@ -49,7 +49,7 @@ function FlightSearchScreenComponent({ navigation, route }) {
 
   const animatedMainStyle = [
     styles.mainContainer,
-    getScreenContainerStyle(isDarkMode, anim.screenFadeAnim),
+    getScreenContainerStyle(isDarkMode, anim.screenSlideAnim),
   ];
 
   return (
@@ -62,7 +62,7 @@ function FlightSearchScreenComponent({ navigation, route }) {
         destinationTitle={selectedItem?.title}
         isDarkMode={isDarkMode}
         onBackPress={() =>
-          form.searchSubmitted ? form.setSearchSubmitted(false) : anim.handleGoBack()
+          form.searchSubmitted ? anim.handleBackFromResults() : anim.handleGoBack()
         }
       />
 
@@ -72,7 +72,10 @@ function FlightSearchScreenComponent({ navigation, route }) {
           isDarkMode ? styles.infoBottomSectionDark : styles.infoBottomSectionLight,
         ]}
       >
-        {!form.searchSubmitted ? (
+        <View
+          style={styles.flex1}
+          pointerEvents={form.searchSubmitted ? "none" : "auto"}
+        >
           <FlightSearchForm
             scrollViewRef={form.scrollViewRef}
             keyboardPadding={form.keyboardPadding}
@@ -117,15 +120,27 @@ function FlightSearchScreenComponent({ navigation, route }) {
             currentTheme={currentTheme}
             isDarkMode={isDarkMode}
           />
-        ) : (
-          <FlightResults
-            tickets={form.tickets}
-            loading={form.loading}
-            error={form.error}
-            onRetry={form.handleSearchFlights}
-            currentTheme={currentTheme}
-            isDarkMode={isDarkMode}
-          />
+        </View>
+
+        {form.searchSubmitted && (
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              isDarkMode ? styles.infoBottomSectionDark : styles.infoBottomSectionLight,
+              {
+                transform: [{ translateX: anim.resultsSlideAnim }],
+              },
+            ]}
+          >
+            <FlightResults
+              tickets={form.tickets}
+              loading={form.loading}
+              error={form.error}
+              onRetry={form.handleSearchFlights}
+              currentTheme={currentTheme}
+              isDarkMode={isDarkMode}
+            />
+          </Animated.View>
         )}
       </View>
 

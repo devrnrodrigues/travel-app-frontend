@@ -46,7 +46,7 @@ function FlightResultsScreenComponent({
   }
 
   return (
-    <FadeInView duration={280} style={styles.flex1}>
+    <FadeInView duration={90} style={styles.flex1}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}

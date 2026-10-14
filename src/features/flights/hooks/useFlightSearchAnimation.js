@@ -1,5 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
-import { Animated, BackHandler, Easing } from "react-native";
+import { Animated, BackHandler, Easing, Dimensions } from "react-native";
+
+const SCREEN_WIDTH = Math.max(Dimensions.get("screen").width, Dimensions.get("window").width) + 80;
 
 export function useFlightSearchAnimation({
   onlyDirect,
@@ -21,23 +23,31 @@ export function useFlightSearchAnimation({
   childAgeModalVisible,
   setChildAgeModalVisible,
 }) {
-  const screenFadeAnim = useRef(new Animated.Value(0)).current;
+  const screenSlideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
+  const resultsSlideAnim = useRef(new Animated.Value(0)).current;
   const directAnim = useRef(new Animated.Value(0)).current;
   const isExitingRef = useRef(false);
+  const isReturningFromResultsRef = useRef(false);
 
   useEffect(() => {
-    Animated.timing(screenFadeAnim, {
-      toValue: 1,
-      duration: 180,
-      easing: Easing.out(Easing.ease),
+    Animated.timing(screenSlideAnim, {
+      toValue: 0,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [screenFadeAnim]);
+  }, [screenSlideAnim]);
+
+  useEffect(() => {
+    if (searchSubmitted) {
+      resultsSlideAnim.setValue(0);
+    }
+  }, [searchSubmitted, resultsSlideAnim]);
 
   useEffect(() => {
     Animated.timing(directAnim, {
       toValue: onlyDirect ? 1 : 0,
-      duration: 220,
+      duration: 100,
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: false,
     }).start();
@@ -67,10 +77,10 @@ export function useFlightSearchAnimation({
   const handleGoBack = useCallback(() => {
     if (isExitingRef.current) return;
     isExitingRef.current = true;
-    Animated.timing(screenFadeAnim, {
-      toValue: 0,
+    Animated.timing(screenSlideAnim, {
+      toValue: SCREEN_WIDTH,
       duration: 180,
-      easing: Easing.in(Easing.ease),
+      easing: Easing.in(Easing.cubic),
       useNativeDriver: true,
     }).start(() => {
       if (navigation.canGoBack()) {
@@ -79,7 +89,21 @@ export function useFlightSearchAnimation({
         navigation.navigate("Main");
       }
     });
-  }, [navigation, screenFadeAnim]);
+  }, [navigation, screenSlideAnim]);
+
+  const handleBackFromResults = useCallback(() => {
+    if (isReturningFromResultsRef.current) return;
+    isReturningFromResultsRef.current = true;
+    Animated.timing(resultsSlideAnim, {
+      toValue: SCREEN_WIDTH,
+      duration: 200,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => {
+      setSearchSubmitted(false);
+      isReturningFromResultsRef.current = false;
+    });
+  }, [resultsSlideAnim, setSearchSubmitted]);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -108,7 +132,7 @@ export function useFlightSearchAnimation({
         return true;
       }
       if (searchSubmitted) {
-        setSearchSubmitted(false);
+        handleBackFromResults();
         return true;
       }
       handleGoBack();
@@ -131,14 +155,17 @@ export function useFlightSearchAnimation({
     setCalendarModalVisible,
     setSortModalVisible,
     setChildAgeModalVisible,
+    handleBackFromResults,
     handleGoBack,
   ]);
 
   return {
-    screenFadeAnim,
+    screenSlideAnim,
+    resultsSlideAnim,
     switchTrackBg,
     switchThumbTranslate,
     switchThumbBg,
     handleGoBack,
+    handleBackFromResults,
   };
 }

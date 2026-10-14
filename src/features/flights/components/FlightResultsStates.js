@@ -24,7 +24,7 @@ function FlightResultsErrorComponent({ onRetry, currentTheme, isDarkMode }) {
   const retryBtnBg = getAccentBg(currentTheme.accent);
 
   return (
-    <FadeInView duration={240} style={styles.errorContainer}>
+    <FadeInView duration={90} style={styles.errorContainer}>
       <Text
         style={[
           styles.errorText,
@@ -46,7 +46,7 @@ function FlightResultsErrorComponent({ onRetry, currentTheme, isDarkMode }) {
 
 function FlightResultsEmptyComponent({ isDarkMode }) {
   return (
-    <FadeInView duration={240} style={styles.loadingContainer}>
+    <FadeInView duration={90} style={styles.loadingContainer}>
       <Feather
         name="alert-circle"
         size={36}

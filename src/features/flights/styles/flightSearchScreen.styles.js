@@ -2,9 +2,9 @@ import { StyleSheet, Dimensions } from "react-native";
 
 const { height } = Dimensions.get("window");
 
-export const getScreenContainerStyle = (isDarkMode, opacity) => ({
+export const getScreenContainerStyle = (isDarkMode, screenSlideAnim) => ({
   backgroundColor: isDarkMode ? "#000000" : "#FFFFFF",
-  opacity,
+  transform: [{ translateX: screenSlideAnim }],
 });
 
 export default StyleSheet.create({
@@ -18,6 +18,8 @@ export default StyleSheet.create({
     borderTopRightRadius: 34,
     paddingHorizontal: 0,
     elevation: 0,
+    overflow: "hidden",
+    position: "relative",
   },
   infoBottomSectionDark: {
     backgroundColor: "#0A0A0A",
