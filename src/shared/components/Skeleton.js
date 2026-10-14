@@ -199,16 +199,22 @@ export function HomeCardSkeleton({
     ? "rgba(26, 26, 26, 0.78)"
     : isMinimalist
     ? "#E5E7EB"
-    : "#FFFFFF";
+    : "rgba(100, 100, 100, 0.40)";
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
-    : "rgba(0, 0, 0, 0.08)";
+    : isMinimalist
+    ? "rgba(0, 0, 0, 0.08)"
+    : "rgba(255, 255, 255, 0.20)";
   const placeholderBg2 = isDarkMode
     ? "rgba(255, 255, 255, 0.06)"
-    : "rgba(0, 0, 0, 0.04)";
+    : isMinimalist
+    ? "rgba(0, 0, 0, 0.04)"
+    : "rgba(255, 255, 255, 0.10)";
   const cardInfoOverlayBg = isDarkMode
     ? "rgba(12, 12, 12, 0.75)"
-    : "#F9FAFB";
+    : isMinimalist
+    ? "#F9FAFB"
+    : "rgba(100, 100, 100, 0.50)";
 
   const actualWidth = cardWidth || CARD_WIDTH;
   const actualHeight = cardHeight || CARD_HEIGHT;
@@ -554,8 +560,6 @@ export function TopDestinationCardSkeleton({
         backgroundColor: cardBg,
         padding: 10,
         marginRight: 14,
-        overflow: "hidden",
-        position: "relative",
       }}
     >
       <View
@@ -566,7 +570,14 @@ export function TopDestinationCardSkeleton({
           backgroundColor: imgBg,
           overflow: "hidden",
         }}
-      />
+      >
+        <ShimmerOverlay
+          animatedValue={anim}
+          width={actualWidth}
+          height={actualImgSize}
+          isDarkMode={isDarkMode}
+        />
+      </View>
 
       <View
         style={{
@@ -589,8 +600,16 @@ export function TopDestinationCardSkeleton({
               width: "72%",
               borderRadius: 4,
               backgroundColor: placeholderBg1,
+              overflow: "hidden",
             }}
-          />
+          >
+            <ShimmerOverlay
+              animatedValue={anim}
+              width={actualWidth}
+              height={Math.round((titleSize || 16) * 0.8)}
+              isDarkMode={isDarkMode}
+            />
+          </View>
         </View>
 
         <View
@@ -605,17 +624,18 @@ export function TopDestinationCardSkeleton({
               width: "48%",
               borderRadius: 3,
               backgroundColor: placeholderBg2,
+              overflow: "hidden",
             }}
-          />
+          >
+            <ShimmerOverlay
+              animatedValue={anim}
+              width={actualWidth}
+              height={Math.round((locationSize || 13) * 0.75)}
+              isDarkMode={isDarkMode}
+            />
+          </View>
         </View>
       </View>
-
-      <ShimmerOverlay
-        animatedValue={anim}
-        width={actualWidth}
-        height={actualHeight}
-        isDarkMode={isDarkMode}
-      />
     </View>
   );
 }
@@ -956,8 +976,6 @@ export function SearchCardSkeleton({
         marginBottom: cardMarginBottom,
         flexDirection: "row",
         alignItems: "center",
-        overflow: "hidden",
-        position: "relative",
       }}
     >
       <View
@@ -966,8 +984,16 @@ export function SearchCardSkeleton({
           height: imageSize,
           borderRadius: 13,
           backgroundColor: thumbBg,
+          overflow: "hidden",
         }}
-      />
+      >
+        <ShimmerOverlay
+          animatedValue={anim}
+          width={cardWidth}
+          height={imageSize}
+          isDarkMode={isDarkMode}
+        />
+      </View>
 
       <View style={{ marginLeft: 14, flex: 1, justifyContent: "center" }}>
         <View
@@ -977,8 +1003,16 @@ export function SearchCardSkeleton({
             borderRadius: 4,
             backgroundColor: placeholderBg1,
             marginBottom: 6,
+            overflow: "hidden",
           }}
-        />
+        >
+          <ShimmerOverlay
+            animatedValue={anim}
+            width={cardWidth}
+            height={14}
+            isDarkMode={isDarkMode}
+          />
+        </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
           <View
             style={{
@@ -987,25 +1021,34 @@ export function SearchCardSkeleton({
               borderRadius: 3,
               backgroundColor: placeholderBg2,
               marginRight: 5,
+              overflow: "hidden",
             }}
-          />
+          >
+            <ShimmerOverlay
+              animatedValue={anim}
+              width={cardWidth}
+              height={10}
+              isDarkMode={isDarkMode}
+            />
+          </View>
           <View
             style={{
               height: 10,
               width: locationWidth,
               borderRadius: 3,
               backgroundColor: placeholderBg2,
+              overflow: "hidden",
             }}
-          />
+          >
+            <ShimmerOverlay
+              animatedValue={anim}
+              width={cardWidth}
+              height={10}
+              isDarkMode={isDarkMode}
+            />
+          </View>
         </View>
       </View>
-
-      <ShimmerOverlay
-        animatedValue={anim}
-        width={cardWidth}
-        height={cardHeight}
-        isDarkMode={isDarkMode}
-      />
     </View>
   );
 }
@@ -1049,6 +1092,11 @@ export function SearchSkeletonList({
 export function ProfileAvatarSkeleton({ size = 102, isDarkMode = true }) {
   const isMinimalist = useIsMinimalist(isDarkMode);
   const anim = useShimmerAnimation();
+  const avatarBg = isDarkMode
+    ? "rgba(255, 255, 255, 0.08)"
+    : isMinimalist
+    ? "#D1D5DB"
+    : "rgba(100, 100, 100, 0.40)";
 
   return (
     <View
@@ -1056,7 +1104,7 @@ export function ProfileAvatarSkeleton({ size = 102, isDarkMode = true }) {
         width: "100%",
         height: "100%",
         borderRadius: size / 2,
-        backgroundColor: isDarkMode ? "#1A1A1E" : isMinimalist ? "#D1D5DB" : "#E5E7EB",
+        backgroundColor: avatarBg,
         overflow: "hidden",
         position: "relative",
       }}
@@ -1087,7 +1135,7 @@ export function ProfileSkeletonBar({
     ? "rgba(255, 255, 255, 0.09)"
     : isMinimalist
     ? "#D1D5DB"
-    : "#E5E7EB";
+    : "rgba(100, 100, 100, 0.40)";
 
   const numW = typeof barW === "number" ? barW : 150;
   const numH = typeof barH === "number" ? barH : 20;
@@ -1120,69 +1168,77 @@ export function ProfileCollectionCardSkeleton({
   isDarkMode = true,
   anim: externalAnim,
   scale = 1,
-  cardWidth = 180,
-  cardHeight = 260,
-  cardBorderRadius = 22,
-  cardGradientHeight = 95,
-  cardGradientPadding = 14,
-  cardTitleFontSize = 15,
-  cardSubFontSize = 12,
+  cardWidth,
+  cardHeight,
+  cardBorderRadius,
+  cardGradientHeight,
+  cardGradientPadding,
+  cardTitleFontSize,
+  cardSubFontSize,
 }) {
   const isMinimalist = useIsMinimalist(isDarkMode);
   const localAnim = useShimmerAnimation();
   const anim = externalAnim || localAnim;
 
   const cardBg = isDarkMode
-    ? "rgba(255, 255, 255, 0.05)"
+    ? "rgba(255, 255, 255, 0.08)"
     : isMinimalist
     ? "#F3F4F6"
-    : "#E2E2E2";
+    : "rgba(100, 100, 100, 0.40)";
   const placeholderBg1 = isDarkMode
-    ? "rgba(255, 255, 255, 0.09)"
+    ? "rgba(255, 255, 255, 0.12)"
     : isMinimalist
     ? "#CBD5E1"
-    : "rgba(0, 0, 0, 0.12)";
+    : "rgba(255, 255, 255, 0.20)";
   const placeholderBg2 = isDarkMode
-    ? "rgba(255, 255, 255, 0.05)"
+    ? "rgba(255, 255, 255, 0.06)"
     : isMinimalist
     ? "#E2E8F0"
-    : "rgba(0, 0, 0, 0.06)";
+    : "rgba(255, 255, 255, 0.10)";
+
+  const actualWidth = cardWidth !== undefined ? cardWidth : 180;
+  const actualHeight = cardHeight !== undefined ? cardHeight : 260;
+  const actualRadius = cardBorderRadius !== undefined ? cardBorderRadius : 22;
+  const actualGradientHeight = cardGradientHeight !== undefined ? cardGradientHeight : 95;
+  const actualGradientPadding = cardGradientPadding !== undefined ? cardGradientPadding : 14;
 
   return (
     <View
       style={[
         profileStyles.collectionCardItem,
-        scale < 1 && {
-          width: cardWidth,
-          height: cardHeight,
-          borderRadius: cardBorderRadius,
+        {
+          width: actualWidth,
+          height: actualHeight,
+          borderRadius: actualRadius,
+          backgroundColor: cardBg,
+          overflow: "hidden",
+          position: "relative",
         },
-        { backgroundColor: cardBg, overflow: "hidden", position: "relative" },
       ]}
     >
       <View
         style={[
           profileStyles.collectionCardGradient,
-          scale < 1 && {
-            height: cardGradientHeight,
-            padding: cardGradientPadding,
+          {
+            height: actualGradientHeight,
+            padding: actualGradientPadding,
           },
         ]}
       >
-        <View style={{ height: scale < 1 ? Math.round(19 * scale) : 19, justifyContent: "center" }}>
+        <View style={{ height: Math.round((cardTitleFontSize || 15) * 1.25), justifyContent: "center" }}>
           <View
             style={{
-              height: Math.round(cardTitleFontSize * 0.8),
+              height: Math.round((cardTitleFontSize || 15) * 0.8),
               width: "70%",
               borderRadius: 4,
               backgroundColor: placeholderBg1,
             }}
           />
         </View>
-        <View style={{ height: scale < 1 ? Math.round(15 * scale) : 15, marginTop: 3, justifyContent: "center" }}>
+        <View style={{ height: Math.round((cardSubFontSize || 12) * 1.25), marginTop: 3, justifyContent: "center" }}>
           <View
             style={{
-              height: Math.round(cardSubFontSize * 0.8),
+              height: Math.round((cardSubFontSize || 12) * 0.8),
               width: "40%",
               borderRadius: 3,
               backgroundColor: placeholderBg2,
@@ -1192,8 +1248,8 @@ export function ProfileCollectionCardSkeleton({
       </View>
       <ShimmerOverlay
         animatedValue={anim}
-        width={cardWidth}
-        height={cardHeight}
+        width={actualWidth}
+        height={actualHeight}
         isDarkMode={isDarkMode}
       />
     </View>
@@ -1203,13 +1259,13 @@ export function ProfileCollectionCardSkeleton({
 export function ProfileCollectionsSkeletonList({
   isDarkMode = true,
   scale = 1,
-  cardWidth = 180,
-  cardHeight = 260,
-  cardBorderRadius = 22,
-  cardGradientHeight = 95,
-  cardGradientPadding = 14,
-  cardTitleFontSize = 15,
-  cardSubFontSize = 12,
+  cardWidth,
+  cardHeight,
+  cardBorderRadius,
+  cardGradientHeight,
+  cardGradientPadding,
+  cardTitleFontSize,
+  cardSubFontSize,
 }) {
   const anim = useShimmerAnimation();
 
@@ -1302,30 +1358,30 @@ export function ProfileSkeleton({ isDarkMode = true, scale: customScale }) {
     : "rgba(0, 0, 0, 0.06)";
   const avatarBorderColor = isDarkMode ? "#0C0C0E" : "#FFFFFF";
   const avatarBg = isDarkMode
-    ? "#1A1A1E"
+    ? "rgba(255, 255, 255, 0.08)"
     : isMinimalist
     ? "#E5E7EB"
-    : "#E5E7EB";
+    : "rgba(100, 100, 100, 0.40)";
   const placeholderBg1 = isDarkMode
     ? "rgba(255, 255, 255, 0.09)"
     : isMinimalist
     ? "#CBD5E1"
-    : "rgba(0, 0, 0, 0.09)";
+    : "rgba(100, 100, 100, 0.40)";
   const placeholderBg2 = isDarkMode
     ? "rgba(255, 255, 255, 0.05)"
     : isMinimalist
     ? "#E2E8F0"
-    : "rgba(0, 0, 0, 0.06)";
+    : "rgba(100, 100, 100, 0.25)";
   const dividerBg = isDarkMode
     ? "rgba(255, 255, 255, 0.12)"
     : isMinimalist
     ? "#E5E7EB"
     : "rgba(0, 0, 0, 0.08)";
   const cardBg = isDarkMode
-    ? "rgba(255, 255, 255, 0.05)"
+    ? "rgba(255, 255, 255, 0.08)"
     : isMinimalist
     ? "#F3F4F6"
-    : "rgba(0, 0, 0, 0.05)";
+    : "rgba(100, 100, 100, 0.40)";
   const iconBtnBg = isDarkMode ? "rgba(0, 0, 0, 0.42)" : "rgba(0, 0, 0, 0.25)";
 
   const SkeletonBar = ({ width: barW, height: barH, borderRadius = 4, bg = placeholderBg1, style }) => (
@@ -1833,12 +1889,19 @@ export function DetailsDescriptionSkeleton({ isDarkMode = true }) {
     : "rgba(0, 0, 0, 0.06)";
 
   return (
-    <View style={{ marginVertical: 6, overflow: "hidden", position: "relative" }}>
-      <View style={{ width: "100%", height: 13, borderRadius: 4, backgroundColor: bg1, marginBottom: 8 }} />
-      <View style={{ width: "94%", height: 13, borderRadius: 4, backgroundColor: bg2, marginBottom: 8 }} />
-      <View style={{ width: "88%", height: 13, borderRadius: 4, backgroundColor: bg1, marginBottom: 8 }} />
-      <View style={{ width: "55%", height: 13, borderRadius: 4, backgroundColor: bg2 }} />
-      <ShimmerOverlay animatedValue={anim} width={width - 50} height={80} isDarkMode={isDarkMode} />
+    <View style={{ marginVertical: 6 }}>
+      <View style={{ width: "100%", height: 13, borderRadius: 4, backgroundColor: bg1, marginBottom: 8, overflow: "hidden" }}>
+        <ShimmerOverlay animatedValue={anim} width={width - 50} height={13} isDarkMode={isDarkMode} />
+      </View>
+      <View style={{ width: "94%", height: 13, borderRadius: 4, backgroundColor: bg2, marginBottom: 8, overflow: "hidden" }}>
+        <ShimmerOverlay animatedValue={anim} width={width - 50} height={13} isDarkMode={isDarkMode} />
+      </View>
+      <View style={{ width: "88%", height: 13, borderRadius: 4, backgroundColor: bg1, marginBottom: 8, overflow: "hidden" }}>
+        <ShimmerOverlay animatedValue={anim} width={width - 50} height={13} isDarkMode={isDarkMode} />
+      </View>
+      <View style={{ width: "55%", height: 13, borderRadius: 4, backgroundColor: bg2, overflow: "hidden" }}>
+        <ShimmerOverlay animatedValue={anim} width={width - 50} height={13} isDarkMode={isDarkMode} />
+      </View>
     </View>
   );
 }
@@ -1859,7 +1922,7 @@ export function DetailsReviewsSkeleton({ isDarkMode = true, count = 2 }) {
   const borderCol = isDarkMode ? "rgba(255, 255, 255, 0.08)" : isMinimalist ? "#E5E7EB" : "rgba(0, 0, 0, 0.08)";
 
   return (
-    <View style={{ marginTop: 6, overflow: "hidden", position: "relative" }}>
+    <View style={{ marginTop: 6 }}>
       {Array.from({ length: count }).map((_, i) => (
         <View
           key={`detail-rev-skel-${i}`}
@@ -1871,7 +1934,6 @@ export function DetailsReviewsSkeleton({ isDarkMode = true, count = 2 }) {
             borderBottomColor: borderCol,
           }}
         >
-          { }
           <View
             style={{
               width: 36,
@@ -1880,22 +1942,29 @@ export function DetailsReviewsSkeleton({ isDarkMode = true, count = 2 }) {
               backgroundColor: bg1,
               marginRight: 10,
               marginTop: 2,
+              overflow: "hidden",
             }}
-          />
-          { }
+          >
+            <ShimmerOverlay animatedValue={anim} width={width - 50} height={36} isDarkMode={isDarkMode} />
+          </View>
           <View style={{ flex: 1 }}>
-            { }
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <View style={{ width: 85, height: 12, borderRadius: 4, backgroundColor: bg1 }} />
-              <View style={{ width: 42, height: 10, borderRadius: 3, backgroundColor: bg2 }} />
+              <View style={{ width: 85, height: 12, borderRadius: 4, backgroundColor: bg1, overflow: "hidden" }}>
+                <ShimmerOverlay animatedValue={anim} width={width - 50} height={12} isDarkMode={isDarkMode} />
+              </View>
+              <View style={{ width: 42, height: 10, borderRadius: 3, backgroundColor: bg2, overflow: "hidden" }}>
+                <ShimmerOverlay animatedValue={anim} width={width - 50} height={10} isDarkMode={isDarkMode} />
+              </View>
             </View>
-            { }
-            <View style={{ width: "95%", height: 11, borderRadius: 3, backgroundColor: bg2, marginBottom: 6 }} />
-            <View style={{ width: i === 0 ? "70%" : "50%", height: 11, borderRadius: 3, backgroundColor: bg2 }} />
+            <View style={{ width: "95%", height: 11, borderRadius: 3, backgroundColor: bg2, marginBottom: 6, overflow: "hidden" }}>
+              <ShimmerOverlay animatedValue={anim} width={width - 50} height={11} isDarkMode={isDarkMode} />
+            </View>
+            <View style={{ width: i === 0 ? "70%" : "50%", height: 11, borderRadius: 3, backgroundColor: bg2, overflow: "hidden" }}>
+              <ShimmerOverlay animatedValue={anim} width={width - 50} height={11} isDarkMode={isDarkMode} />
+            </View>
           </View>
         </View>
       ))}
-      <ShimmerOverlay animatedValue={anim} width={width - 50} height={180} isDarkMode={isDarkMode} />
     </View>
   );
 }

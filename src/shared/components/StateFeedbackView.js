@@ -18,10 +18,11 @@ export default function StateFeedbackView({
   isDarkMode: propIsDarkMode,
   style,
   showDarkFilter = true,
+  forceLightText = false,
 }) {
   const { isDarkMode: contextIsDarkMode } = useTheme();
   const isDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : contextIsDarkMode;
-  const isLight = !isDarkMode;
+  const isLight = !isDarkMode && !forceLightText;
   const isFeather = iconType === "feather";
 
   const iconColor = isLight
