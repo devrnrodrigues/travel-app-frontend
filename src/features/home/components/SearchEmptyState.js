@@ -14,6 +14,7 @@ const SearchEmptyState = React.memo(function SearchEmptyState({
   isMinimalist = false,
 }) {
   const feedbackDarkMode = isDarkMode;
+  const isDecorativeLight = !isMinimalist && !isDarkMode;
 
   if (isError) {
     const status = error?.response?.status;
@@ -29,6 +30,7 @@ const SearchEmptyState = React.memo(function SearchEmptyState({
           onButtonPress={onRetry}
           isDarkMode={feedbackDarkMode}
           showDarkFilter={false}
+          forceLightText={isDecorativeLight}
         />
       );
     }
@@ -44,6 +46,7 @@ const SearchEmptyState = React.memo(function SearchEmptyState({
           onButtonPress={onRetry}
           isDarkMode={feedbackDarkMode}
           showDarkFilter={false}
+          forceLightText={isDecorativeLight}
         />
       );
     }
@@ -58,6 +61,7 @@ const SearchEmptyState = React.memo(function SearchEmptyState({
         onButtonPress={onRetry}
         isDarkMode={feedbackDarkMode}
         showDarkFilter={false}
+        forceLightText={isDecorativeLight}
       />
     );
   }
@@ -73,6 +77,7 @@ const SearchEmptyState = React.memo(function SearchEmptyState({
       }
       isDarkMode={feedbackDarkMode}
       showDarkFilter={false}
+      forceLightText={isDecorativeLight}
     />
   );
 });

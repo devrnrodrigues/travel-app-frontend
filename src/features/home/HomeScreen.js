@@ -160,9 +160,8 @@ export default function Home({ navigation }) {
     };
   }, [isDarkMode, currentTheme?.colors]);
 
-  const isErrorBg = Boolean(errorConfig);
   const isMinimalistDark = isDarkMode && isMinimalist;
-  const isWhiteBg = !isDarkMode && (isMinimalist || isErrorBg);
+  const isWhiteBg = !isDarkMode && isMinimalist;
 
   const homeBody = (
     <>
@@ -232,6 +231,7 @@ export default function Home({ navigation }) {
                   onButtonPress={handleRefresh}
                   isDarkMode={isDarkMode}
                   showDarkFilter={false}
+                  forceLightText={!isMinimalist && !isDarkMode}
                 />
               </View>
             ) : (
@@ -292,8 +292,6 @@ export default function Home({ navigation }) {
       />
 
       {isMinimalist ? (
-        <View style={styles.flex1}>{homeBody}</View>
-      ) : isErrorBg ? (
         <View style={styles.flex1}>{homeBody}</View>
       ) : (
         <ImageBackground source={bgSource} style={styles.backgroundImage} resizeMode="cover">

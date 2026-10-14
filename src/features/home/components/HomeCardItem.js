@@ -45,7 +45,11 @@ const HomeCardItem = React.memo(function HomeCardItem({
       activeOpacity={0.9}
       style={[
         styles.card,
-        isDarkMode ? styles.cardDark : styles.cardLight,
+        isDarkMode
+          ? styles.cardDark
+          : isMinimalist
+          ? styles.cardLight
+          : styles.cardDecorativeLight,
         getCardDimensionsStyle(cardWidth, cardHeight, isDarkMode ? item.avgColor : undefined),
       ]}
       onPress={() => navigation.navigate("Details", { item, currentTheme })}
@@ -61,7 +65,11 @@ const HomeCardItem = React.memo(function HomeCardItem({
         <View
           style={[
             styles.cardImageFallback,
-            isDarkMode ? styles.cardImageFallbackDark : styles.cardImageFallbackLight,
+            isDarkMode
+              ? styles.cardImageFallbackDark
+              : isMinimalist
+              ? styles.cardImageFallbackLight
+              : styles.cardImageFallbackDecorativeLight,
           ]}
         >
           <Ionicons

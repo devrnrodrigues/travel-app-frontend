@@ -21,6 +21,10 @@ export default StyleSheet.create({
     backgroundColor: "#F3F4F6",
     borderWidth: 0,
   },
+  cardDecorativeLight: {
+    backgroundColor: "rgba(100, 100, 100, 0.40)",
+    borderWidth: 0,
+  },
   cardImage: {
     width: "100%",
     height: "100%",
@@ -39,6 +43,9 @@ export default StyleSheet.create({
   },
   cardImageFallbackLight: {
     backgroundColor: "#F3F4F6",
+  },
+  cardImageFallbackDecorativeLight: {
+    backgroundColor: "rgba(100, 100, 100, 0.40)",
   },
   cardFallbackText: {
     color: "rgba(255, 255, 255, 0.6)",
