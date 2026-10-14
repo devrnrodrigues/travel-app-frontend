@@ -59,8 +59,8 @@ export default function RootNavigator({ session, hasSeenWelcome }) {
               component={DetailsScreen}
               options={{
                 presentation: "transparentModal",
-                animation: "fade",
-                animationDuration: 180,
+                animation: "none",
+                contentStyle: { backgroundColor: "transparent" },
               }}
             />
             <Stack.Screen
@@ -68,8 +68,8 @@ export default function RootNavigator({ session, hasSeenWelcome }) {
               component={FlightSearchScreen}
               options={{
                 presentation: "transparentModal",
-                animation: "fade",
-                animationDuration: 180,
+                animation: "none",
+                contentStyle: { backgroundColor: "transparent" },
               }}
             />
             <Stack.Screen

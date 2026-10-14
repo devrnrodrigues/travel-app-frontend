@@ -31,7 +31,6 @@ export default function BottomTabBar({ state, navigation }) {
   const isFavorites = currentRouteName === "Favorites";
   const isMinimalist = aestheticMode === "minimalista";
   const isMinimalistExplore = isMinimalist && isExplore;
-  const isTranslucentTab = !isMinimalist && isExplore;
 
   const exploreRoute = state.routes.find((r) => r.name === "Explore");
   const [isExploreSearchVisible, setIsExploreSearchVisible] = useState(
@@ -74,7 +73,7 @@ export default function BottomTabBar({ state, navigation }) {
   }, [isExploreSearchVisible]);
 
   const tabItemOpacity =
-    isMinimalist && isExplore
+    isMinimalist && isExplore && isDarkMode
       ? exploreAnim.interpolate({
           inputRange: [0, 1],
           outputRange: [0.60, 1],
@@ -202,7 +201,7 @@ export default function BottomTabBar({ state, navigation }) {
         !isMinimalist && styles.bottomTabFloating,
         {
           backgroundColor: isMinimalist
-            ? isExplore
+            ? isExplore && isDarkMode
               ? "transparent"
               : isDarkMode
               ? "#161616"
@@ -219,29 +218,25 @@ export default function BottomTabBar({ state, navigation }) {
         },
       ]}
     >
-      {isMinimalistExplore && (
+      {isMinimalistExplore && isDarkMode && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <View
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: isDarkMode
-                  ? "rgba(22, 22, 22, 0.40)"
-                  : "rgba(245, 245, 247, 0.50)",
+                backgroundColor: "rgba(22, 22, 22, 0.40)",
               },
             ]}
           />
         </View>
       )}
-      {isMinimalist && isExplore && (
+      {isMinimalist && isExplore && isDarkMode && (
         <Animated.View
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isDarkMode
-                ? "#161616"
-                : "#F5F5F7",
+              backgroundColor: "#161616",
               opacity: exploreAnim,
             },
           ]}
