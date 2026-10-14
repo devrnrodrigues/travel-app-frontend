@@ -1,72 +1,114 @@
 # Travel App
 
-Aplicativo moderno de turismo e planejamento de viagens desenvolvido em **React Native** com **Expo**. O app oferece descoberta de destinos turísticos com fotos em alta resolução, previsão do tempo ao vivo, descrições e estimativas geradas por Inteligência Artificial, busca de voos em tempo real, suporte a temas (claro/escuro) e sincronização na nuvem através de API REST **Spring Boot** com **PostgreSQL**.
+Aplicativo moderno de turismo e planejamento de viagens desenvolvido em **React Native** com **Expo**. O projeto oferece uma experiência visual imersiva para descoberta de destinos turísticos ao redor do mundo, com galerias de fotos em alta definição, previsão do tempo ao vivo, resumos culturais e estimativas de custos de viagem gerados por inteligência artificial, mecanismo de busca e cotação de passagens aéreas reais, avaliações interativas com fotos, coleções pessoais e sincronização segura com backend próprio em **Spring Boot** e **PostgreSQL**.
 
 ## Funcionalidades
 
-### Descoberta e Exploração
-- **Home Dinâmica:** Carrosséis de destinos populares e recomendados por país e categoria.
-- **Filtro por Países:** Modal interativo para filtrar locais por região ou popularidade.
-- **Busca em Tempo Real:** Pesquisa rápida de destinos com feedback visual e skeletons.
-- **Explorar por Categorias:** Navegação em grade categorizada (Praias, Montanhas, Históricos, etc.) com paletas temáticas.
+### Descoberta e exploração
+- **Página inicial dinâmica:** Carrosséis de destinos em destaque e recomendações com paginação infinita (*infinite scroll*) e deduplicação de listas via **React Query**.
+- **Filtro rápido e categorias:** Navegação fluida por categorias (florestas, praias, montanhas, históricos, etc.) com paletas de cores e gradientes dinâmicos.
+- **Busca em tempo real:** Modal interativo de busca com debounce, filtros e estados de feedback imediato.
+- **Catálogo em grade:** Tela dedicada para exploração de destinos em formato de cartões verticais com paginação e ordenação.
 
-### Detalhes do Destino
-- **Galeria Imersiva:** Modal de tela cheia com fotos em alta definição via Pexels API e navegação por miniaturas (*thumbnails*).
-- **Previsão do Tempo em Tempo Real:** Clima e temperatura atualizados da localização.
-- **Inteligência Artificial (Google Gemini):**
-  - Resumos descritivos inteligentes do destino.
-  - Estimativa de custos médios para planejamento.
-- **Avaliações dos Usuários:** Seção modular com reviews e comentários interativos.
+### Detalhes do destino
+- **Galeria de fotos:** Modal em tela cheia com navegação por miniaturas (*thumbnails*) e pré-visualização em alta resolução.
+- **Previsão do tempo atualizada:** Temperatura, sensação, probabilidade de chuva e vento (dados integrados e cacheados via backend).
+- **Inteligência artificial integrada:** Resumo turístico em múltiplos parágrafos e estimativa de custos médios para planejamento de viagem.
+- **Avaliações da comunidade:**
+  - Sistema de notas (1 a 5 estrelas) e comentários.
+  - Envio e visualização de fotos anexadas em formato polaroid com ampliação.
+  - Votação de comentários úteis.
 
-### Busca de Voos
-- **Pesquisa Completa:** Origem, destino, classe de cabine (Econômica, Premium, Executiva, Primeira Classe) e seleção de moedas (BRL, USD, EUR, GBP, AED).
-- **Calendário Customizado:** Seletor visual de datas para ida e volta.
-- **Resultados Detalhados:** Listagem de passagens com cia aérea, paradas, bagagem inclusa e redirecionamento para compra.
+### Busca de voos
+- **Pesquisa completa:** Seleção de aeroportos de origem/destino com autocompletar e códigos IATA, quantidade de passageiros (adultos e crianças com faixas etárias).
+- **Filtros e configurações:** Classe de cabine (econômica, premium, executiva, primeira classe), ordenação (mais barato, mais rápido, melhor) e moedas internacionais (BRL, USD, EUR, etc.).
+- **Calendário customizado:** Modal visual para seleção de datas de ida e volta.
+- **Resultados detalhados:** Cards com companhia aérea, horários de partida/chegada, conexões e detalhes de franquia de bagagem.
 
-### Favoritos e Perfil
-- **Favoritos Sincronizados:** Adicione ou remova destinos favoritos salvos no backend.
-- **Dark Mode / Light Mode:** Suporte completo a tema escuro e claro com persistência local.
-- **Autenticação Segura:** Cadastro, login com e-mail/senha, login com Google Sign-In e sessão gerenciada via JWT e Refresh Token.
-- **Perfil do Usuário:** Gerenciamento de dados cadastrais, avatar e alteração de senha.
+### Perfil, coleções e favoritos
+- **Favoritos sincronizados:** Adição e remoção de destinos com atualização em cache e pull-to-refresh.
+- **Coleções pessoais de fotos:** Criação e organização de coleções de fotos de viagens no perfil, com contagem e visualizador em galeria.
+- **Gerenciamento de conta:** Edição de perfil (nome, bio, nacionalidade com bandeiras), upload de avatar e logout seguro.
+- **Autenticação segura:**
+  - Login e cadastro local com e-mail e senha.
+  - Login social com Google.
+  - Telas de introdução e boas-vindas com memorização de exibição.
+  - Sessão persistida via JWT e renovação automática via refresh token.
 
-## Tecnologias e Bibliotecas
+## Interface, estética e transições
+
+- **Modos estéticos:** Suporte à alternância entre modo imersivo (fundos fotográficos dinâmicos com gradientes e desfoque via BlurView) e modo minimalista (foco em contraste limpo e legibilidade).
+- **Esquema de cores e temas:** Tema escuro e tema claro com persistência local da escolha do usuário.
+- **Paletas contextuais:** Cores de destaque, cabeçalhos e gradientes sincronizados automaticamente com a categoria selecionada.
+- **Sistema de skeletons:** Esqueletos visuais com animação de brilho (*shimmer*) espelhando fielmente as dimensões de cada componente durante o carregamento (cards, categorias, bandeiras, comentários e perfil).
+- **Transições e micro-interações:**
+  - Telas de detalhes e cotação de passagens com animações verticais rápidas para evitar intermitência visual.
+  - Animações de esmaecimento (*fade in*) para carregamento de imagens remotas.
+  - Barra de navegação inferior flutuante customizada, com gradiente e transição de opacidade integrada à rolagem e busca.
+
+## Tratamento de erros e feedback visual
+
+- **Feedbacks visuais contextualizados:** Componente centralizado de feedback (`StateFeedbackView`) que exibe ilustrações exclusivas e mensagens amigáveis de acordo com o status HTTP da resposta.
+- **Conteúdo não encontrado (404):** Mensagem orientada com ação para recarregar a navegação inicial.
+- **Instabilidade no servidor (500):** Feedback visual com instrução clara de tentativa posterior.
+- **Ausência de conexão:** Detecção de falhas de rede com botão direto de tentar novamente (*retry*).
+- **Estados vazios (*empty states*):** Mensagens personalizadas para listas de favoritos, coleções de fotos ou buscas sem correspondência.
+
+## Comunicação com a API e rede
+
+O aplicativo consome a API REST desenvolvida em Spring Boot através de um cliente HTTP centralizado (`apiClient`), implementando:
+
+- **Autenticação e interceptação de sessão:** Injeção automática do cabeçalho `Authorization: Bearer <token>` em rotas protegidas e renovação transparente de sessão via refresh token ao receber status HTTP 401.
+- **Upload de arquivos em formato nativo:** Suporte a requisições multipartes (`multipart/form-data`) para envio e processamento de imagens (fotos de perfil e coleções).
+- **Tratamento de integridade:** Captura de erros de validação padronizados pelo servidor (`fieldErrors` e mensagens amigáveis).
+
+### Principais recursos consumidos da API
+- `/api/auth` - Cadastro, login local, login social com Google e renovação de token
+- `/api/destinations` - Catálogo de destinos, detalhes, fotos, clima e estimativas de viagem
+- `/api/categories` - Categorias temáticas e metadados visuais
+- `/api/flights` e `/api/airports` - Consulta de aeroportos e busca de voos em tempo real
+- `/api/favorites` e `/api/comments` - Sincronização de destinos salvos, avaliações e fotos
+- `/api/collections` e `/api/users` - Coleções pessoais de fotos e perfil do viajante
+
+> Para documentação completa dos contratos, DTOs e regras de negócio, consulte o repositório do [travel-app-backend](https://github.com/devrnrodrigues/travel-app-backend).
+
+## Tecnologias e bibliotecas
 
 - **Core:** [React Native](https://reactnative.dev/) (0.86) & [Expo](https://expo.dev/) (SDK 57)
-- **Navegação:** [@react-navigation/native](https://reactnavigation.org/) (Stack & Bottom Tabs v7)
-- **Backend & Auth:** API REST Spring Boot (OAuth2/JWT) com PostgreSQL
-- **Armazenamento Local:** [@react-native-async-storage/async-storage](https://react-native-async-storage.github.io/async-storage/)
-- **Animações e Efeitos:** `react-native-reanimated`, `expo-linear-gradient`, `expo-blur`
-- **Ícones:** `@expo/vector-icons` (Ionicons, Feather, MaterialCommunityIcons)
-- **APIs Externas:**
-  - Pexels API (Imagens e galerias)
-  - Weather API (Clima em tempo real)
-  - Google Gemini API (Geração de resumos e preços)
-  - RapidAPI / Google Flights (Busca de voos)
+- **Gerenciamento de dados e cache:** [@tanstack/react-query](https://tanstack.com/query) v5
+- **Navegação:** [@react-navigation/native](https://reactnavigation.org/) (pilha nativa e abas inferiores v7)
+- **Autenticação:** [@react-native-google-signin/google-signin](https://github.com/react-native-google-signin/google-signin) & JWT
+- **Armazenamento local:** [@react-native-async-storage/async-storage](https://react-native-async-storage.github.io/async-storage/)
+- **Animações e interface:** `react-native-reanimated`, `expo-linear-gradient`, `expo-blur`, `LayoutAnimation`
+- **Manipulação de mídia:** `expo-image-picker`, `expo-image-manipulator`
+- **Ícones e tipografia:** `@expo/vector-icons` (Ionicons, Feather) e fontes customizadas Google Fonts (Caveat)
 
-## Arquitetura de Pastas
+## Arquitetura de pastas
 
-A estrutura segue o padrão Feature-Based Modular:
+A estrutura segue o padrão modular baseado em funcionalidades:
 
 ```text
 travel-app-frontend/
-├── assets/                  # Ícones, splash screen e imagens estáticas
+├── assets/                  # Fontes, telas de abertura e ilustrações de estado
 ├── src/
-│   ├── config/              # Configurações globais (API client, variáveis de ambiente)
+│   ├── config/              # Cliente HTTP centralizado (apiClient) e variáveis de ambiente
+│   ├── context/             # Contextos globais (AuthContext)
 │   ├── features/            # Módulos organizados por funcionalidade
-│   │   ├── auth/            # Telas de login/registro e estilos de autenticação
-│   │   ├── destinations/    # Detalhes do destino, API de IA, clima e avaliações
-│   │   ├── explore/         # Tela e estilos de exploração por categoria
-│   │   ├── favorites/       # Gestão de destinos favoritos
-│   │   ├── flights/         # Mecanismo de busca e listagem de voos
-│   │   ├── home/            # Tela inicial, cards e modais de busca/filtro
-│   │   ├── onboarding/      # Telas de boas-vindas e introdução
-│   │   └── profile/         # Gerenciamento de conta, temas e dados do usuário
-│   ├── navigation/          # AppNavigator (Tabs), RootNavigator (Stack) e TabBar
-│   ├── shared/              # Componentes globais (Skeletons, FadeInView, Message)
-│   └── theme/               # ThemeContext, paletas claro/escuro e tipografia
-├── App.js                   # Ponto de entrada com ThemeProvider e navegação
+│   │   ├── auth/            # Login, cadastro, autenticação com Google e contexto
+│   │   ├── categories/      # Hooks e serviços de categorias
+│   │   ├── destinations/    # Detalhes do destino, avaliações, clima e galeria
+│   │   ├── explore/         # Listagem exploratória por categorias
+│   │   ├── favorites/       # Gestão de destinos salvos
+│   │   ├── flights/         # Mecanismo de busca de voos, filtros e modais
+│   │   ├── home/            # Tela inicial, destaques, recomendações e busca rápida
+│   │   ├── onboarding/      # Telas de introdução e boas-vindas
+│   │   └── profile/         # Perfil do usuário, coleções de fotos e edição
+│   ├── navigation/          # Navegadores de pilha, abas inferiores e barra customizada
+│   ├── shared/              # Utilitários, feedback visual e skeletons
+│   └── theme/               # Contexto de temas, paletas dinâmicas e modos estéticos
+├── App.js                   # Ponto de entrada com provedores globais (React Query, tema, auth)
 ├── app.json                 # Configurações do Expo
-└── package.json             # Dependências e scripts do projeto
+└── package.json             # Dependências e scripts
 ```
 
 ## Como rodar localmente?
@@ -75,6 +117,7 @@ travel-app-frontend/
 - [Node.js](https://nodejs.org/) (versão LTS recomendada)
 - [Git](https://git-scm.com/)
 - Aplicativo **Expo Go** no smartphone (Android/iOS) ou emulador configurado.
+- Backend **travel-app-backend** em execução para consumo dos endpoints.
 
 ### 1. Clonar o repositório
 ```bash
@@ -94,13 +137,9 @@ Crie um arquivo `.env` na raiz do projeto baseado no `.env.example`:
 cp .env.example .env
 ```
 
-Preencha com as suas respectivas chaves de API:
+Preencha com o endereço da sua API local (substitua pelo IP da sua máquina na rede local):
 ```env
 EXPO_PUBLIC_API_URL=http://<seu-ip-local>:8080/api
-EXPO_PUBLIC_PEXELS_API_KEY=sua_chave_pexels
-EXPO_PUBLIC_WEATHER_API_KEY=sua_chave_weather_api
-EXPO_PUBLIC_GEMINI_API_KEY=sua_chave_gemini_api
-EXPO_PUBLIC_RAPIDAPI_KEY=sua_chave_rapidapi
 ```
 
 ### 4. Executar o projeto
