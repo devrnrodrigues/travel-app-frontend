@@ -30,7 +30,7 @@ export default StyleSheet.create({
   },
   modalSelectHeader: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.08)",
@@ -45,6 +45,55 @@ export default StyleSheet.create({
   },
   modalSelectTitleLight: {
     color: "#111827",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#202020",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    height: 44,
+  },
+  searchContainerLight: {
+    backgroundColor: "#F3F4F6",
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: "#FFFFFF",
+    paddingVertical: 0,
+    marginLeft: 8,
+  },
+  searchInputLight: {
+    color: "#111827",
+  },
+  modalOptionSymbolBox: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+    backgroundColor: "transparent",
+  },
+  symbolBadgeText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#8E8E93",
+  },
+  symbolBadgeTextLight: {
+    color: "#6B7280",
+  },
+  emptyListContainer: {
+    paddingVertical: 32,
+    alignItems: "center",
+  },
+  emptyListText: {
+    fontSize: 14,
+    color: "#8E8E93",
+  },
+  emptyListTextLight: {
+    color: "#6B7280",
   },
   modalOptionItem: {
     flexDirection: "row",

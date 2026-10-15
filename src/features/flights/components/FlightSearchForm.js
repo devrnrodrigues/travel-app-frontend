@@ -149,6 +149,7 @@ function FlightSearchFormComponent({
               isDarkMode ? styles.textInputFieldDark : styles.textInputFieldLight,
             ]}
             value={originInput}
+            maxLength={50}
             onChangeText={(text) => {
               setOriginInput(text);
               if (!text) setOriginAirport(null);
@@ -331,6 +332,7 @@ function FlightSearchFormComponent({
                 formErrors.adults && styles.inputCenterError,
               ]}
               value={adults}
+              maxLength={2}
               onChangeText={handleAdultsChange}
               keyboardType="numeric"
               onFocus={() => scrollToOffset(tripType === "ROUND_TRIP" ? 360 : 300)}
@@ -356,6 +358,7 @@ function FlightSearchFormComponent({
                 isDarkMode ? styles.inputCenterDark : styles.inputCenterLight,
               ]}
               value={children}
+              maxLength={2}
               onChangeText={handleChildrenChange}
               keyboardType="numeric"
               onFocus={() => scrollToOffset(tripType === "ROUND_TRIP" ? 400 : 340)}
