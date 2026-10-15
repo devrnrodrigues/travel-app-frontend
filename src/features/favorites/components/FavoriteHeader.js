@@ -98,6 +98,7 @@ export const FavoriteHeader = React.memo(function FavoriteHeader({
             placeholder="Buscar"
             placeholderTextColor={placeholderColor}
             value={searchQuery}
+            maxLength={100}
             onChangeText={setSearchQuery}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
