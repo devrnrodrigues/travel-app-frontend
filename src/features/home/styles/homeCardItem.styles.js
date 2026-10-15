@@ -185,9 +185,13 @@ export default StyleSheet.create({
     marginLeft: 5,
     fontSize: 14,
     fontWeight: "700",
+    color: "#FFFFFF",
     textShadowColor: "transparent",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 0,
+  },
+  ratingTextLight: {
+    color: "#111827",
   },
 });
 

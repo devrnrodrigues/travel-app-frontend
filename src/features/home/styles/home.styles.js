@@ -11,37 +11,37 @@ export const getHomeDimensions = (
 ) => {
   const topInset = insetsTop || 0;
   const bottomInset = insetsBottom || 0;
-  const bottomBarHeight = (isMinimalist ? 54 : 115) + bottomInset;
+  const bottomBarHeight = isMinimalist ? 54 + bottomInset : 108;
   const availableHeight = windowHeight - topInset - bottomBarHeight;
 
   const isSmallScreen = availableHeight < 640;
   const isTallScreen = availableHeight > 780;
 
-  const headerPaddingTop = isSmallScreen ? 8 : isTallScreen ? 16 : 12;
+  const headerPaddingTop = isSmallScreen ? 8 : isTallScreen ? 14 : 10;
   const headerTitleSize = isSmallScreen ? 26 : isTallScreen ? 32 : 30;
   const iconPadding = isSmallScreen ? 10 : 12;
-  const headerHeight = headerPaddingTop + (isSmallScreen ? 34 : 42);
+  const headerHeight = headerPaddingTop + (isSmallScreen ? 34 : 40);
 
-  const categoriesHeight = isSmallScreen ? 44 : isTallScreen ? 54 : 48;
-  const topCardHeight = isSmallScreen ? 82 : isTallScreen ? 134 : 90;
-  const topCardWidth = isSmallScreen ? 236 : isTallScreen ? 320 : 258;
-  const topCardImageSize = isSmallScreen ? 64 : isTallScreen ? 106 : 72;
-  const topDestTitleSize = isSmallScreen ? 19 : isTallScreen ? 23 : 22;
-  const topDestHeaderMarginBottom = isSmallScreen ? 8 : isTallScreen ? 12 : 12;
+  const categoriesHeight = isSmallScreen ? 42 : isTallScreen ? 50 : 46;
+  const topCardHeight = isSmallScreen ? 94 : isTallScreen ? 126 : 110;
+  const topCardWidth = isSmallScreen ? 256 : isTallScreen ? 310 : 284;
+  const topCardImageSize = isSmallScreen ? 76 : isTallScreen ? 100 : 88;
+  const topDestTitleSize = isSmallScreen ? 19 : isTallScreen ? 23 : 21;
+  const topDestHeaderMarginBottom = isSmallScreen ? 8 : 10;
   const topDestSectionHeight = topDestTitleSize + topDestHeaderMarginBottom + topCardHeight;
 
-  const cardMarginTop = isSmallScreen ? 10 : isTallScreen ? 16 : 12;
-  const cardMarginBottom = isSmallScreen ? 10 : isTallScreen ? 16 : 14;
+  const cardMarginTop = isSmallScreen ? 6 : isTallScreen ? 12 : 8;
+  const cardMarginBottom = isSmallScreen ? 6 : isTallScreen ? 12 : 8;
   const cardVerticalSpacing = cardMarginTop + cardMarginBottom;
 
-  const bottomSpacing = isSmallScreen ? 10 : isTallScreen ? 16 : 12;
+  const bottomSpacing = isSmallScreen ? 14 : isTallScreen ? 24 : 20;
 
-  const baseDestHeight = isSmallScreen ? 109 : 132;
+  const baseDestHeight = topDestSectionHeight;
   const totalBaseHeights = headerHeight + categoriesHeight + baseDestHeight + cardVerticalSpacing;
   const availableForCard = availableHeight - bottomSpacing - totalBaseHeights;
 
-  const rawCardHeight = Math.round(availableForCard * (isTallScreen ? 0.90 : 0.94));
-  const cardHeight = Math.round(Math.max(260, Math.min(rawCardHeight, 490)));
+  const rawCardHeight = Math.round(availableForCard * (isSmallScreen ? 0.88 : isTallScreen ? 0.91 : 0.90));
+  const cardHeight = Math.round(Math.max(240, Math.min(rawCardHeight, 460)));
   const cardWidth = Math.round(Math.min(windowWidth * 0.76, 360, cardHeight * 0.74));
 
   const cardInfoBottom = Math.round(Math.max(14, Math.min(25, cardHeight * 0.055)));
@@ -135,7 +135,7 @@ export default StyleSheet.create({
     elevation: 0,
   },
   iconButtonDark: {
-    backgroundColor: "rgba(0, 0, 0, 0.70)",
+    backgroundColor: "rgba(12, 12, 12, 0.82)",
     borderWidth: 0,
   },
   iconButtonLight: {

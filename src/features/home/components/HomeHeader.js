@@ -29,7 +29,7 @@ const HomeHeader = React.memo(function HomeHeader({
         ]}
         numberOfLines={1}
       >
-        {`Olá, ${userName}`}
+        Descubra
       </Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity

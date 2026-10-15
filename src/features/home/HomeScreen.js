@@ -33,7 +33,7 @@ const errorImage = require("../../../assets/images/error.png");
 const notFoundImage = require("../../../assets/images/not-found.png");
 const noConnectionImage = require("../../../assets/images/no-connection.png");
 
-const DEFAULT_DARK_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.72)", "rgba(0, 0, 0, 0.96)", "rgba(0, 0, 0, 0.98)"];
+const DEFAULT_DARK_GRADIENT = ["rgba(0, 0, 0, 0.42)", "rgba(0, 0, 0, 0.54)", "rgba(0, 0, 0, 0.76)", "rgba(0, 0, 0, 0.82)"];
 const DARK_GRADIENT_LOCATIONS = [0, 0.38, 0.72, 1];
 const HOME_LIGHT_GRADIENT = ["rgba(0, 0, 0, 0.55)", "rgba(0, 0, 0, 0.25)", "rgba(0, 0, 0, 0.75)"];
 const HOME_LIGHT_LOCATIONS = [0, 0.45, 1];
@@ -145,8 +145,8 @@ export default function Home({ navigation }) {
           ? [
               currentTheme.colors[0],
               currentTheme.colors[1],
-              "rgba(0, 0, 0, 0.72)",
-              "rgba(0, 0, 0, 0.96)",
+              "rgba(0, 0, 0, 0.54)",
+              "rgba(0, 0, 0, 0.78)",
             ]
           : DEFAULT_DARK_GRADIENT;
       return {

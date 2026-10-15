@@ -17,7 +17,7 @@ export default StyleSheet.create({
     shadowRadius: 0,
   },
   cardContainerDark: {
-    backgroundColor: "rgba(0, 0, 0, 0.60)",
+    backgroundColor: "rgba(12, 12, 12, 0.82)",
     borderWidth: 0,
   },
   cardContainerLight: {

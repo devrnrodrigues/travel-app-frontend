@@ -29,13 +29,21 @@ export default StyleSheet.create({
   },
 });
 
-export const getCategoryTextColor = (isActive, accentColor, isMinimalist, isDarkMode) => ({
-  color: isActive
-    ? accentColor
-    : isMinimalist && !isDarkMode
-    ? "#111827"
-    : "#FFFFFF",
-});
+export const getCategoryTextColor = (isActive, accentColor, isMinimalist, isDarkMode) => {
+  if (isMinimalist) {
+    if (isDarkMode) {
+      return {
+        color: isActive ? "#FFFFFF" : "rgba(255, 255, 255, 0.45)",
+      };
+    }
+    return {
+      color: isActive ? "#111111" : "rgba(0, 0, 0, 0.4)",
+    };
+  }
+  return {
+    color: isActive ? accentColor : "#FFFFFF",
+  };
+};
 
 export const getActiveLineStyle = (accentColor, scaleX) => ({
   backgroundColor: accentColor,

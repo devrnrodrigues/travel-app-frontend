@@ -6,7 +6,6 @@ import styles, {
   getCardDimensionsStyle,
   getCardInfoPosition,
   getImageOpacityStyle,
-  getRatingColorStyle,
 } from "../styles/homeCardItem.styles";
 import { getOptimizedImageUrl } from "../../../shared/utils/imageUrl";
 import useImageFadeIn from "../hooks/useImageFadeIn";
@@ -161,11 +160,11 @@ const HomeCardItem = React.memo(function HomeCardItem({
                   : !isDarkMode && styles.cardInfoLightBg,
               ]}
             >
-              <Ionicons name="star" size={14} color={currentTheme?.accent || "#FFD700"} />
+              <Ionicons name="star" size={14} color="#FFD700" />
               <Text
                 style={[
                   styles.ratingText,
-                  getRatingColorStyle(currentTheme?.accent || "#FFD700"),
+                  isMinimalist && !isDarkMode && styles.ratingTextLight,
                 ]}
               >
                 {item.realRating}
