@@ -69,9 +69,7 @@ function DestinationFooterComponent({
       <TouchableOpacity
         style={[
           styles.actionButton,
-          !isDarkMode
-            ? styles.actionButtonLight
-            : { backgroundColor: currentTheme.accent },
+          { backgroundColor: currentTheme.accent },
         ]}
         activeOpacity={0.8}
         onPress={onNavigateTicket}

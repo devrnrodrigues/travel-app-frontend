@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useMemo } from "react";
 import {
   View,
   ScrollView,
@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import styles from "./styles/details.styles";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../theme/ThemeContext";
+import { resolveCategoryTheme, THEMES_BY_CAT } from "../../theme/categoryThemes";
 import useDestinationDetails from "./hooks/useDestinationDetails";
 import useDestinationFavorite from "./hooks/useDestinationFavorite";
 import useDestinationThemeAnimations from "./hooks/useDestinationThemeAnimations";
@@ -29,9 +30,52 @@ import EstimatedPriceModal from "./components/EstimatedPriceModal";
 
 export default function Details({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, categories } = useTheme();
   const { user } = useAuth();
-  const { item, currentTheme } = route.params;
+  const { item, currentTheme: passedTheme } = route.params;
+
+  const currentTheme = useMemo(() => {
+    const itemCat = item?.category || (Array.isArray(item?.categories) && item.categories[0]) || null;
+    const catSlug = typeof itemCat === "string"
+      ? itemCat.toLowerCase()
+      : (itemCat?.slug || itemCat?.name || "").toLowerCase();
+
+    if (catSlug && Array.isArray(categories) && categories.length > 0) {
+      const catIndex = categories.findIndex(
+        (c) => c.slug?.toLowerCase() === catSlug || c.name?.toLowerCase() === catSlug
+      );
+      if (catIndex !== -1) {
+        return resolveCategoryTheme(categories[catIndex], catIndex);
+      }
+    }
+
+    if (itemCat && typeof itemCat === "object" && (itemCat.accentColor || itemCat.name)) {
+      return resolveCategoryTheme(itemCat, 0);
+    }
+
+    const isMonochrome =
+      passedTheme?.accent === "#FFFFFF" ||
+      passedTheme?.accent === "#111111" ||
+      passedTheme?.accent === "#000000";
+
+    if (passedTheme?.accent && !isMonochrome) {
+      return passedTheme;
+    }
+
+    if (passedTheme) {
+      const foundEntry = Object.values(THEMES_BY_CAT).find(
+        (t) => t.icon === passedTheme.icon || t.bg === passedTheme.bg
+      );
+      if (foundEntry) {
+        return {
+          ...passedTheme,
+          accent: foundEntry.accent,
+        };
+      }
+    }
+
+    return resolveCategoryTheme(categories?.[0] || null, 0);
+  }, [item, categories, passedTheme]);
 
   const details = useDestinationDetails(item);
   const favorite = useDestinationFavorite(item, user);

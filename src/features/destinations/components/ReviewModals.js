@@ -311,6 +311,7 @@ export function ReviewFormModal({
               value={inputComment}
               onChangeText={setInputComment}
               multiline
+              maxLength={1000}
               onFocus={handleCommentFocus}
               onBlur={handleCommentBlur}
               style={[reviewStyles.reviewModalTextInput, !isDarkMode && reviewStyles.reviewModalTextInputLight]}
@@ -356,8 +357,8 @@ export function ReviewFormModal({
                   ]}
                 >
                   {photosList.length > 0
-                    ? `Fotos (${photosList.length}/5)`
-                    : "Adicionar fotos"}
+                    ? `Fotos selecionadas (${photosList.length})`
+                    : "Adicionar fotos (máx. 5)"}
                 </Text>
               </>
             )}
