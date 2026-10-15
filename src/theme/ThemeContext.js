@@ -87,16 +87,33 @@ export function ThemeProvider({ children }) {
   const activeCategory = categories[activeCat] || categories[0] || null;
 
   const currentTheme = useMemo(() => {
-    return resolveCategoryTheme(activeCategory, activeCat);
-  }, [activeCategory, activeCat]);
+    const baseTheme = resolveCategoryTheme(activeCategory, activeCat);
+    if (aestheticMode === "minimalista") {
+      const minimalistAccent = isDarkMode ? "#FFFFFF" : "#111111";
+      return {
+        ...baseTheme,
+        accent: minimalistAccent,
+      };
+    }
+    return baseTheme;
+  }, [activeCategory, activeCat, aestheticMode, isDarkMode]);
 
   const themesByCat = useMemo(() => {
     const map = { ...THEMES_BY_CAT };
+    const minimalistAccent = isDarkMode ? "#FFFFFF" : "#111111";
     categories.forEach((cat, index) => {
-      map[index] = resolveCategoryTheme(cat, index);
+      const baseTheme = resolveCategoryTheme(cat, index);
+      if (aestheticMode === "minimalista") {
+        map[index] = {
+          ...baseTheme,
+          accent: minimalistAccent,
+        };
+      } else {
+        map[index] = baseTheme;
+      }
     });
     return map;
-  }, [categories]);
+  }, [categories, aestheticMode, isDarkMode]);
 
   return (
     <ThemeContext.Provider
