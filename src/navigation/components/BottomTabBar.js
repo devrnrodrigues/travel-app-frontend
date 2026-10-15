@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -6,7 +6,6 @@ import {
   Easing,
   Platform,
   StyleSheet,
-  DeviceEventEmitter,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,58 +29,6 @@ export default function BottomTabBar({ state, navigation }) {
   const isExplore = currentRouteName === "Explore";
   const isFavorites = currentRouteName === "Favorites";
   const isMinimalist = aestheticMode === "minimalista";
-  const isMinimalistExplore = isMinimalist && isExplore;
-
-  const exploreRoute = state.routes.find((r) => r.name === "Explore");
-  const [isExploreSearchVisible, setIsExploreSearchVisible] = useState(
-    exploreRoute?.params?.isSearchBarVisible !== false
-  );
-
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener(
-      "exploreSearchBarVisible",
-      (visible) => {
-        setIsExploreSearchVisible(visible);
-      }
-    );
-    return () => sub.remove();
-  }, []);
-
-  useEffect(() => {
-    if (isExplore) {
-      const currentParam = state.routes[state.index]?.params?.isSearchBarVisible;
-      if (typeof currentParam === "boolean") {
-        setIsExploreSearchVisible(currentParam);
-      }
-    } else {
-      setIsExploreSearchVisible(true);
-      exploreAnim.setValue(1);
-    }
-  }, [isExplore, state.index]);
-
-  const exploreAnim = useRef(
-    new Animated.Value(exploreRoute?.params?.isSearchBarVisible !== false ? 1 : 0)
-  ).current;
-
-  useEffect(() => {
-    Animated.timing(exploreAnim, {
-      toValue: isExploreSearchVisible ? 1 : 0,
-      duration: 180,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, [isExploreSearchVisible]);
-
-  const tabItemOpacity =
-    isMinimalist && isExplore && isDarkMode
-      ? exploreAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.60, 1],
-        })
-      : 1;
-
-
-
   const prevIndexRef = useRef(state.index);
   const sweepOpacity = useRef(new Animated.Value(0)).current;
   const verticalOpacity = useRef(new Animated.Value(0)).current;
@@ -201,13 +148,11 @@ export default function BottomTabBar({ state, navigation }) {
         !isMinimalist && styles.bottomTabFloating,
         {
           backgroundColor: isMinimalist
-            ? isExplore && isDarkMode
-              ? "transparent"
-              : isDarkMode
+            ? isDarkMode
               ? "#161616"
               : "#F5F5F7"
             : isDarkMode
-            ? "rgba(10, 10, 10, 0.85)"
+            ? "rgba(12, 12, 12, 0.82)"
             : isExplore
             ? "rgba(100, 100, 100, 0.82)"
             : "rgba(100, 100, 100, 0.40)",
@@ -218,30 +163,6 @@ export default function BottomTabBar({ state, navigation }) {
         },
       ]}
     >
-      {isMinimalistExplore && isDarkMode && (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: "rgba(22, 22, 22, 0.40)",
-              },
-            ]}
-          />
-        </View>
-      )}
-      {isMinimalist && isExplore && isDarkMode && (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: "#161616",
-              opacity: exploreAnim,
-            },
-          ]}
-        />
-      )}
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
 
@@ -267,10 +188,7 @@ export default function BottomTabBar({ state, navigation }) {
         }
 
         return (
-          <Animated.View
-            key={route.key}
-            style={{ opacity: tabItemOpacity }}
-          >
+          <View key={route.key}>
             <TouchableOpacity
               onPress={onPress}
               activeOpacity={0.8}
@@ -310,15 +228,17 @@ export default function BottomTabBar({ state, navigation }) {
                         ? activeAccent
                         : "#FFFFFF"
                       : isFocused
-                      ? "#FFFFFF"
+                      ? isDarkMode
+                        ? "#000000"
+                        : "#FFFFFF"
                       : isDarkMode
-                      ? "#FFFFFF"
-                      : "#000000"
+                      ? "rgba(255, 255, 255, 0.90)"
+                      : "rgba(0, 0, 0, 0.85)"
                   }
                 />
               </Animated.View>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         );
       })}
 
