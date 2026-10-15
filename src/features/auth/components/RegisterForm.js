@@ -59,6 +59,7 @@ function RegisterFormComponent({
           style={styles.input}
           placeholder="Nome Completo"
           placeholderTextColor="rgba(255, 255, 255, 0.7)"
+          maxLength={150}
           editable={isEditable && !isAnyLoading}
           onFocus={() => onFocusInput("registerName")}
           onBlur={onBlurInput}
@@ -80,6 +81,7 @@ function RegisterFormComponent({
           placeholderTextColor="rgba(255, 255, 255, 0.7)"
           keyboardType="email-address"
           autoCapitalize="none"
+          maxLength={150}
           editable={isEditable && !isAnyLoading}
           onFocus={() => onFocusInput("registerEmail")}
           onBlur={onBlurInput}
@@ -100,6 +102,7 @@ function RegisterFormComponent({
           placeholder="Senha"
           placeholderTextColor="rgba(255, 255, 255, 0.7)"
           secureTextEntry={!showPassword}
+          maxLength={72}
           editable={isEditable && !isAnyLoading}
           onFocus={() => onFocusInput("registerPassword")}
           onBlur={onBlurInput}
@@ -136,6 +139,7 @@ function RegisterFormComponent({
           placeholder="Confirmar Senha"
           placeholderTextColor="rgba(255, 255, 255, 0.7)"
           secureTextEntry={!showConfirmPassword}
+          maxLength={72}
           editable={isEditable && !isAnyLoading}
           onFocus={() => onFocusInput("registerConfirmPassword")}
           onBlur={onBlurInput}

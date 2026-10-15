@@ -55,6 +55,7 @@ function LoginFormComponent({
           placeholderTextColor="rgba(255, 255, 255, 0.7)"
           keyboardType="email-address"
           autoCapitalize="none"
+          maxLength={150}
           editable={isEditable && !isAnyLoading}
           onFocus={() => onFocusInput("loginEmail")}
           onBlur={onBlurInput}
@@ -75,6 +76,7 @@ function LoginFormComponent({
           placeholder="Senha"
           placeholderTextColor="rgba(255, 255, 255, 0.7)"
           secureTextEntry={!showPassword}
+          maxLength={100}
           editable={isEditable && !isAnyLoading}
           onFocus={() => onFocusInput("loginPassword")}
           onBlur={onBlurInput}

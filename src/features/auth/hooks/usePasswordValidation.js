@@ -10,8 +10,8 @@ export function usePasswordValidation(password = "", confirmPassword = "") {
     const requirements = [
       {
         id: "min",
-        label: "No mínimo 8 caracteres",
-        valid: password.length >= 8,
+        label: "Entre 8 e 72 caracteres",
+        valid: password.length >= 8 && password.length <= 72,
       },
       {
         id: "letter",
