@@ -35,11 +35,19 @@ export default function useCreateCollection(queryClient) {
         return;
       }
 
-      setSelectedCollectionPhotos((prev) => [
-        ...prev,
-        ...result.assets.map((a) => a.uri),
-      ]);
-      setFormErrors((prev) => ({ ...prev, photos: null }));
+      const newUris = result.assets.map((a) => a.uri);
+      setSelectedCollectionPhotos((prev) => {
+        const combined = [...prev, ...newUris];
+        if (combined.length > 10) {
+          setFormErrors((e) => ({
+            ...e,
+            photos: "Limite de 10 fotos por envio atingido (as primeiras 10 foram mantidas).",
+          }));
+          return combined.slice(0, 10);
+        }
+        setFormErrors((e) => ({ ...e, photos: null }));
+        return combined;
+      });
     } catch {
       setFormErrors((prev) => ({
         ...prev,

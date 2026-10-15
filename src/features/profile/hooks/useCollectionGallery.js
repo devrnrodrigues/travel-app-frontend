@@ -137,11 +137,19 @@ export default function useCollectionGallery(initialCollection, navigation) {
         quality: 0.8,
       });
       if (!res.canceled && res.assets) {
-        setNewPhotosToUpload((prev) => [
-          ...prev,
-          ...res.assets.map((a) => a.uri),
-        ]);
-        setAddPhotosErrors((prev) => ({ ...prev, photos: null }));
+        const newUris = res.assets.map((a) => a.uri);
+        setNewPhotosToUpload((prev) => {
+          const combined = [...prev, ...newUris];
+          if (combined.length > 10) {
+            setAddPhotosErrors((e) => ({
+              ...e,
+              photos: "Limite de 10 fotos por envio atingido (as primeiras 10 foram mantidas).",
+            }));
+            return combined.slice(0, 10);
+          }
+          setAddPhotosErrors((e) => ({ ...e, photos: null }));
+          return combined;
+        });
       }
     } catch {
       setAddPhotosErrors({ photos: "Não foi possível selecionar fotos." });

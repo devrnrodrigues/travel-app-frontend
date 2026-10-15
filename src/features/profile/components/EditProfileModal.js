@@ -206,6 +206,7 @@ const EditProfileModal = memo(function EditProfileModal({
                   isFocused={focusedInput === "name"}
                   currentTheme={currentTheme}
                   isDarkMode={isDarkMode}
+                  maxLength={150}
                   placeholder="Seu nome"
                   placeholderTextColor={
                     !isDarkMode

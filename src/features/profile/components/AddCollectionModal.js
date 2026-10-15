@@ -221,8 +221,10 @@ const AddCollectionModal = memo(function AddCollectionModal({
                         ]}
                       >
                         {hasPhotos
-                          ? "Toque para adicionar mais fotos"
-                          : "Toque para escolher fotos do dispositivo"}
+                          ? selectedCollectionPhotos.length >= 10
+                            ? "Limite de 10 fotos atingido"
+                            : "Toque para adicionar mais fotos (máx. 10)"
+                          : "Toque para escolher até 10 fotos"}
                       </Text>
                     </>
                   )}

@@ -144,8 +144,10 @@ const AddPhotosModal = memo(function AddPhotosModal({
                   ]}
                 >
                   {selectedNewPhotos.length > 0
-                    ? photoCountText
-                    : "Toque para escolher fotos do dispositivo"}
+                    ? selectedNewPhotos.length >= 10
+                      ? "Limite de 10 fotos atingido"
+                      : `${photoCountText} (máx. 10)`
+                    : "Toque para escolher até 10 fotos"}
                 </Text>
               </>
             )}
