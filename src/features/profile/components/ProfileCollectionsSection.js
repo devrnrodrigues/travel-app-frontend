@@ -55,7 +55,9 @@ const ProfileCollectionsSection = memo(function ProfileCollectionsSection({
   } = collectionDimensions;
 
   const addCardGradientColors =
-    currentTheme?.colors && currentTheme.colors.length >= 2
+    isMinimalist && !isDarkMode
+      ? ["#F5F5F7", "#E5E5EA"]
+      : currentTheme?.colors && currentTheme.colors.length >= 2
       ? [currentTheme.colors[0], currentTheme.colors[1]]
       : [currentTheme?.accent || "#4CAF50", "#7C3AED"];
 
@@ -107,20 +109,30 @@ const ProfileCollectionsSection = memo(function ProfileCollectionsSection({
             )}
           >
             <View
-              style={getAddCardCircleDynamicStyle(
-                scale,
-                addCircleSize,
-                Math.round(14 * scale)
-              )}
+              style={[
+                getAddCardCircleDynamicStyle(
+                  scale,
+                  addCircleSize,
+                  Math.round(14 * scale)
+                ),
+                !isDarkMode && { backgroundColor: "rgba(0, 0, 0, 0.06)" },
+              ]}
             >
-              <Ionicons name="add" size={addIconSize} color="#FFFFFF" />
+              <Ionicons
+                name="add"
+                size={addIconSize}
+                color={isMinimalist && !isDarkMode ? "#000000" : "#FFFFFF"}
+              />
             </View>
             <Text
-              style={getAddCardTextDynamicStyle(
-                scale,
-                addTextFontSize,
-                addTextLineHeight
-              )}
+              style={[
+                getAddCardTextDynamicStyle(
+                  scale,
+                  addTextFontSize,
+                  addTextLineHeight
+                ),
+                !isDarkMode && { color: "#8E8E93" },
+              ]}
             >
               Adicionar{"\n"}coleção
             </Text>
