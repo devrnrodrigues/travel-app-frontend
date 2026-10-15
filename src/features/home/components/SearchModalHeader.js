@@ -92,6 +92,7 @@ const SearchModalHeader = React.memo(function SearchModalHeader({
           placeholder="Pesquisar destinos..."
           placeholderTextColor={placeholderColor}
           value={searchQuery}
+          maxLength={100}
           onChangeText={setSearchQuery}
           onFocus={onFocus}
           onBlur={onBlur}

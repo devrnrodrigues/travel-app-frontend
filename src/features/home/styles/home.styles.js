@@ -15,7 +15,7 @@ export const getHomeDimensions = (
   const availableHeight = windowHeight - topInset - bottomBarHeight;
 
   const isSmallScreen = availableHeight < 640;
-  const isTallScreen = availableHeight > 780;
+  const isTallScreen = availableHeight > 750;
 
   const headerPaddingTop = isSmallScreen ? 8 : isTallScreen ? 14 : 10;
   const headerTitleSize = isSmallScreen ? 26 : isTallScreen ? 32 : 30;
@@ -40,8 +40,9 @@ export const getHomeDimensions = (
   const totalBaseHeights = headerHeight + categoriesHeight + baseDestHeight + cardVerticalSpacing;
   const availableForCard = availableHeight - bottomSpacing - totalBaseHeights;
 
-  const rawCardHeight = Math.round(availableForCard * (isSmallScreen ? 0.88 : isTallScreen ? 0.91 : 0.90));
-  const cardHeight = Math.round(Math.max(240, Math.min(rawCardHeight, 460)));
+  const rawCardHeight = Math.round(availableForCard * (isSmallScreen ? 0.88 : isTallScreen ? 0.97 : 0.94));
+  const maxCardHeight = isSmallScreen ? 460 : isTallScreen ? 510 : 490;
+  const cardHeight = Math.round(Math.max(240, Math.min(rawCardHeight, maxCardHeight)));
   const cardWidth = Math.round(Math.min(windowWidth * 0.76, 360, cardHeight * 0.74));
 
   const cardInfoBottom = Math.round(Math.max(14, Math.min(25, cardHeight * 0.055)));

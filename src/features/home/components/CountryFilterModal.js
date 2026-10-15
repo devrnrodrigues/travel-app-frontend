@@ -359,6 +359,7 @@ const CountryFilterModal = React.memo(function CountryFilterModal({
                 <TextInput
                   value={searchQuery}
                   onChangeText={setSearchQuery}
+                  maxLength={100}
                   placeholder="Buscar país..."
                   placeholderTextColor={isDarkMode ? "rgba(255, 255, 255, 0.4)" : "#9CA3AF"}
                   style={{
