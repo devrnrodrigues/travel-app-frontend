@@ -123,6 +123,7 @@ export const ExploreHeader = React.memo(function ExploreHeader({
             placeholder="Pesquisar"
             placeholderTextColor={placeholderColor}
             value={searchQuery}
+            maxLength={100}
             onChangeText={setSearchQuery}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}

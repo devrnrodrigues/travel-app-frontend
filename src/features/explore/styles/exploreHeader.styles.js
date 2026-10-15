@@ -49,13 +49,13 @@ export const exploreHeaderStyles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
     paddingHorizontal: 12,
-    backgroundColor: "#F5F5F7",
+    backgroundColor: "rgba(245, 245, 247, 0.72)",
   },
   searchBarInputMinimalist: {
     height: 44,
     borderRadius: 12,
     paddingHorizontal: 12,
-    backgroundColor: "#F5F5F7",
+    backgroundColor: "rgba(245, 245, 247, 0.72)",
   },
   searchBarInputDecorativeDark: {
     height: 54,
@@ -128,13 +128,13 @@ export const exploreHeaderStyles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#F5F5F7",
+    backgroundColor: "rgba(245, 245, 247, 0.72)",
   },
   photoIconButtonMinimalist: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#F5F5F7",
+    backgroundColor: "rgba(245, 245, 247, 0.72)",
   },
   photoIconButtonDecorativeDark: {
     width: 54,
