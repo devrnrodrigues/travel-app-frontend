@@ -1,6 +1,6 @@
 <div align="center">
 
-# Travel App (Frontend)
+# Travel App
 
 <p align="center">
   Aplicativo mobile desenvolvido em <strong>React Native</strong> e <strong>Expo</strong> para exploração de destinos turísticos, cotação de passagens aéreas e planejamento inteligente de viagens.
