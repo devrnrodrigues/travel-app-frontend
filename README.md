@@ -1,13 +1,20 @@
+<div align="center">
+
 # Travel App (Frontend)
 
-Aplicativo mobile desenvolvido em **React Native** e **Expo** para exploração de destinos turísticos, cotação de passagens aéreas e planejamento inteligente de viagens.
-
-<div align="center">
+<p align="center">
+  Aplicativo mobile desenvolvido em <strong>React Native</strong> e <strong>Expo</strong> para exploração de destinos turísticos, cotação de passagens aéreas e planejamento inteligente de viagens.
+</p>
 
 [![Demo Online](https://img.shields.io/badge/DEMO-ONLINE-2ea44f?style=for-the-badge&logo=expo&logoColor=white)](#como-rodar-o-projeto)
 [![React Native](https://img.shields.io/badge/React_Native-0.86-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-SDK_57-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+<br/>
+<br/>
+
+<img src="assets/app-images.jpg" alt="Telas da aplicação Travel App" width="100%" />
 
 </div>
 
