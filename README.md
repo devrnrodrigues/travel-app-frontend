@@ -10,12 +10,15 @@
 [![Expo](https://img.shields.io/badge/Expo-SDK_57-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-[![Ver Backend](https://img.shields.io/badge/VER_BACKEND-2ea44f?style=for-the-badge&logo=springboot&logoColor=white)](https://github.com/devrnrodrigues/travel-app-backend)
-
 <br/>
 <br/>
 
 <img src="assets/app-images.jpg" alt="Telas da aplicação Travel App" width="100%" />
+
+<br/>
+<br/>
+
+[![Ver Backend](https://img.shields.io/badge/VER_BACKEND-2ea44f?style=for-the-badge&logo=springboot&logoColor=white)](https://github.com/devrnrodrigues/travel-app-backend)
 
 </div>
 
